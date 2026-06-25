@@ -932,6 +932,22 @@ function LegacyBanner({ legacy }: { legacy: ReturnType<typeof computeLegacy> }) 
 
 function LegacyHall({ legacy, emp }: { legacy: ReturnType<typeof computeLegacy>; emp: Employee }) {
   const earned = emp.achievements.reduce((s, a) => s + a.history.reduce((x, h) => x + h.stars, 0), 0);
+  const totalAchievementsEarned = emp.achievements.reduce((s, a) => s + a.history.length, 0);
+  const uniqueEarned = emp.achievements.filter(a => a.history.length > 0).length;
+  const yearsOfService = Math.max(1, Math.floor((Date.now() - new Date(emp.joinedOn).getTime()) / (365.25 * 24 * 3600 * 1000)));
+
+  // career milestones derived from history
+  const allHistory = emp.achievements.flatMap(a => a.history.map(h => ({ ...h, name: a.name, icon: a.icon })));
+  allHistory.sort((a, b) => a.date.localeCompare(b.date));
+  const firstEarn = allHistory[0];
+  const milestones: { label: string; date?: string; detail: string }[] = [
+    { label: "Sworn to the Guild", date: emp.joinedOn, detail: emp.guildTitle },
+    ...(firstEarn ? [{ label: "First Star Earned", date: firstEarn.date, detail: `${firstEarn.icon} ${firstEarn.name}` }] : []),
+    { label: "First Moon Forged", date: allHistory[9]?.date, detail: "10 lifetime stars" },
+    ...(legacy.suns >= 1 ? [{ label: "First Sun Risen", date: allHistory[49]?.date, detail: "50 lifetime stars" }] : []),
+    { label: `Title: ${legacy.title.name}`, detail: legacy.title.flavor },
+  ].filter(m => m.label);
+
   return (
     <div className="space-y-6">
       <section className="card-ornate-gold p-8 text-center">
@@ -941,29 +957,59 @@ function LegacyHall({ legacy, emp }: { legacy: ReturnType<typeof computeLegacy>;
         <div className="mt-5 flex justify-center">
           <LegacyGlyphs suns={legacy.suns} moons={legacy.moons} stars={legacy.stars} />
         </div>
-        <div className="mt-3 font-display text-xl text-gold">{legacy.total}★ <span className="text-sm text-muted-foreground">Lifetime Stars</span></div>
+        <div className="mt-3 font-display text-xl text-gold">{legacy.total}⭐ <span className="text-sm text-muted-foreground">Lifetime Stars</span></div>
         <p className="mx-auto mt-4 max-w-md text-xs text-muted-foreground">
-          10 stars become a moon. 10 moons become a sun. Legacy never resets. This is the record carried across every season.
+          10 stars become a moon. 5 moons become a sun. Legacy never resets — it is the record carried across every season.
         </p>
+      </section>
+
+      <section className="card-ornate p-6">
+        <SectionHeader eyebrow="The Long Tally" title="Legacy Statistics" />
+        <div className="mt-4 grid gap-3 grid-cols-2 sm:grid-cols-3">
+          <Stat2 label="Lifetime Stars"        value={`${legacy.total}⭐`} />
+          <Stat2 label="Total Moons"           value={`${Math.floor(legacy.total / 10)}🌙`} />
+          <Stat2 label="Total Suns"            value={`${Math.floor(legacy.total / 50)}☀`} />
+          <Stat2 label="Achievements Earned"   value={String(totalAchievementsEarned)} />
+          <Stat2 label="Unique Achievements"   value={`${uniqueEarned} / ${emp.achievements.length}`} />
+          <Stat2 label="Years of Service"      value={`${yearsOfService} yr`} />
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div className="rounded border border-border bg-ink/40 p-3 text-xs">
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">From this ledger</div>
+            <div className="font-display text-base">{earned}⭐ tracked</div>
+          </div>
+          <div className="rounded border border-border bg-ink/40 p-3 text-xs">
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">From earlier seasons</div>
+            <div className="font-display text-base">{emp.pastLegacyStars}⭐ archived</div>
+          </div>
+        </div>
       </section>
 
       <section className="card-ornate p-6">
         <SectionHeader eyebrow="The Conversion" title="How Legacy is Forged" />
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          <ConversionCard label="Star" glyph="★" desc="Earned from a single achievement." count={legacy.stars} />
-          <ConversionCard label="Moon" glyph="☾" desc="10 stars become a moon." count={legacy.moons} />
-          <ConversionCard label="Sun"  glyph="☀" desc="10 moons become a sun." count={legacy.suns} />
+          <ConversionCard label="Star" glyph="⭐" desc="Earned from a single achievement." count={legacy.stars} />
+          <ConversionCard label="Moon" glyph="🌙" desc="10 stars become a moon." count={legacy.moons} />
+          <ConversionCard label="Sun"  glyph="☀" desc="5 moons become a sun (50 stars)." count={legacy.suns} />
         </div>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <div className="rounded border border-border bg-ink/40 p-3 text-xs">
-            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">From this ledger</div>
-            <div className="font-display text-base">{earned}★ tracked</div>
-          </div>
-          <div className="rounded border border-border bg-ink/40 p-3 text-xs">
-            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">From earlier seasons</div>
-            <div className="font-display text-base">{emp.pastLegacyStars}★ archived</div>
-          </div>
-        </div>
+      </section>
+
+      <section className="card-ornate p-6">
+        <SectionHeader eyebrow="The Saga" title="Career Milestones" />
+        <ol className="mt-4 space-y-2">
+          {milestones.map((m, i) => (
+            <li key={i} className="flex items-start gap-3 rounded-md border border-border bg-ink/40 p-3">
+              <span className="text-gold">◆</span>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <span className="font-display text-sm">{m.label}</span>
+                  {m.date && <span className="text-[11px] text-muted-foreground">{m.date}</span>}
+                </div>
+                <div className="text-[11px] text-muted-foreground">{m.detail}</div>
+              </div>
+            </li>
+          ))}
+        </ol>
       </section>
 
       <section className="card-ornate p-6">
@@ -971,12 +1017,12 @@ function LegacyHall({ legacy, emp }: { legacy: ReturnType<typeof computeLegacy>;
         <ol className="mt-4 space-y-2">
           {[
             { name: "Wanderer",           min: 0,   glyph: "·" },
-            { name: "Pathfinder",         min: 10,  glyph: "☾" },
-            { name: "Voyager",            min: 30,  glyph: "☾☾☾" },
-            { name: "Shipbuilder",        min: 50,  glyph: "☾☾☾☾☾" },
-            { name: "Master Shipbuilder", min: 100, glyph: "☀" },
-            { name: "Guild Elder",        min: 300, glyph: "☀☀☀" },
-            { name: "Living Legend",      min: 500, glyph: "☀☀☀☀☀" },
+            { name: "Pathfinder",         min: 10,  glyph: "🌙" },
+            { name: "Voyager",            min: 30,  glyph: "🌙🌙🌙" },
+            { name: "Shipbuilder",        min: 50,  glyph: "☀" },
+            { name: "Master Shipbuilder", min: 150, glyph: "☀☀☀" },
+            { name: "Guild Elder",        min: 250, glyph: "☀×5" },
+            { name: "Living Legend",      min: 500, glyph: "☀×10" },
           ].map(t => {
             const reached = legacy.total >= t.min;
             const current = legacy.title.name === t.name;
@@ -989,7 +1035,7 @@ function LegacyHall({ legacy, emp }: { legacy: ReturnType<typeof computeLegacy>;
                   <span className="text-lg" style={{ color: reached ? "var(--color-gold)" : undefined }}>{t.glyph}</span>
                   <div>
                     <div className={`font-display text-sm ${current ? "text-gold" : ""}`}>{t.name}</div>
-                    <div className="text-[11px] text-muted-foreground">{t.min}★ lifetime</div>
+                    <div className="text-[11px] text-muted-foreground">{t.min}⭐ lifetime</div>
                   </div>
                 </div>
                 {current && <span className="rounded-full bg-gold/15 px-2 py-0.5 text-[10px] uppercase tracking-widest text-gold">Bearing now</span>}
