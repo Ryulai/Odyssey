@@ -189,4 +189,38 @@ export const SAMPLE_EMPLOYEE: Employee = {
       highlights: ["Hit baseline activity targets."],
       improvements: ["Pipeline coverage thin; needs prospecting cadence."] },
   ],
+  quests: [
+    { id: "q1", name: "Sales Target",        flavor: "Slay the monthly revenue beast.",     icon: "⚔",  current: 78000, target: 100000, unit: "gp",     reward: "+1 Star · Rank XP" },
+    { id: "q2", name: "Exposure Target",     flavor: "Raise the banner across the realm.",  icon: "🏴", current: 42,    target: 60,     unit: "posts",  reward: "Brand Influence +" },
+    { id: "q3", name: "Event Participation", flavor: "Show your colors at the gatherings.", icon: "🎪", current: 3,     target: 4,      unit: "events", reward: "Network Influence +" },
+    { id: "q4", name: "Reviews Collected",   flavor: "Gather testaments from clients won.", icon: "📜", current: 9,     target: 12,     unit: "scrolls", reward: "Professional Influence +" },
+  ],
+  attributes: [
+    { key: "sales",        label: "Sales Influence",        flavor: "Power to close the hunt.",            icon: "⚔",  stars: 5 },
+    { key: "brand",        label: "Brand Influence",        flavor: "Reach of your banner.",                icon: "🏴", stars: 3 },
+    { key: "network",      label: "Network Influence",      flavor: "Strength of your alliances.",          icon: "🤝", stars: 4 },
+    { key: "marketing",    label: "Marketing Influence",    flavor: "Charm of your warcry.",                icon: "📣", stars: 2 },
+    { key: "professional", label: "Professional Influence", flavor: "Respect among fellow hunters.",        icon: "🎖", stars: 4 },
+  ],
+  collection: [
+    { id: "a1", name: "Baller Sales",         description: "Hit 150% of monthly sales target.",       icon: "💰", rarity: "Epic",      unlocked: true,  unlockedOn: "2026-05-22" },
+    { id: "a2", name: "Top Sales",            description: "Ranked #1 hunter of the season.",         icon: "👑", rarity: "Legendary", unlocked: true,  unlockedOn: "2026-04-01" },
+    { id: "a3", name: "Thank You",            description: "Receive 10 client gratitude scrolls.",    icon: "🙏", rarity: "Rare",      unlocked: true,  unlockedOn: "2026-03-12" },
+    { id: "a4", name: "Nothing I Can't Sell", description: "Close a deal in every product line.",     icon: "🗡", rarity: "Epic",      unlocked: false, hint: "Hunt across all five product realms." },
+    { id: "a5", name: "Attention Seeker",     description: "Top engagement on social campaigns.",     icon: "📢", rarity: "Rare",      unlocked: true,  unlockedOn: "2026-02-09" },
+    { id: "a6", name: "Iron Man",             description: "12 months without a missed target.",      icon: "🛡", rarity: "Legendary", unlocked: false, hint: "Currently at 8 of 12 months." },
+    { id: "a7", name: "Mentorship",           description: "Guide 3 juniors to their first rank up.", icon: "🧙", rarity: "Epic",      unlocked: true,  unlockedOn: "2026-04-10" },
+    { id: "a8", name: "Game Changer",         description: "Ship an innovation adopted guild-wide.",  icon: "💎", rarity: "Legendary", unlocked: false, hint: "A relic yet to be forged." },
+  ],
+  rankProgress: {
+    nextRank: "diamond",
+    metric: "A Grades",
+    current: 8,
+    needed: 12,
+    notes: [
+      "Maintain Platinum-level capability for 4 more months.",
+      "Captain's nomination required for the final trial.",
+      "Complete one Tier-4 Career branch.",
+    ],
+  },
 };
