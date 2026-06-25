@@ -1550,7 +1550,7 @@ const GROWTH_TREES: GrowthTree[] = [
   },
   {
     id: "mentor",
-    title: "Mentor Tree",
+    title: "Navigator Tree",
     question: "Who have I helped grow?",
     icon: "📖",
     accent: "var(--color-grade-a)",
