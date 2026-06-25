@@ -65,6 +65,44 @@ export interface MonthlyReview {
   reviewer: string;
 }
 
+export interface Quest {
+  id: string;
+  name: string;
+  flavor: string;
+  icon: string;
+  current: number;
+  target: number;
+  unit: string;
+  reward: string;
+}
+
+export interface Attribute {
+  key: "sales" | "brand" | "network" | "marketing" | "professional";
+  label: string;
+  flavor: string;
+  icon: string;
+  stars: 1 | 2 | 3 | 4 | 5;
+}
+
+export interface CollectionAchievement {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  rarity: "Common" | "Rare" | "Epic" | "Legendary";
+  unlocked: boolean;
+  unlockedOn?: string;
+  hint?: string;
+}
+
+export interface RankProgress {
+  nextRank: RankKey;
+  metric: string;          // "A Grades"
+  current: number;
+  needed: number;
+  notes: string[];
+}
+
 export interface Employee {
   id: string;
   name: string;
@@ -78,6 +116,10 @@ export interface Employee {
   career: CareerTreeNode[];
   reviews: MonthlyReview[];
   abcdHistory: { month: string; grade: Grade }[];
+  quests: Quest[];
+  attributes: Attribute[];
+  collection: CollectionAchievement[];
+  rankProgress: RankProgress;
 }
 
 export const PARTNER_PATH: PartnerNode[] = [
