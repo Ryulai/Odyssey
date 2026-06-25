@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { AuthGate } from "@/components/auth-gate";
 import { getStaffDashboard } from "@/lib/workflow.functions";
 import { GRADE_META } from "@/lib/employee-data";
+import { useRole } from "@/lib/roles";
+
 
 export const Route = createFileRoute("/profile")({
   head: () => ({ meta: [{ title: "My Profile — The Odyssey Guide" }] }),
@@ -33,20 +35,8 @@ function ProfilePage() {
           </div>
         )}
 
-        {data?.staff && (
-          <div className="space-y-6">
-            <CharacterSheet d={data} />
-            <div className="grid gap-6 lg:grid-cols-2">
-              <LegacyCard d={data} />
-              <PromotionCard d={data} />
-            </div>
-            <ClaimSummary d={data} />
-            <div className="grid gap-6 lg:grid-cols-2">
-              <RecordsCard records={data.records} />
-              <GradesCard grades={data.grades} />
-            </div>
-          </div>
-        )}
+        {data?.staff && <ProfileBody data={data} />}
+
       </div>
     </div>
   );
@@ -54,7 +44,27 @@ function ProfilePage() {
 
 function Skel() { return <div className="animate-pulse rounded-md border border-border bg-ink/30 p-12 text-center text-xs text-muted-foreground">Calculating…</div>; }
 
-function CharacterSheet({ d }: { d: any }) {
+function ProfileBody({ data }: { data: any }) {
+  const { role } = useRole();
+  const isShipbuilder = role === "director";
+  return (
+    <div className="space-y-6">
+      <CharacterSheet d={data} isShipbuilder={isShipbuilder} />
+      <div className={`grid gap-6 ${isShipbuilder ? "" : "lg:grid-cols-2"}`}>
+        <LegacyCard d={data} />
+        {!isShipbuilder && <PromotionCard d={data} />}
+      </div>
+      <ClaimSummary d={data} />
+      <div className="grid gap-6 lg:grid-cols-2">
+        <RecordsCard records={data.records} />
+        <GradesCard grades={data.grades} />
+      </div>
+    </div>
+  );
+}
+
+
+function CharacterSheet({ d, isShipbuilder = false }: { d: any; isShipbuilder?: boolean }) {
   const s = d.staff;
   const ev = d.evaluation;
   const latestGrade = d.grades?.[0]?.grade ?? "—";
@@ -62,19 +72,37 @@ function CharacterSheet({ d }: { d: any }) {
     <section className="rounded-md border border-gold/30 bg-gradient-to-br from-ink/60 to-ink/30 p-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
+          {isShipbuilder && (
+            <div className="text-[10px] uppercase tracking-[0.3em] text-gold">The Shipbuilder</div>
+          )}
           <div className="font-display text-2xl text-gold">{s.name}</div>
-          <div className="text-xs uppercase tracking-widest text-muted-foreground">{s.role} · {s.department} · {s.role_family}</div>
-          <div className="mt-1 text-[11px] text-muted-foreground">
-            Manager: <span className="text-foreground">{s.manager?.name ?? "Unassigned"}</span>
-            {s.email && <> · {s.email}</>}
-          </div>
+          <div className="text-xs uppercase tracking-widest text-muted-foreground">{s.role} · {s.department} · {isShipbuilder ? "System Builder" : s.role_family}</div>
+          {!isShipbuilder && (
+            <div className="mt-1 text-[11px] text-muted-foreground">
+              Manager: <span className="text-foreground">{s.manager?.name ?? "Unassigned"}</span>
+              {s.email && <> · {s.email}</>}
+            </div>
+          )}
+          {isShipbuilder && s.email && (
+            <div className="mt-1 text-[11px] text-muted-foreground">{s.email}</div>
+          )}
         </div>
         <div className="text-right">
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Current Rank</div>
-          <div className="font-display text-xl text-gold">{s.rank?.name ?? ev?.current_rank_name ?? "Unranked"}</div>
-          <div className="text-[10px] italic text-muted-foreground">{s.rank?.subtitle ?? ""}</div>
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Status</div>
+          {isShipbuilder ? (
+            <>
+              <div className="font-display text-xl text-gold">Beyond Rank</div>
+              <div className="text-[10px] italic text-muted-foreground">Charts the course. Builds the ship.</div>
+            </>
+          ) : (
+            <>
+              <div className="font-display text-xl text-gold">{s.rank?.name ?? ev?.current_rank_name ?? "Unranked"}</div>
+              <div className="text-[10px] italic text-muted-foreground">{s.rank?.subtitle ?? ""}</div>
+            </>
+          )}
         </div>
       </div>
+
       <div className="mt-5 grid gap-3 sm:grid-cols-4">
         <Stat label="Total Stars" value={d.totals?.stars ?? 0} icon="⭐" />
         <Stat label="Moons" value={d.totals?.moons ?? 0} icon="🌙" />
