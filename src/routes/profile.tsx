@@ -235,14 +235,14 @@ function PromotionCard({ d }: { d: any }) {
 function ClaimSummary({ d }: { d: any }) {
   return (
     <section className="rounded-md border border-border bg-ink/30 p-5">
-      <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">My Claims</h2>
+      <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">My Harbor Records</h2>
       <div className="mt-3 grid grid-cols-3 gap-3 text-center">
         <Pill label="Pending"  value={d.claims.pending}  tone="gold" />
         <Pill label="Approved" value={d.claims.approved} tone="emerald" />
         <Pill label="Rejected" value={d.claims.rejected} tone="red" />
       </div>
       <div className="mt-4 text-right">
-        <Link to="/claims" className="text-xs uppercase tracking-widest text-gold hover:underline">Submit a claim →</Link>
+        <Link to="/claims" className="text-xs uppercase tracking-widest text-gold hover:underline">Record a voyage →</Link>
       </div>
     </section>
   );
