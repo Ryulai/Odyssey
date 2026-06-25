@@ -8,7 +8,12 @@ import {
   type Grade,
   type RankKey,
   type CareerTreeNode,
+  type Quest,
+  type Attribute,
+  type CollectionAchievement,
+  type RankProgress,
 } from "@/lib/employee-data";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
