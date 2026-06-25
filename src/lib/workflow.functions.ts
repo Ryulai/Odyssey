@@ -163,6 +163,7 @@ export const getStaffDashboard = createServerFn({ method: "GET" })
         moonsPerSun: cfg.moons_per_sun,
       },
       legacy: { currentTitle, nextTitle, starsToNextTitle: nextTitle ? nextTitle.min_stars - totalStars : 0 },
+      holdings: holdingsRes.data ?? [],
       evaluation,
       records: recordsRes.data ?? [],
       grades: gradesRes.data ?? [],
