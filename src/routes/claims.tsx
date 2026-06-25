@@ -173,11 +173,11 @@ function MyClaims({ userId }: { userId: string | null }) {
   const mine = claims.filter((c: any) => c.submitted_by === userId);
   return (
     <section className="rounded-md border border-border bg-ink/30 p-5">
-      <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">My Claims</h2>
+      <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">My Voyages</h2>
       {isLoading ? <div className="py-4 text-xs text-muted-foreground">Loading…</div> : (
         <div className="mt-4 space-y-2">
           {mine.map((c: any) => <ClaimCard key={c.id} c={c} />)}
-          {!mine.length && <div className="py-6 text-center text-xs text-muted-foreground">No claims yet.</div>}
+          {!mine.length && <div className="py-6 text-center text-xs text-muted-foreground">No voyages recorded yet.</div>}
         </div>
       )}
     </section>
