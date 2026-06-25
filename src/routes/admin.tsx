@@ -24,15 +24,17 @@ export const Route = createFileRoute("/admin")({
   component: () => <AuthGate><AdminPage /></AuthGate>,
 });
 
-type AdminTab = "staff" | "grades" | "achievements" | "ranks" | "legacy";
+type AdminTab = "staff" | "locations" | "grades" | "achievements" | "ranks" | "legacy";
 
 const TABS: { key: AdminTab; label: string; hint: string; cap: Capability }[] = [
-  { key: "staff",        label: "Staff",        hint: "Create, edit, assign department & manager", cap: "admin.staff" },
+  { key: "staff",        label: "Staff",        hint: "Create, edit, assign department, manager & location", cap: "admin.staff" },
+  { key: "locations",    label: "Fleets",       hint: "Manage locations / venues and their captain",         cap: "admin.staff" },
   { key: "grades",       label: "Grades",       hint: "Define A/B/C/D rules and weights",          cap: "admin.grades" },
   { key: "achievements", label: "Achievements", hint: "Define achievements & star rewards",        cap: "admin.achievements" },
   { key: "ranks",        label: "Ranks",        hint: "Configure Hunter ranks & promotion rules",  cap: "admin.ranks" },
   { key: "legacy",       label: "Legacy",       hint: "Conversion ratios & legacy titles",         cap: "admin.legacy" },
 ];
+
 
 function AdminPage() {
   const { role } = useRole();
