@@ -5,47 +5,43 @@ import {
   GRADE_META,
   HUNTER_RANKS,
   PARTNER_PATH,
+  computeLegacy,
+  totalStars,
   type Grade,
   type RankKey,
   type CareerTreeNode,
   type Quest,
   type Attribute,
-  type CollectionAchievement,
+  type RepeatableAchievement,
   type RankProgress,
+  type Employee,
 } from "@/lib/employee-data";
 
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Guild Ledger — Hunter Growth System" },
-      { name: "description", content: "An RPG-styled employee growth dashboard: ABCD grading, achievement stars, rank progression, career and partner trees, and monthly reviews." },
-      { property: "og:title", content: "Guild Ledger — Hunter Growth System" },
-      { property: "og:description", content: "ABCD grading, achievement stars, rank progression, career and partner trees, and monthly reviews." },
+      { title: "Guild Ledger — Hunter Legacy System" },
+      { name: "description", content: "An RPG-styled hunter progression journal: ABCD monthly grade, permanent Hunter Rank, repeatable achievement stars, lifetime legacy, and the Partner tree." },
+      { property: "og:title", content: "Guild Ledger — Hunter Legacy System" },
+      { property: "og:description", content: "Monthly grades, permanent rank, repeatable stars, lifetime legacy, and the partner journey." },
     ],
   }),
   component: Dashboard,
 });
 
-type TabKey = "overview" | "career" | "partner" | "reviews" | "achievements";
+type TabKey = "overview" | "achievements" | "legacy" | "career" | "partner" | "reviews";
 
 function Dashboard() {
   const emp = SAMPLE_EMPLOYEE;
   const [tab, setTab] = useState<TabKey>("overview");
+  const legacy = useMemo(() => computeLegacy(totalStars(emp)), [emp]);
 
   return (
     <div className="min-h-screen text-foreground">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         <HunterHeader />
-        <ProfileCard
-          name={emp.name}
-          title={emp.guildTitle}
-          avatar={emp.avatar}
-          rank={emp.currentRank}
-          grade={emp.currentGrade}
-          starCount={emp.stars.length}
-          joinedOn={emp.joinedOn}
-        />
+        <ProfileCard emp={emp} legacy={legacy} />
 
         <Tabs value={tab} onChange={setTab} />
 
@@ -54,31 +50,29 @@ function Dashboard() {
             <>
               <QuestBoard quests={emp.quests} />
               <div className="grid gap-6 lg:grid-cols-2">
+                <CurrentGradeCard current={emp.currentGrade} />
                 <NextRankProgress current={emp.currentRank} progress={emp.rankProgress} />
-                <HunterAttributes attributes={emp.attributes} />
               </div>
-              <AchievementCollection items={emp.collection} />
+              <LegacyBanner legacy={legacy} />
+              <HunterAttributes attributes={emp.attributes} />
               <ABCDPanel current={emp.currentGrade} history={emp.abcdHistory} />
-              <div className="grid gap-6 lg:grid-cols-2">
-                <RankLadder current={emp.currentRank} />
-                <PartnerPath currentKey={emp.partnerStage} />
-              </div>
             </>
           )}
-          {tab === "career" && <CareerTree nodes={emp.career} />}
+          {tab === "achievements" && <AchievementsLedger items={emp.achievements} />}
+          {tab === "legacy" && <LegacyHall legacy={legacy} emp={emp} />}
+          {tab === "career" && (
+            <>
+              <RankLadder current={emp.currentRank} />
+              <CareerTree nodes={emp.career} />
+            </>
+          )}
           {tab === "partner" && <PartnerPath currentKey={emp.partnerStage} expanded />}
           {tab === "reviews" && <ReviewsPanel reviews={emp.reviews} />}
-          {tab === "achievements" && (
-            <>
-              <AchievementCollection items={emp.collection} />
-              <AchievementsGrid stars={emp.stars} />
-            </>
-          )}
         </div>
 
 
         <footer className="mt-12 border-t border-border pt-6 text-center text-xs text-muted-foreground">
-          The Guild Ledger · prototype · all hunters depicted are fictional
+          The Guild Ledger · a hunter's adventure journal · all hunters depicted are fictional
         </footer>
       </div>
     </div>
@@ -96,7 +90,7 @@ function HunterHeader() {
           <div className="font-display text-lg font-semibold tracking-widest text-gold uppercase">
             The Guild Ledger
           </div>
-          <div className="text-xs text-muted-foreground">Hunter growth & partner registry</div>
+          <div className="text-xs text-muted-foreground">Adventure journal of a guild hunter</div>
         </div>
       </div>
       <div className="hidden text-right text-xs text-muted-foreground sm:block">
@@ -128,12 +122,10 @@ function CrestIcon() {
 
 /* ----------------------------- Profile ----------------------------- */
 
-function ProfileCard(props: {
-  name: string; title: string; avatar: string; rank: RankKey; grade: Grade; starCount: number; joinedOn: string;
-}) {
-  const rank = HUNTER_RANKS.find(r => r.key === props.rank)!;
-  const grade = GRADE_META[props.grade];
-  const years = Math.max(1, new Date().getFullYear() - new Date(props.joinedOn).getFullYear());
+function ProfileCard({ emp, legacy }: { emp: Employee; legacy: ReturnType<typeof computeLegacy> }) {
+  const rank = HUNTER_RANKS.find(r => r.key === emp.currentRank)!;
+  const grade = GRADE_META[emp.currentGrade];
+  const years = Math.max(1, new Date().getFullYear() - new Date(emp.joinedOn).getFullYear());
 
   return (
     <section className="card-ornate-gold relative overflow-hidden p-6 sm:p-8">
@@ -147,19 +139,23 @@ function ProfileCard(props: {
               boxShadow: `0 0 0 2px ${rank.color}, 0 0 24px -4px ${rank.color}`,
             }}
           >
-            {props.avatar}
+            {emp.avatar}
           </div>
           <div>
-            <h1 className="font-display text-2xl text-foreground sm:text-3xl">{props.name}</h1>
-            <p className="text-sm text-muted-foreground">{props.title}</p>
+            <div className="text-[10px] uppercase tracking-[0.25em] text-gold">{legacy.title.name}</div>
+            <h1 className="font-display text-2xl text-foreground sm:text-3xl">{emp.name}</h1>
+            <p className="text-sm text-muted-foreground">{emp.guildTitle}</p>
             <p className="mt-1 text-xs text-muted-foreground">Sworn to the guild for {years} year{years > 1 ? "s" : ""}</p>
+            <div className="mt-2 flex items-center gap-2 text-lg leading-none" aria-label={`Legacy: ${legacy.suns} suns, ${legacy.moons} moons, ${legacy.stars} stars`}>
+              <LegacyGlyphs suns={legacy.suns} moons={legacy.moons} stars={legacy.stars} compact />
+            </div>
           </div>
         </div>
 
         <div className="grid flex-1 grid-cols-3 gap-3 sm:gap-4">
           <Stat label="Rank" value={rank.name.replace(" Hunter", "")} sub={rank.subtitle} color={rank.color} />
-          <Stat label="This Month" value={`Grade ${props.grade}`} sub={grade.label} color={grade.color} />
-          <Stat label="Stars" value={String(props.starCount)} sub="achievements" color="var(--color-gold)" />
+          <Stat label="This Month" value={`Grade ${emp.currentGrade}`} sub={grade.label} color={grade.color} />
+          <Stat label="Legacy" value={`${legacy.total}★`} sub="lifetime stars" color="var(--color-gold)" />
         </div>
       </div>
     </section>
@@ -180,10 +176,11 @@ function Stat({ label, value, sub, color }: { label: string; value: string; sub:
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: "overview",     label: "Overview" },
-  { key: "career",       label: "Career Tree" },
-  { key: "partner",      label: "Partner Path" },
-  { key: "reviews",      label: "Monthly Reviews" },
   { key: "achievements", label: "Achievements" },
+  { key: "legacy",       label: "Legacy" },
+  { key: "career",       label: "Rank & Career" },
+  { key: "partner",      label: "Partner Path" },
+  { key: "reviews",      label: "Reviews" },
 ];
 
 function Tabs({ value, onChange }: { value: TabKey; onChange: (k: TabKey) => void }) {
@@ -212,64 +209,90 @@ function Tabs({ value, onChange }: { value: TabKey; onChange: (k: TabKey) => voi
   );
 }
 
-/* ----------------------------- ABCD Panel ----------------------------- */
+/* ----------------------------- Current Grade ----------------------------- */
 
-function ABCDPanel({ current, history }: { current: Grade; history: { month: string; grade: Grade }[] }) {
+function CurrentGradeCard({ current }: { current: Grade }) {
+  const meta = GRADE_META[current];
   return (
     <section className="card-ornate p-6">
       <SectionHeader
-        eyebrow="Monthly Standing"
-        title="ABCD Grading"
-        hint="Current month's contribution & consistency. Resets each month. Does not change rank."
+        eyebrow="This Month's Wind"
+        title="Monthly Grade"
+        hint="Resets every month. Affects bonuses and seasonal rewards only. Does not change rank."
       />
-
-      <div className="mt-5 grid gap-3 sm:grid-cols-4">
+      <div className="mt-5 flex items-center gap-5 rounded-md border p-5"
+        style={{
+          borderColor: meta.color,
+          background: `linear-gradient(180deg, color-mix(in oklch, ${meta.color} 18%, transparent), transparent)`,
+          boxShadow: `0 0 30px -10px ${meta.color}`,
+        }}
+      >
+        <div className="font-display text-7xl leading-none" style={{ color: meta.color }}>{current}</div>
+        <div>
+          <div className="font-display text-xl" style={{ color: meta.color }}>{meta.label}</div>
+          <div className="text-sm text-muted-foreground">{meta.tagline}</div>
+        </div>
+      </div>
+      <div className="mt-3 grid grid-cols-4 gap-2">
         {(["A","B","C","D"] as Grade[]).map(g => {
-          const meta = GRADE_META[g];
-          const active = g === current;
+          const m = GRADE_META[g];
+          const on = g === current;
           return (
-            <div
-              key={g}
-              className={`rounded-md border p-4 transition-all ${active ? "scale-[1.02]" : "opacity-60"}`}
-              style={{
-                borderColor: active ? meta.color : "var(--color-border)",
-                background: active
-                  ? `linear-gradient(180deg, color-mix(in oklch, ${meta.color} 18%, transparent), transparent)`
-                  : "transparent",
-                boxShadow: active ? `0 0 24px -8px ${meta.color}` : undefined,
-              }}
+            <div key={g} className={`rounded border px-2 py-1.5 text-center text-[11px] ${on ? "" : "opacity-50"}`}
+              style={{ borderColor: on ? m.color : "var(--color-border)" }}
             >
-              <div className="flex items-baseline justify-between">
-                <div className="font-display text-3xl" style={{ color: meta.color }}>{g}</div>
-                {active && <span className="text-[10px] uppercase tracking-widest text-gold">Current</span>}
-              </div>
-              <div className="mt-1 font-display text-sm">{meta.label}</div>
-              <div className="text-xs text-muted-foreground">{meta.tagline}</div>
+              <div className="font-display text-sm" style={{ color: m.color }}>{g}</div>
+              <div className="text-muted-foreground">{m.label}</div>
             </div>
           );
         })}
       </div>
+    </section>
+  );
+}
 
-      <div className="mt-6">
-        <div className="mb-2 text-xs uppercase tracking-widest text-muted-foreground">Last 6 months</div>
-        <div className="flex items-end gap-2">
+/* ----------------------------- ABCD Panel (12mo history) ----------------------------- */
+
+function ABCDPanel({ current, history }: { current: Grade; history: { month: string; grade: Grade }[] }) {
+  void current;
+  return (
+    <section className="card-ornate p-6">
+      <SectionHeader
+        eyebrow="Voyage Log"
+        title="Last 12 Months · Grade History"
+        hint="A record of consistency. Each month stands on its own."
+      />
+      <div className="mt-5">
+        <div className="flex items-end gap-1.5 sm:gap-2">
           {history.map(h => {
             const meta = GRADE_META[h.grade];
-            const heights: Record<Grade, string> = { A: "h-20", B: "h-16", C: "h-11", D: "h-6" };
+            const heights: Record<Grade, string> = { A: "h-24", B: "h-20", C: "h-12", D: "h-6" };
             return (
               <div key={h.month} className="flex flex-1 flex-col items-center gap-1">
                 <div className={`w-full rounded-sm ${heights[h.grade]}`} style={{ background: meta.color, opacity: 0.85 }} />
-                <div className="text-[10px] text-muted-foreground">{h.month.slice(5)}</div>
-                <div className="font-display text-xs" style={{ color: meta.color }}>{h.grade}</div>
+                <div className="text-[9px] text-muted-foreground">{h.month.slice(5)}</div>
+                <div className="font-display text-[11px]" style={{ color: meta.color }}>{h.grade}</div>
               </div>
             );
           })}
         </div>
       </div>
 
-      <p className="mt-5 rounded-md border border-border bg-ink/40 p-3 text-xs text-muted-foreground">
-        Grading affects yearly bonuses and seasonal rewards. It is independent from Rank (capability) and Achievements (history).
-      </p>
+      <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {(["A","B","C","D"] as Grade[]).map(g => {
+          const count = history.filter(h => h.grade === g).length;
+          const m = GRADE_META[g];
+          return (
+            <div key={g} className="rounded border border-border bg-ink/40 px-3 py-2">
+              <div className="flex items-baseline justify-between">
+                <span className="font-display text-base" style={{ color: m.color }}>{g}</span>
+                <span className="font-display text-sm">×{count}</span>
+              </div>
+              <div className="text-[10px] text-muted-foreground">{m.label}</div>
+            </div>
+          );
+        })}
+      </div>
     </section>
   );
 }
@@ -280,7 +303,7 @@ function RankLadder({ current }: { current: RankKey }) {
   const currentIdx = HUNTER_RANKS.findIndex(r => r.key === current);
   return (
     <section className="card-ornate p-6">
-      <SectionHeader eyebrow="Capability Certification" title="Hunter Rank" hint="Rank never decreases. It unlocks opportunities, not bonuses." />
+      <SectionHeader eyebrow="Permanent Certification" title="Hunter Rank" hint="Rank never decreases. It is a record of proven capability — not a score." />
       <ol className="mt-5 space-y-2">
         {HUNTER_RANKS.map((r, i) => {
           const achieved = i <= currentIdx;
@@ -301,7 +324,7 @@ function RankLadder({ current }: { current: RankKey }) {
                   </span>
                   <span className="text-[11px] text-muted-foreground">{r.subtitle}</span>
                   {isCurrent && <span className="rounded-full bg-gold/15 px-2 py-0.5 text-[10px] uppercase tracking-widest text-gold">You are here</span>}
-                  {r.locked && !achieved && <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Locked</span>}
+                  {r.locked && !achieved && <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Sealed</span>}
                 </div>
                 <div className="text-xs text-muted-foreground">{r.description}</div>
               </div>
@@ -342,9 +365,9 @@ function PartnerPath({ currentKey, expanded }: { currentKey: string; expanded?: 
   return (
     <section className="card-ornate p-6">
       <SectionHeader
-        eyebrow="What can I build?"
+        eyebrow="The Long Journey"
         title="Partner Tree"
-        hint="Leadership, ownership, business mindset. Separate from craft."
+        hint="Ownership mindset and leadership. A path entirely separate from rank or grade."
       />
 
       <div className="mt-5 space-y-3">
@@ -376,25 +399,20 @@ function PartnerPath({ currentKey, expanded }: { currentKey: string; expanded?: 
                   {!reached && <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Sealed</span>}
                 </div>
                 <p className="text-xs text-muted-foreground">{node.blurb}</p>
+                {(expanded || isCurrent) && (
+                  <ul className="mt-2 space-y-1 text-[11px] text-muted-foreground">
+                    {node.requirements.map((req, j) => (
+                      <li key={j} className="flex gap-1.5">
+                        <span className="text-gold">◆</span><span>{req}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             </div>
           );
         })}
       </div>
-
-      {expanded && (
-        <div className="mt-5 rounded-md border border-border bg-ink/40 p-4 text-xs text-muted-foreground">
-          <div className="mb-2 font-display text-sm text-foreground">General expectations</div>
-          <ul className="list-inside list-disc space-y-1">
-            <li>Strong performance record across multiple seasons</li>
-            <li>Multiple Career Tree branches developed</li>
-            <li>Demonstrated leadership and mentorship</li>
-            <li>Understanding of operations, branding, business development</li>
-            <li>Long-term commitment to the guild</li>
-          </ul>
-          <p className="mt-3 italic">Specific gates are not revealed. Captains nominate candidates.</p>
-        </div>
-      )}
     </section>
   );
 }
@@ -548,60 +566,6 @@ function formatMonth(s: string) {
   return new Date(y, m - 1, 1).toLocaleString(undefined, { month: "long", year: "numeric" });
 }
 
-/* ----------------------------- Achievements ----------------------------- */
-
-function RecentStars({ stars }: { stars: typeof SAMPLE_EMPLOYEE.stars }) {
-  return (
-    <section className="card-ornate p-6">
-      <SectionHeader eyebrow="Latest Trophies" title="Recent Achievement Stars" />
-      <div className="mt-5 grid gap-3 sm:grid-cols-2">
-        {stars.map(s => <StarCard key={s.id} star={s} />)}
-      </div>
-    </section>
-  );
-}
-
-function AchievementsGrid({ stars }: { stars: typeof SAMPLE_EMPLOYEE.stars }) {
-  return (
-    <section className="card-ornate p-6">
-      <SectionHeader eyebrow="Hall of Records" title="All Achievement Stars" hint="A historical record. Stars are never taken back." />
-      <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {stars.map(s => <StarCard key={s.id} star={s} />)}
-      </div>
-    </section>
-  );
-}
-
-function StarCard({ star }: { star: typeof SAMPLE_EMPLOYEE.stars[number] }) {
-  return (
-    <div className="flex gap-3 rounded-md border border-border bg-ink/40 p-3">
-      <div className="grid h-12 w-12 shrink-0 place-items-center rounded-md"
-        style={{ background: "radial-gradient(circle at 30% 30%, oklch(0.85 0.16 85), oklch(0.45 0.1 60))" }}
-      >
-        <svg viewBox="0 0 24 24" className="h-6 w-6" fill="oklch(0.18 0.03 250)">
-          <path d="M12 2l2.9 6.6L22 9.7l-5 4.9 1.2 7L12 18.3 5.8 21.6 7 14.6 2 9.7l7.1-1.1z" />
-        </svg>
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="font-display text-sm leading-tight">{star.title}</div>
-        <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
-          <span className="rounded-full border border-border px-1.5 py-0.5">{star.category}</span>
-          <span>{star.earnedOn}</span>
-          <Rarity n={star.rarity} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Rarity({ n }: { n: number }) {
-  return (
-    <span aria-label={`Rarity ${n} of 5`} className="text-gold tracking-tight">
-      {"★".repeat(n)}<span className="opacity-30">{"★".repeat(5 - n)}</span>
-    </span>
-  );
-}
-
 /* ----------------------------- Shared ----------------------------- */
 
 function SectionHeader({ eyebrow, title, hint }: { eyebrow: string; title: string; hint?: string }) {
@@ -687,7 +651,7 @@ function NextRankProgress({ current, progress }: { current: RankKey; progress: R
 
   return (
     <section className="card-ornate p-6">
-      <SectionHeader eyebrow="Ascension Trial" title="Next Rank Progress" />
+      <SectionHeader eyebrow="Ascension Trial" title="Path to Next Rank" hint="Rank only moves upward. The trial is permanent once cleared." />
 
       <div className="mt-5 flex items-center justify-between gap-4">
         <RankSigil rank={curRank} size={56} />
@@ -766,7 +730,7 @@ function HunterAttributes({ attributes }: { attributes: Attribute[] }) {
         title="Hunter Influence"
         hint="The five powers that shape a hunter's reach."
       />
-      <ul className="mt-5 space-y-3">
+      <ul className="mt-5 grid gap-3 sm:grid-cols-2">
         {attributes.map(a => (
           <li key={a.key} className="flex items-center gap-3 rounded-md border border-border bg-ink/40 p-3">
             <div className="grid h-10 w-10 shrink-0 place-items-center rounded-md border border-gold/30 bg-ink text-lg">
@@ -794,71 +758,256 @@ function StarRow({ n }: { n: number }) {
   );
 }
 
-/* ----------------------------- Achievement Collection ----------------------------- */
+/* ----------------------------- Achievements Ledger (repeatable) ----------------------------- */
 
-const RARITY_META: Record<CollectionAchievement["rarity"], { color: string; ring: string }> = {
-  Common:    { color: "oklch(0.78 0.02 250)", ring: "oklch(0.78 0.02 250 / 0.4)" },
-  Rare:      { color: "oklch(0.72 0.16 230)", ring: "oklch(0.72 0.16 230 / 0.5)" },
-  Epic:      { color: "oklch(0.7 0.2 300)",   ring: "oklch(0.7 0.2 300 / 0.5)" },
-  Legendary: { color: "oklch(0.82 0.16 78)",  ring: "oklch(0.82 0.16 78 / 0.6)" },
+const DIFFICULTY_COLOR: Record<string, string> = {
+  Easy:      "oklch(0.78 0.12 150)",
+  Standard:  "oklch(0.78 0.02 250)",
+  Hard:      "oklch(0.72 0.16 230)",
+  Epic:      "oklch(0.7 0.2 300)",
+  Legendary: "oklch(0.82 0.16 78)",
 };
 
-function AchievementCollection({ items }: { items: CollectionAchievement[] }) {
-  const unlocked = items.filter(i => i.unlocked).length;
+function AchievementsLedger({ items }: { items: RepeatableAchievement[] }) {
+  const totalEarnedStars = items.reduce((s, a) => s + a.history.reduce((x, h) => x + h.stars, 0), 0);
   return (
     <section className="card-ornate p-6">
       <SectionHeader
-        eyebrow="Trophy Hall"
-        title="Achievement Collection"
-        hint={`${unlocked} of ${items.length} relics claimed. The rest await their hunter.`}
+        eyebrow="Hall of Records"
+        title="Achievement Ledger"
+        hint="Achievements are repeatable. Earning the same achievement again grants another star."
       />
-      <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        {items.map(a => <BadgeCard key={a.id} a={a} />)}
+      <div className="mt-3 text-xs text-muted-foreground">
+        <span className="text-gold font-display">{totalEarnedStars}★</span> stars earned across <span className="text-foreground">{items.length}</span> achievements in this ledger.
+      </div>
+      <div className="mt-5 grid gap-3 lg:grid-cols-2">
+        {items.map(a => <AchievementRow key={a.id} a={a} />)}
       </div>
     </section>
   );
 }
 
-function BadgeCard({ a }: { a: CollectionAchievement }) {
-  const meta = RARITY_META[a.rarity];
-  const locked = !a.unlocked;
+function AchievementRow({ a }: { a: RepeatableAchievement }) {
+  const stars = a.history.reduce((s, h) => s + h.stars, 0);
+  const times = a.history.length;
+  const last = a.history[a.history.length - 1];
+  const diffColor = DIFFICULTY_COLOR[a.difficulty] ?? "var(--color-gold)";
   return (
-    <div
-      className="relative flex flex-col items-center gap-2 rounded-md border p-3 text-center transition-all"
+    <div className="rounded-md border border-border bg-ink/40 p-4">
+      <div className="flex items-start gap-3">
+        <div
+          className="grid h-12 w-12 shrink-0 place-items-center rounded-md border text-xl"
+          style={{
+            borderColor: diffColor,
+            background: `radial-gradient(circle at 30% 30%, color-mix(in oklch, ${diffColor} 35%, transparent), oklch(0.2 0.03 250))`,
+            boxShadow: times > 0 ? `0 0 14px -6px ${diffColor}` : undefined,
+          }}
+        >
+          {a.icon}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <span className="font-display text-sm">{a.name}</span>
+            <span className="font-display text-sm text-gold">{stars}★</span>
+          </div>
+          <div className="text-[11px] text-muted-foreground">{a.description}</div>
+          <div className="mt-2 flex flex-wrap gap-1.5 text-[10px] uppercase tracking-widest">
+            <Chip>{a.type}</Chip>
+            <Chip color={diffColor}>{a.difficulty}</Chip>
+            <Chip>Resets · {a.resetCycle}</Chip>
+            <Chip>{a.repeatable ? "Repeatable" : "One-Time"}</Chip>
+            <Chip>Max {a.maxPerCycle}/cycle</Chip>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-2 text-[11px]">
+        <Stat2 label="Times Earned" value={String(times)} />
+        <Stat2 label="Stars Generated" value={`${stars}★`} />
+        <Stat2 label="Reward" value={a.rewardText} />
+        <Stat2 label="Latest" value={last ? last.period : "—"} />
+      </div>
+
+      {times > 0 ? (
+        <div className="mt-3">
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">History</div>
+          <ol className="mt-1.5 space-y-1">
+            {a.history.slice().reverse().map((h, i) => (
+              <li key={i} className="flex items-center justify-between rounded border border-border/70 bg-ink/60 px-2 py-1 text-[11px]">
+                <span className="text-foreground">{h.period}</span>
+                <span className="flex items-center gap-2">
+                  <span className="text-muted-foreground">{h.date}</span>
+                  <span className="text-gold">{"★".repeat(h.stars)}</span>
+                </span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      ) : (
+        <div className="mt-3 rounded border border-dashed border-border/60 bg-ink/40 px-3 py-2 text-[11px] italic text-muted-foreground">
+          Not yet claimed. {a.repeatable ? "Earn it and the ledger will remember every time." : "A relic yet to be forged — a one-time honor."}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Chip({ children, color }: { children: React.ReactNode; color?: string }) {
+  return (
+    <span
+      className="rounded-full border px-1.5 py-0.5"
       style={{
-        borderColor: locked ? "var(--color-border)" : meta.ring,
-        background: locked
-          ? "oklch(0.18 0.02 250 / 0.6)"
-          : `linear-gradient(180deg, color-mix(in oklch, ${meta.color} 10%, transparent), transparent)`,
-        boxShadow: locked ? undefined : `0 0 18px -8px ${meta.color}`,
+        borderColor: color ?? "var(--color-border)",
+        color: color ?? "var(--color-muted-foreground)",
       }}
     >
-      <div
-        className="grid h-14 w-14 place-items-center rounded-full border-2 text-2xl"
-        style={{
-          borderColor: locked ? "var(--color-border)" : meta.color,
-          background: locked
-            ? "oklch(0.22 0.02 250)"
-            : `radial-gradient(circle at 30% 30%, color-mix(in oklch, ${meta.color} 60%, transparent), oklch(0.2 0.03 250))`,
-          color: locked ? "oklch(0.5 0.02 250)" : undefined,
-          filter: locked ? "grayscale(1) brightness(0.7)" : undefined,
-        }}
-      >
-        {locked ? (
-          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" />
-          </svg>
-        ) : a.icon}
+      {children}
+    </span>
+  );
+}
+
+function Stat2({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded border border-border/70 bg-ink/60 px-2 py-1.5">
+      <div className="text-[9px] uppercase tracking-widest text-muted-foreground">{label}</div>
+      <div className="font-display text-sm">{value}</div>
+    </div>
+  );
+}
+
+/* ----------------------------- Legacy ----------------------------- */
+
+function LegacyGlyphs({ suns, moons, stars, compact }: { suns: number; moons: number; stars: number; compact?: boolean }) {
+  const size = compact ? "text-base" : "text-3xl";
+  const cap = (n: number, max = 5) => Math.min(n, max);
+  return (
+    <span className={`flex items-center gap-1.5 ${size}`}>
+      {suns > 0 && (
+        <span className="flex items-center gap-0.5" title={`${suns} suns`}>
+          {"☀".repeat(cap(suns))}{suns > 5 && <span className="text-xs text-muted-foreground">×{suns}</span>}
+        </span>
+      )}
+      {moons > 0 && (
+        <span className="flex items-center gap-0.5" title={`${moons} moons`}>
+          {"☾".repeat(cap(moons))}{moons > 5 && <span className="text-xs text-muted-foreground">×{moons}</span>}
+        </span>
+      )}
+      {stars > 0 && (
+        <span className="flex items-center gap-0.5 text-gold" title={`${stars} stars`}>
+          {"★".repeat(cap(stars))}{stars > 5 && <span className="text-xs text-muted-foreground">×{stars}</span>}
+        </span>
+      )}
+      {suns + moons + stars === 0 && <span className="text-xs text-muted-foreground">No legacy yet</span>}
+    </span>
+  );
+}
+
+function LegacyBanner({ legacy }: { legacy: ReturnType<typeof computeLegacy> }) {
+  const toNext = legacy.next ? legacy.next.minStars - legacy.total : 0;
+  return (
+    <section className="card-ornate-gold p-6">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <div className="text-[10px] uppercase tracking-[0.25em] text-gold">Lifetime Legacy</div>
+          <div className="mt-1 font-display text-2xl">{legacy.title.name}</div>
+          <div className="text-xs italic text-muted-foreground">{legacy.title.flavor}</div>
+        </div>
+        <div className="text-right">
+          <LegacyGlyphs suns={legacy.suns} moons={legacy.moons} stars={legacy.stars} />
+          <div className="mt-1 text-xs text-muted-foreground">
+            Lifetime Stars: <span className="font-display text-foreground">{legacy.total}</span>
+          </div>
+          {legacy.next && (
+            <div className="text-[11px] text-muted-foreground">
+              {toNext}★ to <span className="text-gold">{legacy.next.name}</span>
+            </div>
+          )}
+        </div>
       </div>
-      <div className={`font-display text-xs leading-tight ${locked ? "text-muted-foreground" : ""}`}>
-        {a.name}
-      </div>
-      <div className="text-[10px] uppercase tracking-widest" style={{ color: locked ? "var(--color-muted-foreground)" : meta.color }}>
-        {locked ? "Sealed" : a.rarity}
-      </div>
-      <div className="text-[10px] leading-snug text-muted-foreground">
-        {locked ? (a.hint ?? a.description) : a.description}
-      </div>
+    </section>
+  );
+}
+
+function LegacyHall({ legacy, emp }: { legacy: ReturnType<typeof computeLegacy>; emp: Employee }) {
+  const earned = emp.achievements.reduce((s, a) => s + a.history.reduce((x, h) => x + h.stars, 0), 0);
+  return (
+    <div className="space-y-6">
+      <section className="card-ornate-gold p-8 text-center">
+        <div className="text-[10px] uppercase tracking-[0.3em] text-gold">Lifetime Legacy</div>
+        <h2 className="mt-2 font-display text-3xl">{legacy.title.name}</h2>
+        <p className="mt-1 text-sm italic text-muted-foreground">{legacy.title.flavor}</p>
+        <div className="mt-5 flex justify-center">
+          <LegacyGlyphs suns={legacy.suns} moons={legacy.moons} stars={legacy.stars} />
+        </div>
+        <div className="mt-3 font-display text-xl text-gold">{legacy.total}★ <span className="text-sm text-muted-foreground">Lifetime Stars</span></div>
+        <p className="mx-auto mt-4 max-w-md text-xs text-muted-foreground">
+          10 stars become a moon. 10 moons become a sun. Legacy never resets. This is the record carried across every season.
+        </p>
+      </section>
+
+      <section className="card-ornate p-6">
+        <SectionHeader eyebrow="The Conversion" title="How Legacy is Forged" />
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <ConversionCard label="Star" glyph="★" desc="Earned from a single achievement." count={legacy.stars} />
+          <ConversionCard label="Moon" glyph="☾" desc="10 stars become a moon." count={legacy.moons} />
+          <ConversionCard label="Sun"  glyph="☀" desc="10 moons become a sun." count={legacy.suns} />
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div className="rounded border border-border bg-ink/40 p-3 text-xs">
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">From this ledger</div>
+            <div className="font-display text-base">{earned}★ tracked</div>
+          </div>
+          <div className="rounded border border-border bg-ink/40 p-3 text-xs">
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">From earlier seasons</div>
+            <div className="font-display text-base">{emp.pastLegacyStars}★ archived</div>
+          </div>
+        </div>
+      </section>
+
+      <section className="card-ornate p-6">
+        <SectionHeader eyebrow="Titles of the Guild" title="Legacy Titles" hint="Titles awarded as your lifetime legacy grows." />
+        <ol className="mt-4 space-y-2">
+          {[
+            { name: "Wanderer",           min: 0,   glyph: "·" },
+            { name: "Pathfinder",         min: 10,  glyph: "☾" },
+            { name: "Voyager",            min: 30,  glyph: "☾☾☾" },
+            { name: "Shipbuilder",        min: 50,  glyph: "☾☾☾☾☾" },
+            { name: "Master Shipbuilder", min: 100, glyph: "☀" },
+            { name: "Guild Elder",        min: 300, glyph: "☀☀☀" },
+            { name: "Living Legend",      min: 500, glyph: "☀☀☀☀☀" },
+          ].map(t => {
+            const reached = legacy.total >= t.min;
+            const current = legacy.title.name === t.name;
+            return (
+              <li key={t.name}
+                className={`flex items-center justify-between rounded-md border p-3 ${current ? "border-gold" : "border-border"} ${reached ? "" : "opacity-50"}`}
+                style={current ? { boxShadow: "0 0 18px -6px var(--color-gold)" } : undefined}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-lg" style={{ color: reached ? "var(--color-gold)" : undefined }}>{t.glyph}</span>
+                  <div>
+                    <div className={`font-display text-sm ${current ? "text-gold" : ""}`}>{t.name}</div>
+                    <div className="text-[11px] text-muted-foreground">{t.min}★ lifetime</div>
+                  </div>
+                </div>
+                {current && <span className="rounded-full bg-gold/15 px-2 py-0.5 text-[10px] uppercase tracking-widest text-gold">Bearing now</span>}
+                {!reached && <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Sealed</span>}
+              </li>
+            );
+          })}
+        </ol>
+      </section>
+    </div>
+  );
+}
+
+function ConversionCard({ label, glyph, desc, count }: { label: string; glyph: string; desc: string; count: number }) {
+  return (
+    <div className="rounded-md border border-border bg-ink/40 p-4 text-center">
+      <div className="font-display text-3xl text-gold">{glyph}</div>
+      <div className="mt-1 font-display text-sm">{label}</div>
+      <div className="text-[11px] text-muted-foreground">{desc}</div>
+      <div className="mt-2 text-xs">Currently held: <span className="font-display text-foreground">{count}</span></div>
     </div>
   );
 }
