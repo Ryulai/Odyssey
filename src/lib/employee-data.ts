@@ -25,7 +25,7 @@ export const HUNTER_RANKS: RankInfo[] = [
   { key: "gold",         name: "Gold Hunter",         subtitle: "Professional",       description: "Consistent professional output.",color: "var(--color-rank-gold)" },
   { key: "platinum",     name: "Platinum Hunter",     subtitle: "Elite",              description: "Influential contributor.",       color: "var(--color-rank-platinum)" },
   { key: "diamond",      name: "Diamond Hunter",      subtitle: "Veteran Master",     description: "Defines excellence in the craft.", color: "var(--color-rank-diamond)" },
-  { key: "blackdiamond", name: "Black Diamond Hunter",subtitle: "Guild Pillar",       description: "Builds and shapes whole teams.", color: "oklch(0.45 0.05 280)" },
+  { key: "blackdiamond", name: "Black Diamond Hunter",subtitle: "Fleet Pillar",       description: "Builds and shapes whole teams.", color: "oklch(0.45 0.05 280)" },
   { key: "mythic",       name: "Mythic Hunter",       subtitle: "Department Legend",  description: "Locked tier.",                    color: "var(--color-rank-mythic)", locked: true },
   { key: "legend",       name: "Legend Hunter",       subtitle: "Company Legend",     description: "Locked tier.",                    color: "var(--color-rank-legend)", locked: true },
 ];
@@ -213,15 +213,15 @@ export interface OperationalEmployee {
 export const PARTNER_PATH: PartnerNode[] = [
   { key: "explorer",    name: "Explorer",          blurb: "Curious about the business beyond their craft.",  unlocked: true,  current: false,
     requirements: ["Show interest beyond your craft", "Shadow a senior on one cross-team initiative"] },
-  { key: "guardian",    name: "Guardian",          blurb: "Mentors juniors, protects guild standards.",      unlocked: true,  current: true,
-    requirements: ["Mentor at least 2 hunters to their first rank up", "Uphold guild standards in reviews"] },
+  { key: "guardian",    name: "Guardian",          blurb: "Mentors juniors, protects fleet standards.",      unlocked: true,  current: true,
+    requirements: ["Mentor at least 2 hunters to their first rank up", "Uphold fleet standards in reviews"] },
   { key: "candidate",   name: "Partner Candidate", blurb: "Demonstrates cross-functional leadership.",       unlocked: false,
     requirements: ["Black Diamond rank", "Lead one cross-team campaign", "Captain's nomination"] },
   { key: "partner",     name: "Partner",           blurb: "Trusted captain of a business line.",             unlocked: false,
-    requirements: ["Own a sub-line for 2 seasons", "Sustain Guild Elder legacy"] },
+    requirements: ["Own a sub-line for 2 seasons", "Sustain Fleet Elder legacy"] },
   { key: "business",    name: "Business Partner",  blurb: "Owns a P&L and grows new ventures.",              unlocked: false,
     requirements: ["Launch and sustain a new venture", "Board-level review"] },
-  { key: "shareholder", name: "Shareholder",       blurb: "Long-term steward of the guild.",                 unlocked: false,
+  { key: "shareholder", name: "Shareholder",       blurb: "Long-term steward of the fleet.",                 unlocked: false,
     requirements: ["Decade of stewardship", "Founders' invitation"] },
 ];
 
@@ -239,7 +239,7 @@ export const LEGACY_TITLES: LegacyTitle[] = [
   { name: "Voyager",           minStars: 30,  flavor: "Three moons. The map widens." },
   { name: "Shipbuilder",       minStars: 50,  flavor: "A sun rises. You forge what others sail." },
   { name: "Master Shipbuilder",minStars: 150, flavor: "Three suns. Your fleet is your own." },
-  { name: "Guild Elder",       minStars: 250, flavor: "Five suns. Your name carries weight." },
+  { name: "Fleet Elder",       minStars: 250, flavor: "Five suns. Your name carries weight." },
   { name: "Living Legend",     minStars: 500, flavor: "Ten suns. Songs are sung in your name." },
 ];
 
@@ -303,11 +303,11 @@ export const SAMPLE_EMPLOYEE: Employee = {
     { id: "k1", label: "Toolsmith",          branch: "craft",    tier: 1, status: "mastered",  desc: "Master the CRM forge." },
     { id: "k2", label: "Compass Maker",      branch: "craft",    tier: 2, status: "active",    desc: "Build a reusable playbook." },
     { id: "k3", label: "Engine Builder",     branch: "craft",    tier: 3, status: "locked",    desc: "Ship an internal system." },
-    { id: "k4", label: "Forgemaster",        branch: "craft",    tier: 4, status: "locked",    desc: "Define a guild-wide standard." },
-    { id: "l1", label: "Guild Codex",        branch: "lore",     tier: 1, status: "mastered",  desc: "Learn the guild charter." },
+    { id: "k4", label: "Forgemaster",        branch: "craft",    tier: 4, status: "locked",    desc: "Define a fleet-wide standard." },
+    { id: "l1", label: "Ship's Codex",        branch: "lore",     tier: 1, status: "mastered",  desc: "Learn the ship's charter." },
     { id: "l2", label: "Market Almanac",     branch: "lore",     tier: 2, status: "mastered",  desc: "Speak the customer's language." },
-    { id: "l3", label: "Rival Studies",      branch: "lore",     tier: 3, status: "available", desc: "Brief the guild on a rival." },
-    { id: "l4", label: "Loremaster",         branch: "lore",     tier: 4, status: "locked",    desc: "Author canon for the guild." },
+    { id: "l3", label: "Rival Studies",      branch: "lore",     tier: 3, status: "available", desc: "Brief the fleet on a rival." },
+    { id: "l4", label: "Loremaster",         branch: "lore",     tier: 4, status: "locked",    desc: "Author canon for the fleet." },
   ],
   reviews: [
     { month: "2026-05", grade: "A", reviewer: "Captain Rho",
@@ -379,7 +379,7 @@ export const SAMPLE_EMPLOYEE: Employee = {
     },
     {
       id: "attention-seeker", name: "Attention Seeker", icon: "📢",
-      description: "Top engagement on a guild campaign.",
+      description: "Top engagement on a fleet campaign.",
       type: "Monthly", difficulty: "Standard", resetCycle: "Monthly",
       repeatable: true, maxPerCycle: 1, rewardText: "+1 Star per month",
       history: [
@@ -417,8 +417,8 @@ export const SAMPLE_EMPLOYEE: Employee = {
       ],
     },
     {
-      id: "guild-legend", name: "Guild Legend", icon: "🌟",
-      description: "Voted by peers as the guild's heart of the year.",
+      id: "guild-legend", name: "Fleet Legend", icon: "🌟",
+      description: "Voted by peers as the fleet's heart of the year.",
       type: "Annual", difficulty: "Legendary", resetCycle: "Yearly",
       repeatable: true, maxPerCycle: 1, rewardText: "+5 Stars per year",
       history: [],
@@ -436,7 +436,7 @@ export const SAMPLE_EMPLOYEE: Employee = {
     },
     {
       id: "game-changer", name: "Game Changer", icon: "💎",
-      description: "Ship an innovation adopted guild-wide.",
+      description: "Ship an innovation adopted fleet-wide.",
       type: "One-Time", difficulty: "Legendary", resetCycle: "Never",
       repeatable: false, maxPerCycle: 1, rewardText: "+5 Stars · permanent",
       history: [],

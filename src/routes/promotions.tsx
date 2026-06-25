@@ -75,7 +75,7 @@ function PromotionsPage() {
                     </tr>
                   );
                 })}
-                {!data.length && <tr><td colSpan={8} className="py-6 text-center text-xs text-muted-foreground">No Hunters in the guild yet.</td></tr>}
+                {!data.length && <tr><td colSpan={8} className="py-6 text-center text-xs text-muted-foreground">No Hunters in the fleet yet.</td></tr>}
               </tbody>
             </table>
           </section>

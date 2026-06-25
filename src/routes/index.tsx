@@ -248,7 +248,7 @@ function ProfileCard({ emp, legacy }: { emp: Employee; legacy: ReturnType<typeof
             <div className="text-[10px] uppercase tracking-[0.25em] text-gold">{legacy.title.name}</div>
             <h1 className="font-display text-2xl text-foreground sm:text-3xl">{emp.name}</h1>
             <p className="text-sm text-muted-foreground">{emp.guildTitle}</p>
-            <p className="mt-1 text-xs text-muted-foreground">Sworn to the guild for {years} year{years > 1 ? "s" : ""}</p>
+            <p className="mt-1 text-xs text-muted-foreground">Sworn to the fleet for {years} year{years > 1 ? "s" : ""}</p>
             <div className="mt-2 flex items-center gap-2 text-lg leading-none" aria-label={`Legacy: ${legacy.suns} suns, ${legacy.moons} moons, ${legacy.stars} stars`}>
               <LegacyGlyphs suns={legacy.suns} moons={legacy.moons} stars={legacy.stars} compact />
             </div>
@@ -1061,7 +1061,7 @@ function LegacyHall({ legacy, emp }: { legacy: ReturnType<typeof computeLegacy>;
   allHistory.sort((a, b) => a.date.localeCompare(b.date));
   const firstEarn = allHistory[0];
   const milestones: { label: string; date?: string; detail: string }[] = [
-    { label: "Sworn to the Guild", date: emp.joinedOn, detail: emp.guildTitle },
+    { label: "Sworn to the Fleet", date: emp.joinedOn, detail: emp.guildTitle },
     ...(firstEarn ? [{ label: "First Star Earned", date: firstEarn.date, detail: `${firstEarn.icon} ${firstEarn.name}` }] : []),
     { label: "First Moon Forged", date: allHistory[9]?.date, detail: "10 lifetime stars" },
     ...(legacy.suns >= 1 ? [{ label: "First Sun Risen", date: allHistory[49]?.date, detail: "50 lifetime stars" }] : []),
@@ -1133,7 +1133,7 @@ function LegacyHall({ legacy, emp }: { legacy: ReturnType<typeof computeLegacy>;
       </section>
 
       <section className="card-ornate p-6">
-        <SectionHeader eyebrow="Titles of the Guild" title="Legacy Titles" hint="Titles awarded as your lifetime legacy grows." />
+        <SectionHeader eyebrow="Titles of the Voyage" title="Legacy Titles" hint="Titles awarded as your lifetime legacy grows." />
         <ol className="mt-4 space-y-2">
           {[
             { name: "Wanderer",           min: 0,   glyph: "·" },
@@ -1141,7 +1141,7 @@ function LegacyHall({ legacy, emp }: { legacy: ReturnType<typeof computeLegacy>;
             { name: "Voyager",            min: 30,  glyph: "🌙🌙🌙" },
             { name: "Shipbuilder",        min: 50,  glyph: "☀" },
             { name: "Master Shipbuilder", min: 150, glyph: "☀☀☀" },
-            { name: "Guild Elder",        min: 250, glyph: "☀×5" },
+            { name: "Fleet Elder",        min: 250, glyph: "☀×5" },
             { name: "Living Legend",      min: 500, glyph: "☀×10" },
           ].map(t => {
             const reached = legacy.total >= t.min;
@@ -1514,21 +1514,21 @@ const GROWTH_TREES: GrowthTree[] = [
       { name: "Explorer",          blurb: "Curious about the business beyond the craft.",
         requirements: ["Shadow a senior on one cross-team initiative"],
         rewards: ["Access to strategy briefings"] },
-      { name: "Guardian",          blurb: "Mentors juniors, protects guild standards.",
+      { name: "Guardian",          blurb: "Mentors juniors, protects fleet standards.",
         requirements: ["Mentor 2 juniors to first rank-up", "Uphold standards in reviews"],
         rewards: ["Guardian sash", "Review panel seat"] },
       { name: "Partner Candidate", blurb: "Demonstrates cross-functional leadership.",
         requirements: ["Black Diamond rank", "Lead a cross-team campaign", "Captain's nomination"],
         rewards: ["Candidate ring", "Partner forum access"] },
       { name: "Partner",           blurb: "Trusted captain of a business line.",
-        requirements: ["Own a sub-line for 2 seasons", "Sustained Guild Elder legacy"],
+        requirements: ["Own a sub-line for 2 seasons", "Sustained Fleet Elder legacy"],
         rewards: ["Partner crest", "Profit-share line"] },
       { name: "Business Partner",  blurb: "Owns a P&L and grows new ventures.",
         requirements: ["Launch and sustain a new venture", "Board-level review"],
         rewards: ["Equity grant", "Venture autonomy"] },
-      { name: "Shareholder",       blurb: "Long-term steward of the guild.",
+      { name: "Shareholder",       blurb: "Long-term steward of the fleet.",
         requirements: ["Decade of stewardship", "Founders' invitation"],
-        rewards: ["Shareholder seal", "Permanent guild council seat"] },
+        rewards: ["Shareholder seal", "Permanent admiralty seat"] },
     ],
   },
   {
@@ -1552,11 +1552,11 @@ const GROWTH_TREES: GrowthTree[] = [
         requirements: ["Mentor 3 members to a rank-up"],
         rewards: ["Mentor pin", "Quarterly mentor stipend"] },
       { name: "Master Mentor",  blurb: "Recognized teacher across departments.",
-        requirements: ["6 protégés rank-up", "Run a guild training session"],
+        requirements: ["6 protégés rank-up", "Run a fleet training session"],
         rewards: ["Master Mentor sash", "Curriculum authoring rights"] },
-      { name: "Guild Mentor",   blurb: "Shapes the next generation of the guild.",
+      { name: "Fleet Mentor",   blurb: "Shapes the next generation of the fleet.",
         requirements: ["Sustained 2+ years of mentorship leadership"],
-        rewards: ["Guild Mentor crest", "Permanent academy seat"] },
+        rewards: ["Fleet Mentor crest", "Permanent academy seat"] },
     ],
   },
   {
@@ -1582,7 +1582,7 @@ const GROWTH_TREES: GrowthTree[] = [
       { name: "Fleet Captain",    blurb: "Coordinates multiple teams toward a goal.",
         requirements: ["Run a multi-team campaign for 2 seasons"],
         rewards: ["Fleet standard", "Operational override"] },
-      { name: "Guild Commander",  blurb: "Sets direction across the guild floor.",
+      { name: "Fleet Commander",  blurb: "Sets direction across the fleet floor.",
         requirements: ["Captain nomination", "Proven multi-year influence"],
         rewards: ["Commander's mantle", "Strategy council seat"] },
     ],
@@ -1604,8 +1604,8 @@ const GROWTH_TREES: GrowthTree[] = [
       { name: "Hunter + Sniper",   blurb: "Precision closer. Specializes in high-value, low-volume hunts.",
         requirements: ["Gold Hunter", "5 enterprise closes"],
         rewards: ["Sniper's mark", "Named-account access"] },
-      { name: "Hunter + Bard",     blurb: "Voice of the guild. Owns story and stage.",
-        requirements: ["Platinum Hunter", "Headline 3 guild events"],
+      { name: "Hunter + Bard",     blurb: "Voice of the fleet. Owns story and stage.",
+        requirements: ["Platinum Hunter", "Headline 3 fleet events"],
         rewards: ["Bard's lyre", "Marketing co-sign"] },
       { name: "Hunter + Strategist", blurb: "Planner & analyst behind the field.",
         requirements: ["Diamond Hunter", "Author a winning territory plan"],
@@ -1613,7 +1613,7 @@ const GROWTH_TREES: GrowthTree[] = [
       { name: "Hunter + Host",     blurb: "Front-of-house ambassador for guests and partners.",
         requirements: ["Platinum Hunter", "Host 6 partner evenings"],
         rewards: ["Host's medallion"] },
-      { name: "Hunter + Event Planner", blurb: "Designs and runs guild gatherings end-to-end.",
+      { name: "Hunter + Event Planner", blurb: "Designs and runs crew gatherings end-to-end.",
         requirements: ["Captain (Leadership)", "Run 2 flagship events"],
         rewards: ["Planner's quill"] },
     ],
