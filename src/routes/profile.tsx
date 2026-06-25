@@ -50,15 +50,45 @@ function ProfileBody({ data }: { data: any }) {
   return (
     <div className="space-y-6">
       <CharacterSheet d={data} isShipbuilder={isShipbuilder} />
-      <div className={`grid gap-6 ${isShipbuilder ? "" : "lg:grid-cols-2"}`}>
-        <LegacyCard d={data} />
-        {!isShipbuilder && <PromotionCard d={data} />}
+      {isShipbuilder ? (
+        <ShipbuilderCard />
+      ) : (
+        <div className="grid gap-6 lg:grid-cols-2">
+          <LegacyCard d={data} />
+          <PromotionCard d={data} />
+        </div>
+      )}
+      {!isShipbuilder && <ClaimSummary d={data} />}
+      {!isShipbuilder && (
+        <div className="grid gap-6 lg:grid-cols-2">
+          <RecordsCard records={data.records} />
+          <GradesCard grades={data.grades} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ShipbuilderCard() {
+  return (
+    <section className="rounded-md border border-gold/30 bg-ink/30 p-5">
+      <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">The Shipbuilder</h2>
+      <div className="mt-1 text-xs italic text-muted-foreground">Charts the course. Builds the ship. Beyond rank.</div>
+      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        <SbStat label="Fleet Built" value="—" sub="Systems forged" />
+        <SbStat label="Voyagers Guided" value="—" sub="Crew elevated" />
+        <SbStat label="Legacy Created" value="Beyond Rank" sub="Shipbuilder" />
       </div>
-      <ClaimSummary d={data} />
-      <div className="grid gap-6 lg:grid-cols-2">
-        <RecordsCard records={data.records} />
-        <GradesCard grades={data.grades} />
-      </div>
+    </section>
+  );
+}
+
+function SbStat({ label, value, sub }: { label: string; value: string; sub: string }) {
+  return (
+    <div className="rounded-md border border-border bg-ink/40 p-3 text-center">
+      <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
+      <div className="mt-1 font-display text-lg text-gold">{value}</div>
+      <div className="text-[11px] text-muted-foreground">{sub}</div>
     </div>
   );
 }
