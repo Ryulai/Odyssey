@@ -147,13 +147,13 @@ function SubmitClaim({ userId }: { userId: string | null }) {
           )}
         </div>
         <label className="block">
-          <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">Notes</span>
+          <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">Captain Notes</span>
           <textarea rows={2} className={inputCls} value={notes} onChange={e => setNotes(e.target.value)} />
         </label>
         {msg && <div className="rounded border border-gold/30 bg-gold/5 px-3 py-2 text-xs text-gold">{msg}</div>}
         <button type="submit" disabled={busy || !achievementId || !effectiveStaffId}
           className="w-full rounded-md border border-gold bg-gold/10 px-4 py-2 font-display text-xs uppercase tracking-widest text-gold hover:bg-gold/20 disabled:opacity-50">
-          {busy ? "Submitting…" : "Submit Claim"}
+          {busy ? "Recording…" : "Record Voyage"}
         </button>
       </form>
     </section>
