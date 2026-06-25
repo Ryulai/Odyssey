@@ -201,9 +201,9 @@ function HunterHeader() {
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <Link to="/profile" className={navLink}>My Profile</Link>
-        <Link to="/claims" className={navLink}>Claims</Link>
-        {can(role, "team.recommendPromotion") && <Link to="/promotions" className={navLink}>Promotions</Link>}
-        {can(role, "evaluations.write") && <Link to="/evaluations" className={navLink}>Evaluations</Link>}
+        <Link to="/claims" className={navLink}>Harbor Records</Link>
+        {can(role, "team.recommendPromotion") && <Link to="/promotions" className={navLink}>Voyage Progression</Link>}
+        {can(role, "evaluations.write") && <Link to="/evaluations" className={navLink}>Voyage Review</Link>}
         {can(role, "admin.access") && (
           <Link to="/admin" className="rounded-md border border-gold/50 bg-gold/10 px-3 py-2 font-display text-[10px] uppercase tracking-widest text-gold hover:bg-gold/20">
             Admin
