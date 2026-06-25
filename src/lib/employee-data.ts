@@ -36,6 +36,7 @@ export interface PartnerNode {
   key: PartnerKey;
   name: string;
   blurb: string;
+  requirements: string[];
   unlocked: boolean;
   current?: boolean;
 }
@@ -49,16 +50,8 @@ export type CareerTreeNode = {
   desc: string;
 };
 
-export interface AchievementStar {
-  id: string;
-  title: string;
-  category: "Quest" | "Mentorship" | "Innovation" | "Loyalty" | "Crisis";
-  earnedOn: string;
-  rarity: 1 | 2 | 3 | 4 | 5;
-}
-
 export interface MonthlyReview {
-  month: string; // "2026-05"
+  month: string;
   grade: Grade;
   highlights: string[];
   improvements: string[];
@@ -84,20 +77,33 @@ export interface Attribute {
   stars: 1 | 2 | 3 | 4 | 5;
 }
 
-export interface CollectionAchievement {
+export type AchievementType = "Monthly" | "Season" | "Annual" | "One-Time" | "Milestone";
+export type Difficulty = "Easy" | "Standard" | "Hard" | "Epic" | "Legendary";
+export type ResetCycle = "Monthly" | "Seasonal" | "Yearly" | "Never";
+
+export interface AchievementRecord {
+  period: string; // e.g. "Jan 2026" or "Q1 2026"
+  date: string;   // ISO date
+  stars: number;  // stars granted on this earning
+}
+
+export interface RepeatableAchievement {
   id: string;
   name: string;
   description: string;
   icon: string;
-  rarity: "Common" | "Rare" | "Epic" | "Legendary";
-  unlocked: boolean;
-  unlockedOn?: string;
-  hint?: string;
+  type: AchievementType;
+  difficulty: Difficulty;
+  resetCycle: ResetCycle;
+  repeatable: boolean;
+  maxPerCycle: number;     // stars per cycle
+  rewardText: string;      // human-friendly reward summary
+  history: AchievementRecord[];
 }
 
 export interface RankProgress {
   nextRank: RankKey;
-  metric: string;          // "A Grades"
+  metric: string;
   current: number;
   needed: number;
   notes: string[];
@@ -112,24 +118,69 @@ export interface Employee {
   currentGrade: Grade;
   currentRank: RankKey;
   partnerStage: PartnerKey;
-  stars: AchievementStar[];
   career: CareerTreeNode[];
   reviews: MonthlyReview[];
   abcdHistory: { month: string; grade: Grade }[];
   quests: Quest[];
   attributes: Attribute[];
-  collection: CollectionAchievement[];
+  achievements: RepeatableAchievement[];
   rankProgress: RankProgress;
+  /** Lifetime stars accumulated from past seasons before tracked history. */
+  pastLegacyStars: number;
 }
 
 export const PARTNER_PATH: PartnerNode[] = [
-  { key: "explorer",    name: "Explorer",          blurb: "Curious about the business beyond their craft.",   unlocked: true,  current: false },
-  { key: "guardian",    name: "Guardian",          blurb: "Mentors juniors, protects guild standards.",       unlocked: true,  current: true  },
-  { key: "candidate",   name: "Partner Candidate", blurb: "Demonstrates cross-functional leadership.",         unlocked: false },
-  { key: "partner",     name: "Partner",           blurb: "Trusted captain of a business line.",              unlocked: false },
-  { key: "business",    name: "Business Partner",  blurb: "Owns a P&L and grows new ventures.",                unlocked: false },
-  { key: "shareholder", name: "Shareholder",       blurb: "Long-term steward of the guild.",                   unlocked: false },
+  { key: "explorer",    name: "Explorer",          blurb: "Curious about the business beyond their craft.",  unlocked: true,  current: false,
+    requirements: ["Show interest beyond your craft", "Shadow a senior on one cross-team initiative"] },
+  { key: "guardian",    name: "Guardian",          blurb: "Mentors juniors, protects guild standards.",      unlocked: true,  current: true,
+    requirements: ["Mentor at least 2 hunters to their first rank up", "Uphold guild standards in reviews"] },
+  { key: "candidate",   name: "Partner Candidate", blurb: "Demonstrates cross-functional leadership.",       unlocked: false,
+    requirements: ["Black Diamond rank", "Lead one cross-team campaign", "Captain's nomination"] },
+  { key: "partner",     name: "Partner",           blurb: "Trusted captain of a business line.",             unlocked: false,
+    requirements: ["Own a sub-line for 2 seasons", "Sustain Guild Elder legacy"] },
+  { key: "business",    name: "Business Partner",  blurb: "Owns a P&L and grows new ventures.",              unlocked: false,
+    requirements: ["Launch and sustain a new venture", "Board-level review"] },
+  { key: "shareholder", name: "Shareholder",       blurb: "Long-term steward of the guild.",                 unlocked: false,
+    requirements: ["Decade of stewardship", "Founders' invitation"] },
 ];
+
+/* -------------------------- Legacy Title System -------------------------- */
+
+export interface LegacyTitle {
+  name: string;
+  minStars: number;
+  flavor: string;
+}
+
+export const LEGACY_TITLES: LegacyTitle[] = [
+  { name: "Wanderer",          minStars: 0,    flavor: "The journey has just begun." },
+  { name: "Pathfinder",        minStars: 10,   flavor: "One moon claimed. A path emerges." },
+  { name: "Voyager",           minStars: 30,   flavor: "Three moons. The map widens." },
+  { name: "Shipbuilder",       minStars: 50,   flavor: "Five moons. You forge what others sail." },
+  { name: "Master Shipbuilder",minStars: 100,  flavor: "A sun rises. Your fleet is your own." },
+  { name: "Guild Elder",       minStars: 300,  flavor: "Three suns. Your name carries weight." },
+  { name: "Living Legend",     minStars: 500,  flavor: "Five suns. Songs are sung in your name." },
+];
+
+export function computeLegacy(totalStars: number) {
+  const suns  = Math.floor(totalStars / 100);
+  const moons = Math.floor((totalStars % 100) / 10);
+  const stars = totalStars % 10;
+  let title = LEGACY_TITLES[0];
+  for (const t of LEGACY_TITLES) if (totalStars >= t.minStars) title = t;
+  const next = LEGACY_TITLES.find(t => t.minStars > totalStars);
+  return { suns, moons, stars, total: totalStars, title, next };
+}
+
+export function totalStars(emp: Employee): number {
+  const earned = emp.achievements.reduce(
+    (sum, a) => sum + a.history.reduce((s, h) => s + h.stars, 0),
+    0,
+  );
+  return earned + emp.pastLegacyStars;
+}
+
+/* -------------------------------- Sample -------------------------------- */
 
 export const SAMPLE_EMPLOYEE: Employee = {
   id: "emp-001",
@@ -140,7 +191,14 @@ export const SAMPLE_EMPLOYEE: Employee = {
   currentGrade: "A",
   currentRank: "platinum",
   partnerStage: "guardian",
+  pastLegacyStars: 118, // accumulated from seasons before the tracked log
   abcdHistory: [
+    { month: "2025-06", grade: "C" },
+    { month: "2025-07", grade: "B" },
+    { month: "2025-08", grade: "B" },
+    { month: "2025-09", grade: "A" },
+    { month: "2025-10", grade: "B" },
+    { month: "2025-11", grade: "A" },
     { month: "2025-12", grade: "B" },
     { month: "2026-01", grade: "B" },
     { month: "2026-02", grade: "A" },
@@ -148,31 +206,19 @@ export const SAMPLE_EMPLOYEE: Employee = {
     { month: "2026-04", grade: "B" },
     { month: "2026-05", grade: "A" },
   ],
-  stars: [
-    { id: "s1", title: "Closed the Vermillion Contract",       category: "Quest",       earnedOn: "2026-05-22", rarity: 5 },
-    { id: "s2", title: "Mentored 3 Bronze Hunters to Silver",  category: "Mentorship",  earnedOn: "2026-04-10", rarity: 4 },
-    { id: "s3", title: "Salvaged the Q1 Launch",               category: "Crisis",      earnedOn: "2026-03-30", rarity: 5 },
-    { id: "s4", title: "Built the Lead-Scoring Compass",       category: "Innovation",  earnedOn: "2026-02-18", rarity: 4 },
-    { id: "s5", title: "Three Years at the Guild",             category: "Loyalty",     earnedOn: "2025-03-14", rarity: 3 },
-    { id: "s6", title: "First Independent Hunt",               category: "Quest",       earnedOn: "2023-06-02", rarity: 2 },
-  ],
   career: [
-    // Combat (execution)
     { id: "c1", label: "First Strike",       branch: "combat",   tier: 1, status: "mastered",  desc: "Close your first deal solo." },
     { id: "c2", label: "Pursuit Doctrine",   branch: "combat",   tier: 2, status: "mastered",  desc: "Run a full pipeline cycle." },
     { id: "c3", label: "Siege Warfare",      branch: "combat",   tier: 3, status: "active",    desc: "Lead an enterprise pursuit." },
     { id: "c4", label: "Field Marshal",      branch: "combat",   tier: 4, status: "locked",    desc: "Command a multi-team campaign." },
-    // Strategy
     { id: "s1", label: "Map Reading",        branch: "strategy", tier: 1, status: "mastered",  desc: "Read the territory deck." },
     { id: "s2", label: "Route Planning",     branch: "strategy", tier: 2, status: "mastered",  desc: "Plan a quarterly territory." },
     { id: "s3", label: "Theatre Command",    branch: "strategy", tier: 3, status: "available", desc: "Own a regional plan." },
     { id: "s4", label: "Grand Strategy",     branch: "strategy", tier: 4, status: "locked",    desc: "Set multi-year direction." },
-    // Craft (tools)
     { id: "k1", label: "Toolsmith",          branch: "craft",    tier: 1, status: "mastered",  desc: "Master the CRM forge." },
     { id: "k2", label: "Compass Maker",      branch: "craft",    tier: 2, status: "active",    desc: "Build a reusable playbook." },
     { id: "k3", label: "Engine Builder",     branch: "craft",    tier: 3, status: "locked",    desc: "Ship an internal system." },
     { id: "k4", label: "Forgemaster",        branch: "craft",    tier: 4, status: "locked",    desc: "Define a guild-wide standard." },
-    // Lore (knowledge)
     { id: "l1", label: "Guild Codex",        branch: "lore",     tier: 1, status: "mastered",  desc: "Learn the guild charter." },
     { id: "l2", label: "Market Almanac",     branch: "lore",     tier: 2, status: "mastered",  desc: "Speak the customer's language." },
     { id: "l3", label: "Rival Studies",      branch: "lore",     tier: 3, status: "available", desc: "Brief the guild on a rival." },
@@ -202,15 +248,85 @@ export const SAMPLE_EMPLOYEE: Employee = {
     { key: "marketing",    label: "Marketing Influence",    flavor: "Charm of your warcry.",                icon: "📣", stars: 2 },
     { key: "professional", label: "Professional Influence", flavor: "Respect among fellow hunters.",        icon: "🎖", stars: 4 },
   ],
-  collection: [
-    { id: "a1", name: "Baller Sales",         description: "Hit 150% of monthly sales target.",       icon: "💰", rarity: "Epic",      unlocked: true,  unlockedOn: "2026-05-22" },
-    { id: "a2", name: "Top Sales",            description: "Ranked #1 hunter of the season.",         icon: "👑", rarity: "Legendary", unlocked: true,  unlockedOn: "2026-04-01" },
-    { id: "a3", name: "Thank You",            description: "Receive 10 client gratitude scrolls.",    icon: "🙏", rarity: "Rare",      unlocked: true,  unlockedOn: "2026-03-12" },
-    { id: "a4", name: "Nothing I Can't Sell", description: "Close a deal in every product line.",     icon: "🗡", rarity: "Epic",      unlocked: false, hint: "Hunt across all five product realms." },
-    { id: "a5", name: "Attention Seeker",     description: "Top engagement on social campaigns.",     icon: "📢", rarity: "Rare",      unlocked: true,  unlockedOn: "2026-02-09" },
-    { id: "a6", name: "Iron Man",             description: "12 months without a missed target.",      icon: "🛡", rarity: "Legendary", unlocked: false, hint: "Currently at 8 of 12 months." },
-    { id: "a7", name: "Mentorship",           description: "Guide 3 juniors to their first rank up.", icon: "🧙", rarity: "Epic",      unlocked: true,  unlockedOn: "2026-04-10" },
-    { id: "a8", name: "Game Changer",         description: "Ship an innovation adopted guild-wide.",  icon: "💎", rarity: "Legendary", unlocked: false, hint: "A relic yet to be forged." },
+  achievements: [
+    {
+      id: "top-sales", name: "Top Sales", icon: "👑",
+      description: "Ranked #1 hunter of the month.",
+      type: "Monthly", difficulty: "Hard", resetCycle: "Monthly",
+      repeatable: true, maxPerCycle: 1, rewardText: "+1 Star per month",
+      history: [
+        { period: "Jan 2026", date: "2026-01-31", stars: 1 },
+        { period: "Mar 2026", date: "2026-03-31", stars: 1 },
+        { period: "Apr 2026", date: "2026-04-30", stars: 1 },
+      ],
+    },
+    {
+      id: "baller-sales", name: "Baller Sales", icon: "💰",
+      description: "Hit 150% of monthly sales target.",
+      type: "Monthly", difficulty: "Epic", resetCycle: "Monthly",
+      repeatable: true, maxPerCycle: 1, rewardText: "+1 Star per month",
+      history: [
+        { period: "Feb 2026", date: "2026-02-28", stars: 1 },
+        { period: "May 2026", date: "2026-05-31", stars: 1 },
+      ],
+    },
+    {
+      id: "thank-you", name: "Thank You", icon: "🙏",
+      description: "Collect 10 client gratitude scrolls in a month.",
+      type: "Monthly", difficulty: "Standard", resetCycle: "Monthly",
+      repeatable: true, maxPerCycle: 1, rewardText: "+1 Star per month",
+      history: [
+        { period: "Dec 2025", date: "2025-12-31", stars: 1 },
+        { period: "Mar 2026", date: "2026-03-31", stars: 1 },
+        { period: "Apr 2026", date: "2026-04-30", stars: 1 },
+        { period: "May 2026", date: "2026-05-31", stars: 1 },
+      ],
+    },
+    {
+      id: "nothing-cant-sell", name: "Nothing I Can't Sell", icon: "🗡",
+      description: "Close a deal in every product line in the season.",
+      type: "Season", difficulty: "Epic", resetCycle: "Seasonal",
+      repeatable: true, maxPerCycle: 1, rewardText: "+1 Star per season",
+      history: [
+        { period: "Q1 2026", date: "2026-03-31", stars: 1 },
+        { period: "Q2 2026", date: "2026-06-30", stars: 1 },
+      ],
+    },
+    {
+      id: "attention-seeker", name: "Attention Seeker", icon: "📢",
+      description: "Top engagement on a guild campaign.",
+      type: "Monthly", difficulty: "Standard", resetCycle: "Monthly",
+      repeatable: true, maxPerCycle: 1, rewardText: "+1 Star per month",
+      history: [
+        { period: "Feb 2026", date: "2026-02-28", stars: 1 },
+        { period: "Apr 2026", date: "2026-04-30", stars: 1 },
+      ],
+    },
+    {
+      id: "iron-man", name: "Iron Man", icon: "🛡",
+      description: "12 consecutive months without a missed target.",
+      type: "Annual", difficulty: "Legendary", resetCycle: "Yearly",
+      repeatable: true, maxPerCycle: 1, rewardText: "+3 Stars per year",
+      history: [],
+    },
+    {
+      id: "mentorship", name: "Mentorship", icon: "🧙",
+      description: "Guide a junior to their first rank up.",
+      type: "Season", difficulty: "Hard", resetCycle: "Seasonal",
+      repeatable: true, maxPerCycle: 2, rewardText: "+1 Star per mentee",
+      history: [
+        { period: "Q4 2025", date: "2025-12-15", stars: 1 },
+        { period: "Q1 2026", date: "2026-03-20", stars: 2 },
+        { period: "Q2 2026", date: "2026-04-10", stars: 1 },
+      ],
+    },
+    {
+      id: "game-changer", name: "Game Changer", icon: "💎",
+      description: "Ship an innovation adopted guild-wide.",
+      type: "One-Time", difficulty: "Legendary", resetCycle: "Never",
+      repeatable: false, maxPerCycle: 1, rewardText: "+5 Stars · permanent",
+      history: [],
+    },
   ],
   rankProgress: {
     nextRank: "diamond",
@@ -218,7 +334,7 @@ export const SAMPLE_EMPLOYEE: Employee = {
     current: 8,
     needed: 12,
     notes: [
-      "Maintain Platinum-level capability for 4 more months.",
+      "Sustain Platinum-tier capability for 4 more months.",
       "Captain's nomination required for the final trial.",
       "Complete one Tier-4 Career branch.",
     ],
