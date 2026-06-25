@@ -199,7 +199,7 @@ function PromotionCard({ d }: { d: any }) {
   ];
   return (
     <section className={`rounded-md border p-5 ${ev.eligible ? "border-emerald-400/60 bg-emerald-400/5" : "border-border bg-ink/30"}`}>
-      <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">Rank Promotion Engine</h2>
+      <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">Voyage Progression</h2>
       {!ev.next_rank_key ? (
         <div className="mt-3 text-sm text-muted-foreground">Max rank achieved.</div>
       ) : (
