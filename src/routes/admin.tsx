@@ -441,31 +441,56 @@ function StaffForm({ row, managers, accounts, locations, isDirector, onSave, onC
 
 /* ============ Grades ============ */
 
+const FACTOR_FIELDS: { key: "sales_w" | "attendance_w" | "achievements_w" | "review_w" | "discipline_w" | "kpi_w"; label: string }[] = [
+  { key: "sales_w",        label: "Sales" },
+  { key: "attendance_w",   label: "Attendance" },
+  { key: "achievements_w", label: "Achievements" },
+  { key: "review_w",       label: "Reviews" },
+  { key: "discipline_w",   label: "Discipline" },
+  { key: "kpi_w",          label: "KPI Completion" },
+];
+
 function GradesModule() {
   const qc = useQueryClient();
   const { data, isLoading } = useQuery({ queryKey: ["grades"], queryFn: () => getGradeConfig() });
   const wMut = useMutation({ mutationFn: (d: any) => updateGradeWeights({ data: d }), onSuccess: () => qc.invalidateQueries({ queryKey: ["grades"] }) });
   const rMut = useMutation({ mutationFn: (d: any) => updateGradeRule({ data: d }), onSuccess: () => qc.invalidateQueries({ queryKey: ["grades"] }) });
 
-  const [sales, setSales] = useState(60);
-  useEffect(() => { if (data) setSales(data.weights.sales_weight); }, [data]);
-  const review = 100 - sales;
+  const [w, setW] = useState({ sales_w: 30, attendance_w: 15, achievements_w: 15, review_w: 15, discipline_w: 10, kpi_w: 15 });
+  useEffect(() => {
+    if (data?.weights) {
+      setW({
+        sales_w: data.weights.sales_w ?? 30,
+        attendance_w: data.weights.attendance_w ?? 15,
+        achievements_w: data.weights.achievements_w ?? 15,
+        review_w: data.weights.review_w ?? 15,
+        discipline_w: data.weights.discipline_w ?? 10,
+        kpi_w: data.weights.kpi_w ?? 15,
+      });
+    }
+  }, [data]);
+  const total = FACTOR_FIELDS.reduce((a, f) => a + (w[f.key] || 0), 0);
 
   if (isLoading || !data) return <div className="py-6 text-center text-xs text-muted-foreground">Loading…</div>;
 
   return (
     <div className="space-y-6">
-      <Section title="Grade Weights" action={<Btn onClick={() => wMut.mutate({ sales_weight: sales, review_weight: review })} disabled={wMut.isPending}>Save Weights</Btn>}>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label={`Sales Weight — ${sales}%`}>
-            <input type="range" min={0} max={100} step={5} value={sales} onChange={e => setSales(Number(e.target.value))}
-              className="w-full accent-[var(--color-gold,gold)]" />
-          </Field>
-          <Field label={`Review Weight — ${review}%`}>
-            <div className="rounded-md border border-border bg-ink/60 px-3 py-2 text-sm text-muted-foreground">{review}% (auto)</div>
-          </Field>
+      <Section
+        title="Grade Engine — Factor Weights"
+        action={<Btn onClick={() => wMut.mutate(w)} disabled={wMut.isPending}>Save Weights</Btn>}
+      >
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {FACTOR_FIELDS.map(f => (
+            <Field key={f.key} label={`${f.label} — ${w[f.key]}`}>
+              <input type="range" min={0} max={50} step={1} value={w[f.key]}
+                onChange={e => setW({ ...w, [f.key]: Number(e.target.value) })}
+                className="w-full accent-[var(--color-gold,gold)]" />
+            </Field>
+          ))}
         </div>
-        <p className="mt-3 text-[11px] italic text-muted-foreground">Composite = Sales × {sales}% + Reviews × {review}%.</p>
+        <p className="mt-3 text-[11px] italic text-muted-foreground">
+          Composite = Σ (factor × weight) / Σ weights. Current weight total: <span className="text-gold">{total}</span> (weights are normalized at compute time, so any total works).
+        </p>
       </Section>
 
       <Section title="Grade Rules (A / B / C / D)">
