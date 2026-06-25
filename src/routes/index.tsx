@@ -277,7 +277,7 @@ function RankLadder({ current }: { current: RankKey }) {
               } ${r.locked && !achieved ? "opacity-50" : ""}`}
               style={isCurrent ? { boxShadow: `0 0 20px -8px ${r.color}` } : undefined}
             >
-              <RankPip color={r.color} achieved={achieved} locked={r.locked && !achieved} />
+              <RankPip color={r.color} achieved={achieved} locked={!!r.locked && !achieved} />
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-baseline gap-2">
                   <span className="font-display text-sm" style={{ color: achieved ? r.color : undefined }}>
