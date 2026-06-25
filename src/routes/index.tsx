@@ -38,7 +38,7 @@ export const Route = createFileRoute("/")({
   component: Dashboard,
 });
 
-type TabKey = "overview" | "achievements" | "legacy" | "career" | "partner" | "reviews";
+type TabKey = "overview" | "growth" | "achievements" | "legacy" | "career" | "partner" | "reviews";
 type Path = "hunter" | "operational";
 
 function Dashboard() {
