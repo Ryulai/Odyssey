@@ -206,10 +206,10 @@ function StaffModule() {
                   <td className="py-2 pr-3 text-right">
                     <div className="inline-flex gap-2">
                       <Btn variant="ghost" onClick={() => setEditing(s)}>Edit</Btn>
-                      {!s.user_id && emailMatchesAccount(s.email, accounts) && (
+                      {role === "director" && !s.user_id && emailMatchesAccount(s.email, accounts) && (
                         <Btn variant="ghost" onClick={() => link.mutate({ staff_id: s.id, user_id: emailMatchesAccount(s.email, accounts)?.id, app_role: roleToAppRole(s.role) })}>Link</Btn>
                       )}
-                      <Btn variant="danger" onClick={() => del.mutate(s.id)}>Delete</Btn>
+                      {role === "director" && <Btn variant="danger" onClick={() => del.mutate(s.id)}>Delete</Btn>}
                     </div>
                   </td>
                 </tr>
