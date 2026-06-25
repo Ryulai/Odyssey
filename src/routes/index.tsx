@@ -160,7 +160,7 @@ function LinkedHome({ d }: { d: any }) {
           Open My Profile →
         </Link>
         <Link to="/claims" className="rounded-md border border-border px-4 py-2 font-display text-[10px] uppercase tracking-widest text-muted-foreground hover:border-gold/40 hover:text-gold">
-          Submit a Claim
+          Record a Voyage
         </Link>
       </div>
 
