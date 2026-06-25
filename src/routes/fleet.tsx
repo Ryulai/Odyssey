@@ -84,7 +84,14 @@ function FleetContent({ data }: { data: any }) {
             </thead>
             <tbody>
               {locations.map((loc: any) => {
-                const captain = staff.find((s: any) => s.id === loc.manager_id);
+                const crewHere = activeStaff.filter((x: any) => x.location_id === loc.id);
+                // Option A — auto-derive: explicit loc.manager_id wins, else the staff at this fleet
+                // who other crew at this fleet report to (de-facto captain), else any Manager-role here.
+                const explicit = staff.find((s: any) => s.id === loc.manager_id);
+                const reportedTo = crewHere.find((c: any) => crewHere.some((o: any) => o.manager_id === c.id));
+                const managerRole = crewHere.find((c: any) => (c.app_role ?? c.system_role) === "manager");
+                const captain = explicit ?? reportedTo ?? managerRole;
+                const derived = !explicit && !!captain;
                 const s = fleetStats(loc.id);
                 return (
                   <tr key={loc.id} className="border-b border-border/40">
@@ -92,7 +99,14 @@ function FleetContent({ data }: { data: any }) {
                       <div className="font-display text-gold">{loc.name}</div>
                       <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{loc.kind ?? "venue"}{loc.code ? ` · ${loc.code}` : ""}</div>
                     </td>
-                    <td className="py-2 pr-3 text-muted-foreground">{captain?.name ?? <span className="text-amber-300">— Unassigned —</span>}</td>
+                    <td className="py-2 pr-3 text-muted-foreground">
+                      {captain ? (
+                        <>
+                          <span>{captain.name}</span>
+                          {derived && <span className="ml-2 rounded border border-border/60 px-1.5 py-0.5 text-[9px] uppercase tracking-widest text-muted-foreground">auto</span>}
+                        </>
+                      ) : <span className="text-amber-300">— Unassigned —</span>}
+                    </td>
                     <td className="py-2 pr-3">{s.crew.length}</td>
                     <td className="py-2 pr-3">{s.candidates > 0 ? <span className="text-emerald-400">{s.candidates}</span> : <span className="text-muted-foreground">0</span>}</td>
                     <td className="py-2 pr-3">{s.pending > 0 ? <span className="text-amber-300">{s.pending}</span> : <span className="text-muted-foreground">0</span>}</td>
