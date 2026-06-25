@@ -106,6 +106,7 @@ function AdminPage() {
 
         {tab === "staff"        && <StaffModule />}
         {tab === "locations"    && <LocationsModule />}
+        {tab === "holdings"     && can(role, "admin.legacy")       && <HoldingsModule />}
         {tab === "grades"       && can(role, "admin.grades")       && <GradesModule />}
         {tab === "achievements" && <AchievementsModule />}
         {tab === "ranks"        && can(role, "admin.ranks")        && <RanksModule />}
