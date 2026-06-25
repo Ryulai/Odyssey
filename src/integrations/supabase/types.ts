@@ -435,48 +435,60 @@ export type Database = {
       }
       staff: {
         Row: {
+          career_path: string | null
           created_at: string
           current_rank_key: string | null
           department: string
           email: string | null
+          employee_code: string | null
           id: string
+          join_date: string | null
           location_id: string | null
           manager_id: string | null
           name: string
           role: string
           role_family: string
+          shipbuilder_path: string | null
           status: string
           system_role: Database["public"]["Enums"]["app_role"]
           updated_at: string
           user_id: string | null
         }
         Insert: {
+          career_path?: string | null
           created_at?: string
           current_rank_key?: string | null
           department?: string
           email?: string | null
+          employee_code?: string | null
           id?: string
+          join_date?: string | null
           location_id?: string | null
           manager_id?: string | null
           name: string
           role?: string
           role_family?: string
+          shipbuilder_path?: string | null
           status?: string
           system_role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
           user_id?: string | null
         }
         Update: {
+          career_path?: string | null
           created_at?: string
           current_rank_key?: string | null
           department?: string
           email?: string | null
+          employee_code?: string | null
           id?: string
+          join_date?: string | null
           location_id?: string | null
           manager_id?: string | null
           name?: string
           role?: string
           role_family?: string
+          shipbuilder_path?: string | null
           status?: string
           system_role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string

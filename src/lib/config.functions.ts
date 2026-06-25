@@ -89,17 +89,65 @@ export const listStaff = createServerFn({ method: "GET" })
     }
     const { data, error } = await query.order("name");
     if (error) throw new Error(error.message);
-    if (actorRole !== "director") return data ?? [];
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: roles, error: roleError } = await supabaseAdmin
-      .from("user_roles")
-      .select("user_id, role");
-    if (roleError) throw new Error(roleError.message);
-    const rank = { director: 1, manager: 2, staff: 3 } as Record<AppRole, number>;
-    return (data ?? []).map((s: any) => {
-      const ownRoles = (roles ?? []).filter((r: any) => r.user_id === s.user_id).map((r: any) => r.role as AppRole);
-      ownRoles.sort((a: AppRole, b: AppRole) => rank[a] - rank[b]);
-      return { ...s, app_role: ownRoles[0] ?? s.system_role ?? null };
+    const rows = data ?? [];
+    const ids = rows.map((r: any) => r.id);
+
+    const [starsRes, gradesRes] = await Promise.all([
+      ids.length
+        ? context.supabase.from("achievement_records").select("staff_id, stars").in("staff_id", ids)
+        : Promise.resolve({ data: [], error: null } as any),
+      ids.length
+        ? context.supabase.from("monthly_evaluations").select("staff_id, grade, month").in("staff_id", ids).order("month", { ascending: false })
+        : Promise.resolve({ data: [], error: null } as any),
+    ]);
+    if ((starsRes as any).error) throw new Error((starsRes as any).error.message);
+    if ((gradesRes as any).error) throw new Error((gradesRes as any).error.message);
+
+    const starsMap = new Map<string, number>();
+    for (const r of (starsRes.data ?? []) as any[]) {
+      starsMap.set(r.staff_id, (starsMap.get(r.staff_id) ?? 0) + (r.stars ?? 0));
+    }
+    const gradeMap = new Map<string, string>();
+    for (const g of (gradesRes.data ?? []) as any[]) {
+      if (!gradeMap.has(g.staff_id)) gradeMap.set(g.staff_id, g.grade);
+    }
+    const evals = await Promise.all(rows.map(async (s: any) => {
+      if (s.role_family !== "hunter") return [s.id, null] as const;
+      const { data: ev } = await context.supabase.rpc("evaluate_rank", { _staff_id: s.id }).maybeSingle();
+      return [s.id, ev] as const;
+    }));
+    const evalMap = new Map<string, any>(evals);
+
+    const roleLookup = new Map<string, AppRole>();
+    if (actorRole === "director") {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: roles, error: roleError } = await supabaseAdmin
+        .from("user_roles")
+        .select("user_id, role");
+      if (roleError) throw new Error(roleError.message);
+      const rank = { director: 1, manager: 2, staff: 3 } as Record<AppRole, number>;
+      const byUser = new Map<string, AppRole[]>();
+      for (const r of (roles ?? []) as any[]) {
+        const arr = byUser.get(r.user_id) ?? [];
+        arr.push(r.role as AppRole);
+        byUser.set(r.user_id, arr);
+      }
+      for (const [uid, arr] of byUser) {
+        arr.sort((a, b) => rank[a] - rank[b]);
+        roleLookup.set(uid, arr[0]);
+      }
+    }
+
+    return rows.map((s: any) => {
+      const ev: any = evalMap.get(s.id) ?? null;
+      return {
+        ...s,
+        app_role: s.user_id ? (roleLookup.get(s.user_id) ?? s.system_role ?? null) : (s.system_role ?? null),
+        total_stars: starsMap.get(s.id) ?? 0,
+        latest_grade: gradeMap.get(s.id) ?? null,
+        promotion_ready: !!ev?.eligible,
+        promotion_next_rank_name: ev?.next_rank_name ?? null,
+      };
     });
   });
 
@@ -132,6 +180,8 @@ export const upsertStaff = createServerFn({ method: "POST" })
     role_family: "hunter" | "operational"; department: string; manager_id?: string | null;
     status?: "active" | "inactive"; user_id?: string | null; app_role?: AppRole | null;
     location_id?: string | null;
+    employee_code?: string | null; join_date?: string | null;
+    career_path?: string | null; shipbuilder_path?: string | null;
   }) => d)
 
   .handler(async ({ context, data }) => {
@@ -160,7 +210,10 @@ export const upsertStaff = createServerFn({ method: "POST" })
       manager_id: actorRole === "manager" ? actorStaffId : (data.manager_id || null),
       status: data.status ?? "active",
       location_id: data.location_id ?? null,
-
+      employee_code: data.employee_code?.trim() || null,
+      join_date: data.join_date || null,
+      career_path: data.career_path?.trim() || null,
+      shipbuilder_path: data.shipbuilder_path?.trim() || null,
     };
     if (isDirector) payload.user_id = linkedUserId ?? null;
     if (isDirector) payload.system_role = data.app_role ?? "staff";
@@ -199,7 +252,20 @@ export const deleteStaff = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-/* ============ Grades ============ */
+export const transferStaff = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string; manager_id?: string | null; location_id?: string | null; status?: "active" | "inactive" }) => d)
+  .handler(async ({ context, data }) => {
+    requireDirector(await currentUserRole(context));
+    const patch: any = {};
+    if (data.manager_id !== undefined) patch.manager_id = data.manager_id || null;
+    if (data.location_id !== undefined) patch.location_id = data.location_id || null;
+    if (data.status !== undefined) patch.status = data.status;
+    const { data: row, error } = await context.supabase
+      .from("staff").update(patch).eq("id", data.id).select().single();
+    if (error) throw new Error(error.message);
+    return row;
+  });
 export const getGradeConfig = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
