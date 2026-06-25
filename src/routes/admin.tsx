@@ -185,52 +185,94 @@ function StaffModule() {
   const { data: staff = [], isLoading } = useQuery({ queryKey: ["staff"], queryFn: () => listStaff() });
   const { data: accounts = [] } = useQuery({ queryKey: ["user-accounts"], queryFn: () => listUserAccounts(), enabled: role === "director" });
   const { data: locations = [] } = useQuery({ queryKey: ["locations"], queryFn: () => listLocations() });
-  const save = useMutation({ mutationFn: (d: any) => upsertStaff({ data: d }), onSuccess: () => qc.invalidateQueries({ queryKey: ["staff"] }) });
-  const link = useMutation({ mutationFn: (d: any) => linkStaffAccount({ data: d }), onSuccess: () => qc.invalidateQueries({ queryKey: ["staff"] }) });
-  const del  = useMutation({ mutationFn: (id: string) => deleteStaff({ data: { id } }), onSuccess: () => qc.invalidateQueries({ queryKey: ["staff"] }) });
+  const invalidate = () => { qc.invalidateQueries({ queryKey: ["staff"] }); qc.invalidateQueries({ queryKey: ["fleet-overview"] }); qc.invalidateQueries({ queryKey: ["manager-dashboard"] }); };
+  const save = useMutation({ mutationFn: (d: any) => upsertStaff({ data: d }), onSuccess: invalidate });
+  const link = useMutation({ mutationFn: (d: any) => linkStaffAccount({ data: d }), onSuccess: invalidate });
+  const del  = useMutation({ mutationFn: (id: string) => deleteStaff({ data: { id } }), onSuccess: invalidate });
+  const transfer = useMutation({ mutationFn: (d: any) => transferStaff({ data: d }), onSuccess: invalidate });
   const [editing, setEditing] = useState<StaffRow | null>(null);
+  const [transferring, setTransferring] = useState<StaffRow | null>(null);
+
+  const blank: StaffRow = {
+    id: "", name: "", email: "", role: "", role_family: "hunter", department: "Sales",
+    manager_id: null, status: "active", user_id: null, app_role: "staff", location_id: null,
+    employee_code: "", join_date: "", career_path: "", shipbuilder_path: "",
+  };
 
   return (
-    <Section title="Staff Management" action={
-      <Btn onClick={() => setEditing({ id: "", name: "", email: "", role: "", role_family: "hunter", department: "Sales", manager_id: null, status: "active", user_id: null, app_role: "staff", location_id: null })}>
-        + New Staff
-      </Btn>
-    }>
-
+    <Section title="Staff Management" action={<Btn onClick={() => setEditing(blank)}>+ Add Staff</Btn>}>
       {isLoading ? <div className="py-6 text-center text-xs text-muted-foreground">Loading…</div> : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="text-left text-[10px] uppercase tracking-widest text-muted-foreground">
               <tr className="border-b border-border">
-                <th className="py-2 pr-3">Name</th><th className="py-2 pr-3">Role</th>
-                <th className="py-2 pr-3">Path</th><th className="py-2 pr-3">Department</th>
-                <th className="py-2 pr-3">Manager</th><th className="py-2 pr-3">Fleet</th><th className="py-2 pr-3">Account</th><th className="py-2 pr-3">Status</th><th className="py-2 pr-3 text-right">Actions</th>
+                <th className="py-2 pr-3">Name</th>
+                <th className="py-2 pr-3">Emp ID</th>
+                <th className="py-2 pr-3">Role</th>
+                <th className="py-2 pr-3">Path</th>
+                <th className="py-2 pr-3">Fleet</th>
+                <th className="py-2 pr-3">Manager</th>
+                <th className="py-2 pr-3">Joined</th>
+                <th className="py-2 pr-3">Grade</th>
+                <th className="py-2 pr-3">Stars</th>
+                <th className="py-2 pr-3">Promotion</th>
+                <th className="py-2 pr-3">Status</th>
+                <th className="py-2 pr-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
               {staff.map((s: any) => (
-                <tr key={s.id} className="border-b border-border/40">
-                  <td className="py-2 pr-3">{s.name}</td>
+                <tr key={s.id} className={`border-b border-border/40 ${s.status === "inactive" ? "opacity-50" : ""}`}>
+                  <td className="py-2 pr-3">
+                    <div className="font-medium">{s.name}</div>
+                    <div className="text-[10px] text-muted-foreground">{s.email ?? "—"}</div>
+                  </td>
+                  <td className="py-2 pr-3 text-muted-foreground">{s.employee_code ?? "—"}</td>
                   <td className="py-2 pr-3 text-muted-foreground">{s.role}</td>
-                  <td className="py-2 pr-3 text-muted-foreground capitalize">{s.role_family}</td>
-                  <td className="py-2 pr-3 text-muted-foreground">{s.department}</td>
+                  <td className="py-2 pr-3 text-muted-foreground capitalize">
+                    {s.role_family}
+                    {(s.career_path || s.shipbuilder_path) && (
+                      <div className="text-[10px] text-muted-foreground/80">
+                        {s.career_path && <span>C: {s.career_path}</span>}
+                        {s.career_path && s.shipbuilder_path && " · "}
+                        {s.shipbuilder_path && <span>S: {s.shipbuilder_path}</span>}
+                      </div>
+                    )}
+                  </td>
+                  <td className="py-2 pr-3 text-muted-foreground">{locations.find((l: any) => l.id === s.location_id)?.name ?? <span className="text-amber-300/80">— Unassigned —</span>}</td>
                   <td className="py-2 pr-3 text-muted-foreground">{staff.find((x: any) => x.id === s.manager_id)?.name ?? "—"}</td>
-                  <td className="py-2 pr-3 text-muted-foreground">{locations.find((l: any) => l.id === s.location_id)?.name ?? "—"}</td>
-                  <td className="py-2 pr-3 text-muted-foreground">{s.user_id ? "Linked" : emailMatchesAccount(s.email, accounts) ? "Match ready" : "—"}</td>
+                  <td className="py-2 pr-3 text-muted-foreground">{s.join_date ?? "—"}</td>
+                  <td className="py-2 pr-3">{s.latest_grade ? <span className="font-display text-gold">{s.latest_grade}</span> : <span className="text-muted-foreground">—</span>}</td>
+                  <td className="py-2 pr-3 text-gold">{s.role_family === "hunter" ? (s.total_stars ?? 0) : "—"}</td>
+                  <td className="py-2 pr-3">
+                    {s.role_family !== "hunter"
+                      ? <span className="text-muted-foreground">—</span>
+                      : s.promotion_ready
+                        ? <span className="text-emerald-400">Ready → {s.promotion_next_rank_name}</span>
+                        : s.promotion_next_rank_name
+                          ? <span className="text-muted-foreground">Building</span>
+                          : <span className="text-muted-foreground">Max</span>}
+                  </td>
                   <td className="py-2 pr-3 text-muted-foreground capitalize">{s.status ?? "active"}</td>
                   <td className="py-2 pr-3 text-right">
-                    <div className="inline-flex gap-2">
+                    <div className="inline-flex flex-wrap justify-end gap-2">
                       <Btn variant="ghost" onClick={() => setEditing(s)}>Edit</Btn>
+                      {role === "director" && <Btn variant="ghost" onClick={() => setTransferring(s)}>Transfer</Btn>}
+                      {role === "director" && s.status !== "inactive" && (
+                        <Btn variant="ghost" onClick={() => transfer.mutate({ id: s.id, status: "inactive" })}>Deactivate</Btn>
+                      )}
+                      {role === "director" && s.status === "inactive" && (
+                        <Btn variant="ghost" onClick={() => transfer.mutate({ id: s.id, status: "active" })}>Reactivate</Btn>
+                      )}
                       {role === "director" && !s.user_id && emailMatchesAccount(s.email, accounts) && (
                         <Btn variant="ghost" onClick={() => link.mutate({ staff_id: s.id, user_id: emailMatchesAccount(s.email, accounts)?.id, app_role: roleToAppRole(s.role) })}>Link</Btn>
                       )}
-                      {role === "director" && <Btn variant="danger" onClick={() => del.mutate(s.id)}>Delete</Btn>}
+                      {role === "director" && <Btn variant="danger" onClick={() => { if (confirm(`Delete ${s.name}?`)) del.mutate(s.id); }}>Delete</Btn>}
                     </div>
                   </td>
                 </tr>
               ))}
-              {!staff.length && (<tr><td colSpan={9} className="py-6 text-center text-xs text-muted-foreground">No staff yet.</td></tr>)}
-
+              {!staff.length && (<tr><td colSpan={12} className="py-6 text-center text-xs text-muted-foreground">No staff yet. Click "Add Staff" to log your first crew member.</td></tr>)}
             </tbody>
           </table>
         </div>
@@ -238,7 +280,7 @@ function StaffModule() {
       {editing && (
         <StaffForm
           row={editing}
-          managers={staff.filter((s: any) => s.id !== editing.id)}
+          managers={staff.filter((s: any) => s.id !== editing.id && s.status !== "inactive")}
           accounts={accounts}
           locations={locations}
           isDirector={role === "director"}
@@ -247,7 +289,46 @@ function StaffModule() {
           busy={save.isPending}
         />
       )}
+      {transferring && (
+        <TransferForm
+          row={transferring}
+          managers={staff.filter((s: any) => s.id !== transferring.id && s.status !== "inactive")}
+          locations={locations}
+          onCancel={() => setTransferring(null)}
+          onSave={(d) => transfer.mutate({ id: transferring.id, ...d }, { onSuccess: () => setTransferring(null) })}
+          busy={transfer.isPending}
+        />
+      )}
     </Section>
+  );
+}
+
+function TransferForm({ row, managers, locations, onSave, onCancel, busy }: {
+  row: StaffRow; managers: any[]; locations: any[]; onSave: (d: { manager_id: string | null; location_id: string | null }) => void; onCancel: () => void; busy: boolean;
+}) {
+  const [managerId, setManagerId] = useState<string | null>(row.manager_id);
+  const [locationId, setLocationId] = useState<string | null>(row.location_id ?? null);
+  return (
+    <form onSubmit={(e) => { e.preventDefault(); onSave({ manager_id: managerId, location_id: locationId }); }}
+      className="mt-5 grid gap-3 rounded-md border border-gold/30 bg-ink/50 p-4 sm:grid-cols-2">
+      <div className="sm:col-span-2 font-display text-xs uppercase tracking-widest text-gold">Transfer · {row.name}</div>
+      <Field label="New Manager (Captain)">
+        <select className={inputCls} value={managerId ?? ""} onChange={e => setManagerId(e.target.value || null)}>
+          <option value="">— None —</option>
+          {managers.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+        </select>
+      </Field>
+      <Field label="New Fleet / Location">
+        <select className={inputCls} value={locationId ?? ""} onChange={e => setLocationId(e.target.value || null)}>
+          <option value="">— Unassigned —</option>
+          {locations.map((l: any) => <option key={l.id} value={l.id}>{l.name}{l.code ? ` · ${l.code}` : ""}</option>)}
+        </select>
+      </Field>
+      <div className="sm:col-span-2 mt-2 flex justify-end gap-2">
+        <Btn variant="ghost" onClick={onCancel}>Cancel</Btn>
+        <Btn type="submit" disabled={busy}>{busy ? "Transferring…" : "Transfer"}</Btn>
+      </div>
+    </form>
   );
 }
 
