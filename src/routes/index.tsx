@@ -47,19 +47,30 @@ function Dashboard() {
         <div className="mt-6 space-y-6">
           {tab === "overview" && (
             <>
+              <QuestBoard quests={emp.quests} />
+              <div className="grid gap-6 lg:grid-cols-2">
+                <NextRankProgress current={emp.currentRank} progress={emp.rankProgress} />
+                <HunterAttributes attributes={emp.attributes} />
+              </div>
+              <AchievementCollection items={emp.collection} />
               <ABCDPanel current={emp.currentGrade} history={emp.abcdHistory} />
               <div className="grid gap-6 lg:grid-cols-2">
                 <RankLadder current={emp.currentRank} />
                 <PartnerPath currentKey={emp.partnerStage} />
               </div>
-              <RecentStars stars={emp.stars.slice(0, 4)} />
             </>
           )}
           {tab === "career" && <CareerTree nodes={emp.career} />}
           {tab === "partner" && <PartnerPath currentKey={emp.partnerStage} expanded />}
           {tab === "reviews" && <ReviewsPanel reviews={emp.reviews} />}
-          {tab === "achievements" && <AchievementsGrid stars={emp.stars} />}
+          {tab === "achievements" && (
+            <>
+              <AchievementCollection items={emp.collection} />
+              <AchievementsGrid stars={emp.stars} />
+            </>
+          )}
         </div>
+
 
         <footer className="mt-12 border-t border-border pt-6 text-center text-xs text-muted-foreground">
           The Guild Ledger · prototype · all hunters depicted are fictional
