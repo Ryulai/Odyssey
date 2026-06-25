@@ -57,12 +57,17 @@ function Skel() { return <div className="animate-pulse rounded-md border border-
 function CharacterSheet({ d }: { d: any }) {
   const s = d.staff;
   const ev = d.evaluation;
+  const latestGrade = d.grades?.[0]?.grade ?? "—";
   return (
     <section className="rounded-md border border-gold/30 bg-gradient-to-br from-ink/60 to-ink/30 p-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <div className="font-display text-2xl text-gold">{s.name}</div>
-          <div className="text-xs uppercase tracking-widest text-muted-foreground">{s.role} · {s.department}</div>
+          <div className="text-xs uppercase tracking-widest text-muted-foreground">{s.role} · {s.department} · {s.role_family}</div>
+          <div className="mt-1 text-[11px] text-muted-foreground">
+            Manager: <span className="text-foreground">{s.manager?.name ?? "Unassigned"}</span>
+            {s.email && <> · {s.email}</>}
+          </div>
         </div>
         <div className="text-right">
           <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Current Rank</div>
@@ -74,7 +79,14 @@ function CharacterSheet({ d }: { d: any }) {
         <Stat label="Total Stars" value={d.totals?.stars ?? 0} icon="⭐" />
         <Stat label="Moons" value={d.totals?.moons ?? 0} icon="🌙" />
         <Stat label="Suns" value={d.totals?.suns ?? 0} icon="☀️" />
-        <Stat label="Unique Achievements" value={ev?.unique_achievements ?? 0} icon="🏆" />
+        <div className="rounded-md border border-border bg-ink/40 p-3 text-center">
+          <div className="text-2xl">⚓</div>
+          <div className="font-display text-xl text-gold">{latestGrade}</div>
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Current Grade</div>
+        </div>
+      </div>
+      <div className="mt-3 rounded-md border border-border bg-ink/30 px-3 py-2 text-xs text-muted-foreground">
+        Achievements: <span className="text-gold">{ev?.unique_achievements ?? 0}</span> unique records · Status: <span className="capitalize text-foreground">{s.status ?? "active"}</span>
       </div>
     </section>
   );

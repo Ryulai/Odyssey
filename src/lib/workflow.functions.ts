@@ -43,13 +43,45 @@ export const getStaffDashboard = createServerFn({ method: "GET" })
         .from("staff").select("id").eq("user_id", context.userId).maybeSingle();
       if (me.error) throw new Error(me.error.message);
       staffId = me.data?.id ?? "";
+
+      if (!staffId) {
+        const profile = await context.supabase
+          .from("profiles")
+          .select("email")
+          .eq("id", context.userId)
+          .maybeSingle();
+        if (profile.error) throw new Error(profile.error.message);
+        const email = profile.data?.email?.trim().toLowerCase();
+        if (email) {
+          const candidate = await context.supabase
+            .from("staff")
+            .select("id, user_id")
+            .ilike("email", email)
+            .maybeSingle();
+          if (candidate.error) throw new Error(candidate.error.message);
+          if (candidate.data?.id && !candidate.data.user_id) {
+            const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+            const linked = await supabaseAdmin
+              .from("staff")
+              .update({ user_id: context.userId })
+              .eq("id", candidate.data.id)
+              .is("user_id", null)
+              .select("id")
+              .maybeSingle();
+            if (linked.error) throw new Error(linked.error.message);
+            staffId = linked.data?.id ?? candidate.data.id;
+          } else {
+            staffId = candidate.data?.id ?? "";
+          }
+        }
+      }
     }
     if (!staffId) {
       return { staff: null, totals: null, evaluation: null, records: [], grades: [], legacy: null, claims: { pending: 0, approved: 0, rejected: 0 } };
     }
 
     const [staffRes, recordsRes, gradesRes, evalRes, legacyCfg, legacyTitles, claimsRes] = await Promise.all([
-      context.supabase.from("staff").select("*, rank:ranks!staff_current_rank_key_fkey(*)").eq("id", staffId).maybeSingle(),
+      context.supabase.from("staff").select("*").eq("id", staffId).maybeSingle(),
       context.supabase
         .from("achievement_records")
         .select("*, achievement:achievements(name, star_reward, type)")
@@ -74,6 +106,19 @@ export const getStaffDashboard = createServerFn({ method: "GET" })
       if ((r as any).error) throw new Error((r as any).error.message);
     }
 
+    let rank = null as any;
+    let manager = null as any;
+    if (staffRes.data?.current_rank_key) {
+      const rankRes = await context.supabase.from("ranks").select("*").eq("key", staffRes.data.current_rank_key).maybeSingle();
+      if (rankRes.error) throw new Error(rankRes.error.message);
+      rank = rankRes.data ?? null;
+    }
+    if (staffRes.data?.manager_id) {
+      const managerRes = await context.supabase.from("staff").select("id, name, role, email").eq("id", staffRes.data.manager_id).maybeSingle();
+      if (managerRes.error) throw new Error(managerRes.error.message);
+      manager = managerRes.data ?? null;
+    }
+
     const evaluation = (evalRes.data ?? null) as RankEvaluation | null;
     const totalStars = evaluation?.total_stars ?? 0;
     const cfg = legacyCfg.data ?? { stars_per_moon: 10, moons_per_sun: 5 };
@@ -95,7 +140,7 @@ export const getStaffDashboard = createServerFn({ method: "GET" })
     };
 
     return {
-      staff: staffRes.data,
+      staff: staffRes.data ? { ...staffRes.data, rank, manager } : null,
       totals: {
         stars: totalStars,
         moons: moonsTotal,

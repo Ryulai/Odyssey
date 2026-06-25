@@ -400,6 +400,7 @@ export type Database = {
           name: string
           role: string
           role_family: string
+          status: string
           updated_at: string
           user_id: string | null
         }
@@ -413,6 +414,7 @@ export type Database = {
           name: string
           role?: string
           role_family?: string
+          status?: string
           updated_at?: string
           user_id?: string | null
         }
@@ -426,6 +428,7 @@ export type Database = {
           name?: string
           role?: string
           role_family?: string
+          status?: string
           updated_at?: string
           user_id?: string | null
         }
@@ -499,6 +502,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_director_bootstrap_email: {
+        Args: { _email: string }
         Returns: boolean
       }
       refresh_staff_rank: { Args: { _staff_id: string }; Returns: undefined }

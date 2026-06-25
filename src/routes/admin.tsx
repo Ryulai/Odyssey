@@ -5,7 +5,7 @@ import { useRole, can, ROLE_META, PERMISSIONS, type Capability } from "@/lib/rol
 import { AuthGate } from "@/components/auth-gate";
 import { GRADE_META } from "@/lib/employee-data";
 import {
-  listStaff, upsertStaff, deleteStaff,
+  listStaff, listUserAccounts, upsertStaff, linkStaffAccount, deleteStaff,
   getGradeConfig, updateGradeWeights, updateGradeRule,
   listAchievements, upsertAchievement, deleteAchievement,
   listRanks, updateRank, reorderRanks,
@@ -163,18 +163,22 @@ const DEPARTMENTS = ["Sales", "Operations", "Marketing", "Service", "Leadership"
 type StaffRow = {
   id: string; name: string; email: string | null; role: string;
   role_family: "hunter" | "operational"; department: string; manager_id: string | null;
+  status: "active" | "inactive"; user_id: string | null; app_role?: "director" | "manager" | "staff" | null;
 };
 
 function StaffModule() {
   const qc = useQueryClient();
+  const { role } = useRole();
   const { data: staff = [], isLoading } = useQuery({ queryKey: ["staff"], queryFn: () => listStaff() });
+  const { data: accounts = [] } = useQuery({ queryKey: ["user-accounts"], queryFn: () => listUserAccounts(), enabled: role === "director" });
   const save = useMutation({ mutationFn: (d: any) => upsertStaff({ data: d }), onSuccess: () => qc.invalidateQueries({ queryKey: ["staff"] }) });
+  const link = useMutation({ mutationFn: (d: any) => linkStaffAccount({ data: d }), onSuccess: () => qc.invalidateQueries({ queryKey: ["staff"] }) });
   const del  = useMutation({ mutationFn: (id: string) => deleteStaff({ data: { id } }), onSuccess: () => qc.invalidateQueries({ queryKey: ["staff"] }) });
   const [editing, setEditing] = useState<StaffRow | null>(null);
 
   return (
     <Section title="Staff Management" action={
-      <Btn onClick={() => setEditing({ id: "", name: "", email: "", role: "", role_family: "hunter", department: "Sales", manager_id: null })}>
+      <Btn onClick={() => setEditing({ id: "", name: "", email: "", role: "", role_family: "hunter", department: "Sales", manager_id: null, status: "active", user_id: null, app_role: "staff" })}>
         + New Staff
       </Btn>
     }>
@@ -185,7 +189,7 @@ function StaffModule() {
               <tr className="border-b border-border">
                 <th className="py-2 pr-3">Name</th><th className="py-2 pr-3">Role</th>
                 <th className="py-2 pr-3">Path</th><th className="py-2 pr-3">Department</th>
-                <th className="py-2 pr-3">Manager</th><th className="py-2 pr-3 text-right">Actions</th>
+                <th className="py-2 pr-3">Manager</th><th className="py-2 pr-3">Account</th><th className="py-2 pr-3">Status</th><th className="py-2 pr-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -196,15 +200,20 @@ function StaffModule() {
                   <td className="py-2 pr-3 text-muted-foreground capitalize">{s.role_family}</td>
                   <td className="py-2 pr-3 text-muted-foreground">{s.department}</td>
                   <td className="py-2 pr-3 text-muted-foreground">{staff.find((x: any) => x.id === s.manager_id)?.name ?? "—"}</td>
+                  <td className="py-2 pr-3 text-muted-foreground">{s.user_id ? "Linked" : emailMatchesAccount(s.email, accounts) ? "Match ready" : "—"}</td>
+                  <td className="py-2 pr-3 text-muted-foreground capitalize">{s.status ?? "active"}</td>
                   <td className="py-2 pr-3 text-right">
                     <div className="inline-flex gap-2">
                       <Btn variant="ghost" onClick={() => setEditing(s)}>Edit</Btn>
+                      {!s.user_id && emailMatchesAccount(s.email, accounts) && (
+                        <Btn variant="ghost" onClick={() => link.mutate({ staff_id: s.id, user_id: emailMatchesAccount(s.email, accounts)?.id, app_role: roleToAppRole(s.role) })}>Link</Btn>
+                      )}
                       <Btn variant="danger" onClick={() => del.mutate(s.id)}>Delete</Btn>
                     </div>
                   </td>
                 </tr>
               ))}
-              {!staff.length && (<tr><td colSpan={6} className="py-6 text-center text-xs text-muted-foreground">No staff yet.</td></tr>)}
+              {!staff.length && (<tr><td colSpan={8} className="py-6 text-center text-xs text-muted-foreground">No staff yet.</td></tr>)}
             </tbody>
           </table>
         </div>
@@ -213,6 +222,8 @@ function StaffModule() {
         <StaffForm
           row={editing}
           managers={staff.filter((s: any) => s.id !== editing.id)}
+          accounts={accounts}
+          isDirector={role === "director"}
           onCancel={() => setEditing(null)}
           onSave={(d) => save.mutate(d, { onSuccess: () => setEditing(null) })}
           busy={save.isPending}
@@ -222,11 +233,25 @@ function StaffModule() {
   );
 }
 
-function StaffForm({ row, managers, onSave, onCancel, busy }: {
-  row: StaffRow; managers: any[]; onSave: (r: any) => void; onCancel: () => void; busy: boolean;
+function emailMatchesAccount(email: string | null | undefined, accounts: any[]) {
+  const normalized = email?.trim().toLowerCase();
+  if (!normalized) return null;
+  return accounts.find((a: any) => a.email?.trim().toLowerCase() === normalized) ?? null;
+}
+
+function roleToAppRole(role: string): "director" | "manager" | "staff" {
+  const normalized = role.toLowerCase();
+  if (normalized.includes("director")) return "director";
+  if (normalized.includes("manager")) return "manager";
+  return "staff";
+}
+
+function StaffForm({ row, managers, accounts, isDirector, onSave, onCancel, busy }: {
+  row: StaffRow; managers: any[]; accounts: any[]; isDirector: boolean; onSave: (r: any) => void; onCancel: () => void; busy: boolean;
 }) {
-  const [d, setD] = useState<StaffRow>(row);
+  const [d, setD] = useState<StaffRow>({ ...row, status: row.status ?? "active", user_id: row.user_id ?? null, app_role: row.app_role ?? roleToAppRole(row.role) });
   const set = <K extends keyof StaffRow>(k: K, v: StaffRow[K]) => setD(x => ({ ...x, [k]: v }));
+  const matched = emailMatchesAccount(d.email, accounts);
   return (
     <form onSubmit={(e) => { e.preventDefault(); if (d.name.trim()) {
       const payload: any = { ...d };
@@ -239,7 +264,7 @@ function StaffForm({ row, managers, onSave, onCancel, busy }: {
       </div>
       <Field label="Name"><input className={inputCls} value={d.name} onChange={e => set("name", e.target.value)} required /></Field>
       <Field label="Email"><input type="email" className={inputCls} value={d.email ?? ""} onChange={e => set("email", e.target.value)} /></Field>
-      <Field label="Role"><input className={inputCls} value={d.role} onChange={e => set("role", e.target.value)} placeholder="e.g. Senior Ambassador" /></Field>
+      <Field label="Position"><input className={inputCls} value={d.role} onChange={e => { set("role", e.target.value); set("app_role", roleToAppRole(e.target.value)); }} placeholder="e.g. Senior Ambassador" /></Field>
       <Field label="Path">
         <select className={inputCls} value={d.role_family} onChange={e => set("role_family", e.target.value as any)}>
           <option value="hunter">Hunter</option><option value="operational">Operational</option>
@@ -250,12 +275,33 @@ function StaffForm({ row, managers, onSave, onCancel, busy }: {
           {DEPARTMENTS.map(x => <option key={x} value={x}>{x}</option>)}
         </select>
       </Field>
-      <Field label="Manager">
+      {isDirector && <Field label="Manager">
         <select className={inputCls} value={d.manager_id ?? ""} onChange={e => set("manager_id", e.target.value || null)}>
           <option value="">— None —</option>
           {managers.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
         </select>
+      </Field>}
+      <Field label="Status">
+        <select className={inputCls} value={d.status} onChange={e => set("status", e.target.value as any)}>
+          <option value="active">Active</option><option value="inactive">Inactive</option>
+        </select>
       </Field>
+      {isDirector && <Field label="Linked User Account">
+          <select className={inputCls} value={d.user_id ?? matched?.id ?? ""} onChange={e => set("user_id", e.target.value || null)}>
+            <option value="">{matched ? `Auto-match: ${matched.email}` : "— No account yet —"}</option>
+            {accounts.map(a => <option key={a.id} value={a.id}>{a.email} · {a.full_name ?? "Unnamed"}</option>)}
+          </select>
+        </Field>}
+      {isDirector && <Field label="Account Permission">
+          <select className={inputCls} value={d.app_role ?? roleToAppRole(d.role)} onChange={e => set("app_role", e.target.value as any)}>
+            <option value="director">Director</option><option value="manager">Manager</option><option value="staff">Staff</option>
+          </select>
+        </Field>}
+      {isDirector && matched && !d.user_id && (
+        <div className="sm:col-span-2 rounded border border-gold/30 bg-gold/5 px-3 py-2 text-xs text-gold">
+          Matching account found: {matched.email}. Saving will link it automatically.
+        </div>
+      )}
       <div className="sm:col-span-2 mt-2 flex justify-end gap-2">
         <Btn variant="ghost" onClick={onCancel}>Cancel</Btn>
         <Btn type="submit" disabled={busy}>{busy ? "Saving…" : "Save"}</Btn>
