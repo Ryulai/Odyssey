@@ -79,7 +79,7 @@ function AdminPage() {
             </div>
           </div>
           <div className="mt-1 text-sm text-muted-foreground">
-            Configuration only. Persisted to the Guild Ledger database.
+            Configuration only. Persisted to The Odyssey Guide database.
           </div>
         </div>
 
