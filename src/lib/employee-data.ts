@@ -1,0 +1,150 @@
+export type Grade = "A" | "B" | "C" | "D";
+
+export const GRADE_META: Record<Grade, { label: string; tagline: string; color: string }> = {
+  A: { label: "Full Sail", tagline: "Excellent Performance", color: "var(--color-grade-a)" },
+  B: { label: "Steady Voyage", tagline: "Good Performance", color: "var(--color-grade-b)" },
+  C: { label: "On Course", tagline: "Basic Requirement Achieved", color: "var(--color-grade-c)" },
+  D: { label: "Adrift", tagline: "Needs Improvement", color: "var(--color-grade-d)" },
+};
+
+export type RankKey =
+  | "bronze" | "silver" | "gold" | "platinum" | "diamond" | "mythic" | "legend";
+
+export interface RankInfo {
+  key: RankKey;
+  name: string;
+  subtitle: string;
+  description: string;
+  color: string;
+  locked?: boolean;
+}
+
+export const HUNTER_RANKS: RankInfo[] = [
+  { key: "bronze",   name: "Bronze Hunter",   subtitle: "Apprentice",            description: "Learning the craft.",            color: "var(--color-rank-bronze)" },
+  { key: "silver",   name: "Silver Hunter",   subtitle: "Independent Hunter",    description: "Operates without supervision.",  color: "var(--color-rank-silver)" },
+  { key: "gold",     name: "Gold Hunter",     subtitle: "Professional Hunter",   description: "Consistent professional output.",color: "var(--color-rank-gold)" },
+  { key: "platinum", name: "Platinum Hunter", subtitle: "Elite Hunter",          description: "Influential contributor.",       color: "var(--color-rank-platinum)" },
+  { key: "diamond",  name: "Black Diamond",   subtitle: "Master Hunter",         description: "Builds and shapes teams.",       color: "var(--color-rank-diamond)" },
+  { key: "mythic",   name: "Mythic Hunter",   subtitle: "Department Legend",     description: "Locked tier.",                    color: "var(--color-rank-mythic)", locked: true },
+  { key: "legend",   name: "Legend Hunter",   subtitle: "Company Legend",        description: "Locked tier.",                    color: "var(--color-rank-legend)", locked: true },
+];
+
+export type PartnerKey =
+  | "explorer" | "guardian" | "candidate" | "partner" | "business" | "shareholder";
+
+export interface PartnerNode {
+  key: PartnerKey;
+  name: string;
+  blurb: string;
+  unlocked: boolean;
+  current?: boolean;
+}
+
+export type CareerTreeNode = {
+  id: string;
+  label: string;
+  branch: "combat" | "strategy" | "craft" | "lore";
+  tier: 1 | 2 | 3 | 4;
+  status: "mastered" | "active" | "available" | "locked";
+  desc: string;
+};
+
+export interface AchievementStar {
+  id: string;
+  title: string;
+  category: "Quest" | "Mentorship" | "Innovation" | "Loyalty" | "Crisis";
+  earnedOn: string;
+  rarity: 1 | 2 | 3 | 4 | 5;
+}
+
+export interface MonthlyReview {
+  month: string; // "2026-05"
+  grade: Grade;
+  highlights: string[];
+  improvements: string[];
+  reviewer: string;
+}
+
+export interface Employee {
+  id: string;
+  name: string;
+  guildTitle: string;
+  joinedOn: string;
+  avatar: string;
+  currentGrade: Grade;
+  currentRank: RankKey;
+  partnerStage: PartnerKey;
+  stars: AchievementStar[];
+  career: CareerTreeNode[];
+  reviews: MonthlyReview[];
+  abcdHistory: { month: string; grade: Grade }[];
+}
+
+export const PARTNER_PATH: PartnerNode[] = [
+  { key: "explorer",    name: "Explorer",          blurb: "Curious about the business beyond their craft.",   unlocked: true,  current: false },
+  { key: "guardian",    name: "Guardian",          blurb: "Mentors juniors, protects guild standards.",       unlocked: true,  current: true  },
+  { key: "candidate",   name: "Partner Candidate", blurb: "Demonstrates cross-functional leadership.",         unlocked: false },
+  { key: "partner",     name: "Partner",           blurb: "Trusted captain of a business line.",              unlocked: false },
+  { key: "business",    name: "Business Partner",  blurb: "Owns a P&L and grows new ventures.",                unlocked: false },
+  { key: "shareholder", name: "Shareholder",       blurb: "Long-term steward of the guild.",                   unlocked: false },
+];
+
+export const SAMPLE_EMPLOYEE: Employee = {
+  id: "emp-001",
+  name: "Ariane Voss",
+  guildTitle: "Field Hunter, Northwind Division",
+  joinedOn: "2022-03-14",
+  avatar: "AV",
+  currentGrade: "A",
+  currentRank: "platinum",
+  partnerStage: "guardian",
+  abcdHistory: [
+    { month: "2025-12", grade: "B" },
+    { month: "2026-01", grade: "B" },
+    { month: "2026-02", grade: "A" },
+    { month: "2026-03", grade: "C" },
+    { month: "2026-04", grade: "B" },
+    { month: "2026-05", grade: "A" },
+  ],
+  stars: [
+    { id: "s1", title: "Closed the Vermillion Contract",       category: "Quest",       earnedOn: "2026-05-22", rarity: 5 },
+    { id: "s2", title: "Mentored 3 Bronze Hunters to Silver",  category: "Mentorship",  earnedOn: "2026-04-10", rarity: 4 },
+    { id: "s3", title: "Salvaged the Q1 Launch",               category: "Crisis",      earnedOn: "2026-03-30", rarity: 5 },
+    { id: "s4", title: "Built the Lead-Scoring Compass",       category: "Innovation",  earnedOn: "2026-02-18", rarity: 4 },
+    { id: "s5", title: "Three Years at the Guild",             category: "Loyalty",     earnedOn: "2025-03-14", rarity: 3 },
+    { id: "s6", title: "First Independent Hunt",               category: "Quest",       earnedOn: "2023-06-02", rarity: 2 },
+  ],
+  career: [
+    // Combat (execution)
+    { id: "c1", label: "First Strike",       branch: "combat",   tier: 1, status: "mastered",  desc: "Close your first deal solo." },
+    { id: "c2", label: "Pursuit Doctrine",   branch: "combat",   tier: 2, status: "mastered",  desc: "Run a full pipeline cycle." },
+    { id: "c3", label: "Siege Warfare",      branch: "combat",   tier: 3, status: "active",    desc: "Lead an enterprise pursuit." },
+    { id: "c4", label: "Field Marshal",      branch: "combat",   tier: 4, status: "locked",    desc: "Command a multi-team campaign." },
+    // Strategy
+    { id: "s1", label: "Map Reading",        branch: "strategy", tier: 1, status: "mastered",  desc: "Read the territory deck." },
+    { id: "s2", label: "Route Planning",     branch: "strategy", tier: 2, status: "mastered",  desc: "Plan a quarterly territory." },
+    { id: "s3", label: "Theatre Command",    branch: "strategy", tier: 3, status: "available", desc: "Own a regional plan." },
+    { id: "s4", label: "Grand Strategy",     branch: "strategy", tier: 4, status: "locked",    desc: "Set multi-year direction." },
+    // Craft (tools)
+    { id: "k1", label: "Toolsmith",          branch: "craft",    tier: 1, status: "mastered",  desc: "Master the CRM forge." },
+    { id: "k2", label: "Compass Maker",      branch: "craft",    tier: 2, status: "active",    desc: "Build a reusable playbook." },
+    { id: "k3", label: "Engine Builder",     branch: "craft",    tier: 3, status: "locked",    desc: "Ship an internal system." },
+    { id: "k4", label: "Forgemaster",        branch: "craft",    tier: 4, status: "locked",    desc: "Define a guild-wide standard." },
+    // Lore (knowledge)
+    { id: "l1", label: "Guild Codex",        branch: "lore",     tier: 1, status: "mastered",  desc: "Learn the guild charter." },
+    { id: "l2", label: "Market Almanac",     branch: "lore",     tier: 2, status: "mastered",  desc: "Speak the customer's language." },
+    { id: "l3", label: "Rival Studies",      branch: "lore",     tier: 3, status: "available", desc: "Brief the guild on a rival." },
+    { id: "l4", label: "Loremaster",         branch: "lore",     tier: 4, status: "locked",    desc: "Author canon for the guild." },
+  ],
+  reviews: [
+    { month: "2026-05", grade: "A", reviewer: "Captain Rho",
+      highlights: ["Closed Vermillion contract three weeks early.", "Stood in for the chapter lead during their leave."],
+      improvements: ["Document the playbook so others can repeat it."] },
+    { month: "2026-04", grade: "B", reviewer: "Captain Rho",
+      highlights: ["Mentored two new Bronze hunters."],
+      improvements: ["Forecast accuracy slipped on two opportunities."] },
+    { month: "2026-03", grade: "C", reviewer: "Captain Rho",
+      highlights: ["Hit baseline activity targets."],
+      improvements: ["Pipeline coverage thin; needs prospecting cadence."] },
+  ],
+};
