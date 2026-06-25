@@ -86,7 +86,7 @@ export const listStaff = createServerFn({ method: "GET" })
     return (data ?? []).map((s: any) => {
       const ownRoles = (roles ?? []).filter((r: any) => r.user_id === s.user_id).map((r: any) => r.role as AppRole);
       ownRoles.sort((a: AppRole, b: AppRole) => rank[a] - rank[b]);
-      return { ...s, app_role: ownRoles[0] ?? null };
+      return { ...s, app_role: ownRoles[0] ?? s.system_role ?? null };
     });
   });
 
@@ -145,6 +145,7 @@ export const upsertStaff = createServerFn({ method: "POST" })
       status: data.status ?? "active",
     };
     if (isDirector) payload.user_id = linkedUserId ?? null;
+    if (isDirector) payload.system_role = data.app_role ?? "staff";
     const { data: row, error } = await context.supabase
       .from("staff").upsert(payload).select().single();
     if (error) throw new Error(error.message);
@@ -161,7 +162,7 @@ export const linkStaffAccount = createServerFn({ method: "POST" })
     requireDirector(await currentUserRole(context));
     const { data: row, error } = await context.supabase
       .from("staff")
-      .update({ user_id: data.user_id })
+      .update({ user_id: data.user_id, ...(data.app_role ? { system_role: data.app_role } : {}) })
       .eq("id", data.staff_id)
       .select()
       .single();
