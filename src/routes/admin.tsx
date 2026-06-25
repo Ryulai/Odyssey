@@ -5,7 +5,7 @@ import { useRole, can, ROLE_META, PERMISSIONS, type Capability } from "@/lib/rol
 import { AuthGate } from "@/components/auth-gate";
 import { GRADE_META } from "@/lib/employee-data";
 import {
-  listStaff, listUserAccounts, upsertStaff, linkStaffAccount, deleteStaff,
+  listStaff, listUserAccounts, upsertStaff, linkStaffAccount, deleteStaff, transferStaff,
   getGradeConfig, updateGradeWeights, updateGradeRule,
   listAchievements, upsertAchievement, deleteAchievement,
   listRanks, updateRank, reorderRanks,
