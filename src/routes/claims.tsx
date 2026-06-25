@@ -8,7 +8,7 @@ import { listAchievements, listStaff } from "@/lib/config.functions";
 import { listClaims, submitClaim, decideClaim, listMyRecords } from "@/lib/claims.functions";
 
 export const Route = createFileRoute("/claims")({
-  head: () => ({ meta: [{ title: "Achievement Claims — The Odyssey Guide" }] }),
+  head: () => ({ meta: [{ title: "Harbor Records — The Odyssey Guide" }] }),
   component: () => <AuthGate><ClaimsPage /></AuthGate>,
 });
 
