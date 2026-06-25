@@ -105,6 +105,15 @@ function HunterDashboard() {
 
   return (
     <>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-md border border-gold/40 bg-gold/5 px-4 py-3">
+        <div className="text-xs text-muted-foreground">
+          <span className="font-display text-[10px] uppercase tracking-widest text-gold">Workflow Engine Live</span>
+          {" — "}your real stars, rank progress and legacy are calculated from the database.
+        </div>
+        <Link to="/profile" className="rounded-md border border-gold bg-gold/10 px-3 py-1.5 font-display text-[10px] uppercase tracking-widest text-gold hover:bg-gold/20">
+          Open My Profile →
+        </Link>
+      </div>
       <ProfileCard emp={emp} legacy={legacy} />
       <Tabs tabs={HUNTER_TABS} value={tab} onChange={(k) => setTab(k as TabKey)} />
       <div className="mt-6 space-y-6">
