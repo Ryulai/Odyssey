@@ -1,45 +1,73 @@
+# Three Identity Systems — Architecture Split
 
-## Phase 1 — Cloud + Auth foundation
+Today the `staff` table mixes operational assignment (fleet/manager), RPG progression (rank/path), and ownership signals (Director = "Shipbuilder"). Splitting these into three independent identities so a person can, e.g., work at Ting Livehouse, play as a Silver Priest, and be Founder of Du Bar — all at once.
 
-1. Enable Lovable Cloud.
-2. Add `/auth` page (email+password sign in/up). Profiles table linked to `auth.users` storing `display_name`, `path` (hunter/operational), `department`, `manager_id`. Auto-create profile via trigger.
-3. `app_role` enum (`director | manager | staff`) + `user_roles` table + `has_role()` security-definer fn. Replace the in-app role switcher with the real signed-in role (keep "view-as" only for directors as a UI helper, optional).
-4. Move every protected page under `_authenticated/`. Admin Console gated by `director` / `manager` capabilities (same matrix as today).
+## The three identities
 
-## Phase 2 — Config tables (replace mock data)
+```text
+WORK IDENTITY            RPG IDENTITY              LEGACY IDENTITY
+(operational, 1 record)  (character, 1 record)     (titles, N records)
+─────────────────────    ────────────────────      ──────────────────────
+Fleet / Location         Class (Warrior/Mage/…)    Founder / Co-Founder
+Department               Rank                       Partner / Shareholder
+Position                 Career Tree                Investor / Builder
+Manager                  Stars / Grades             Pioneer / Mentor
+Employment Status        Achievements               + target fleet (optional)
+                                                    + start/end date
+```
 
-Tables (all in `public`, RLS on, GRANTs per rules):
+Work answers "where do you report today?" RPG answers "what character are you playing?" Legacy answers "what have you built that outlives your current role?"
 
-- `staff` (mirrors profile fields needed by admin: role title, path, dept, rank, current grade, manager_id) — directors full CRUD, managers edit own team, staff read self.
-- `grade_rules` (`grade A/B/C/D`, `min_score`, `bonus_pct`, `notes`) + `grade_weights` (singleton row: `sales_weight`, `review_weight`).
-- `achievements` (name, description, star_reward, reset_cycle, difficulty, active).
-- `ranks` (key, name, order_index, description, promotion_requirement).
-- `legacy_config` (singleton: `stars_per_moon`, `moons_per_sun`) + `legacy_titles` (name, min_stars, flavor).
+## Database changes
 
-Director-only write policies; all signed-in users can read config.
+1. **`work_identity`** (new) — current operational record, 1:1 with staff.
+   - `staff_id` (PK, FK staff), `location_id`, `department`, `position`, `manager_id`, `employment_status` (active/leave/separated), `start_date`.
+2. **`rpg_identity`** (new) — character sheet, 1:1 with staff.
+   - `staff_id` (PK, FK staff), `class` (enum: warrior/mage/ranger/priest/bard/…), `career_tree`, `shipbuilder_tree`, `current_rank_key`. Stars/grades/achievements stay in their existing tables, keyed by `staff_id`.
+3. **`legacy_titles`** (rename existing flavor table → `legacy_title_catalog`; new records table `legacy_holdings`)
+   - `legacy_holdings`: `id`, `staff_id`, `title` (Founder/Co-Founder/Partner/Investor/Builder/Pioneer/custom), `location_id` (nullable — title can be company-wide), `note`, `granted_at`, `ended_at` (nullable). Many rows per person.
+4. **Migrate** existing `staff` columns into the new tables, then drop the moved columns from `staff` (keep `name`, `email`, `employee_code`, `user_id`, `system_role`, `avatar`, `join_date`).
+5. **"Shipbuilder = Director"** coupling goes away. Director is purely a system role (permissions). Whether someone shows as a Shipbuilder in the UI is driven by `legacy_holdings` (e.g. holds a Founder/Partner title), not by app role.
 
-Seed migration: insert current sample Hunters, achievements, ranks, legacy titles, grade rules.
+All new tables: GRANT to `authenticated` + `service_role`, RLS on, policies mirroring current `staff` rules (self read, manager reads team via `work_identity.manager_id`, director full).
 
-Admin modules refactored to React Query + `createServerFn` CRUD. Remove all in-memory state and the `employee-data.ts` constants used as source of truth (keep only type definitions / display helpers).
+## Server functions
 
-## Phase 3 — Achievement claim workflow
+- Extend `listStaff` / `getStaff` to join all three identities and return `{ staff, work, rpg, legacy: [...] }`.
+- New CRUD: `upsertWorkIdentity`, `upsertRpgIdentity`, `addLegacyHolding`, `updateLegacyHolding`, `removeLegacyHolding`.
+- `transferStaff` now writes to `work_identity` only.
+- Promotion/rank/grade calculations read `rpg_identity` (class, trees) instead of `staff.role_family`.
+- Fleet/Manager dashboards filter by `work_identity` (current assignment), so legacy ownership never leaks into "who reports to me".
 
-- Storage bucket `claim-evidence` (private), RLS so claimant uploads under `userId/...`, manager + director can read team files.
-- `achievement_claims` (id, staff_id, achievement_id, notes, evidence_urls[], status `pending|approved|rejected`, decided_by, decided_at, decision_notes, created_at).
-- `achievement_records` (id, staff_id, achievement_id, stars_awarded, source_claim_id, awarded_at) — feeds the existing star/legacy math.
-- Server fns: `submitClaim`, `listMyClaims`, `listTeamClaims`, `approveClaim` (inserts achievement_record + updates claim atomically), `rejectClaim`.
-- New routes: `/claims` (staff submit + history) and `/claims/review` (manager queue).
+## Admin UI (`/admin`)
 
-## Phase 4 — Monthly evaluation
+Split the Staff form into three tabs inside the staff editor:
 
-- `monthly_evaluations` (staff_id, period `YYYY-MM`, sales_score, review_score, composite_score, grade, evaluator_id, created_at, unique(staff_id, period)).
-- Server fn `submitEvaluation` computes `composite = sales*sales_weight + review*review_weight`, looks up `grade_rules` to assign A/B/C/D, inserts row. Manager-only for their reports; directors for anyone.
-- New route `/evaluations` (manager view: per-month grid for team) + read-only "My Grades" tab on staff dashboard pulled from this table.
-- Career-tree rank-progress reads counts from `monthly_evaluations` instead of mock arrays.
+1. **Work** — fleet, department, position, manager, status, start date.
+2. **RPG** — class, career tree, shipbuilder tree, starting rank. (Stars/grades remain read-only.)
+3. **Legacy** — list of holdings with Add/Edit/End buttons; each row = title + (optional) fleet + dates + note.
 
-## Tech notes
+New top-level admin tab **Legacy Registry**: cross-fleet view of all holdings (filter by title, fleet, person). This is the "Legendary Titles" registry.
 
-- All DB access through `createServerFn` with `requireSupabaseAuth`; admin/service-role only inside handler imports.
-- Every new `public` table ships with `GRANT`s to `authenticated` + `service_role` and `ENABLE RLS` in the same migration.
-- React Query for cache; mutations invalidate per-key.
-- Defer: bulk import, email notifications, analytics, OAuth providers.
+## Profile / Dashboard surface
+
+- **Character Sheet** header shows: Name + Class + Rank (RPG), then a thin "Working as" line (Work), then a Legacy ribbon of title badges (Founder of Du Bar, Partner at Gaia, …).
+- Manager/Fleet dashboards unchanged in shape, but pull from `work_identity`.
+- Director profiles no longer hardcode "Beyond Rank". A user shows the Shipbuilder/Beyond-Rank treatment when they hold a qualifying legacy title (Founder/Partner/Shareholder). Directors without such a title get a normal RPG sheet.
+
+## Terminology
+
+Keep Odyssey naming. Class list (initial): Warrior, Mage, Ranger, Priest, Bard — editable in Admin → RPG Config. Legacy titles editable in Admin → Legacy Registry.
+
+## Out of scope this pass
+
+- Per-class skill trees content (just the class field + existing trees).
+- Historical work assignments (only `start_date` on current record; full job history is a later phase).
+- Ownership equity %, contracts, payouts.
+
+## Deliverables
+
+1. One migration: create `work_identity`, `rpg_identity`, `legacy_holdings`; backfill from `staff`; drop moved columns.
+2. Updated `config.functions.ts` + new `legacy.functions.ts`.
+3. Admin staff editor with 3 tabs + Legacy Registry tab.
+4. Profile/Manager/Fleet dashboards rewired to the new sources.
