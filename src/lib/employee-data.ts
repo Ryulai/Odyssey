@@ -110,12 +110,23 @@ export interface RankProgress {
   notes: string[];
 }
 
+/** Hunter family roles participate in the Achievement Economy (stars/moons/suns). */
+export type HunterRole = "Ambassador" | "Senior Ambassador" | "Sales Leader";
+/** Operational roles use the Professional Development track. */
+export type OperationalRole =
+  | "Bartender" | "Waiter" | "Cashier" | "DJ" | "Designer" | "Manager";
+
+export type RoleFamily = "hunter" | "operational";
+
 export interface Employee {
   id: string;
   name: string;
   guildTitle: string;
   joinedOn: string;
   avatar: string;
+  roleFamily: RoleFamily;
+  role: HunterRole | OperationalRole | string;
+  department?: string;
   currentGrade: Grade;
   currentRank: RankKey;
   partnerStage: PartnerKey;
@@ -128,6 +139,75 @@ export interface Employee {
   rankProgress: RankProgress;
   /** Lifetime stars accumulated from past seasons before tracked history. */
   pastLegacyStars: number;
+}
+
+/* ----------------------- Operational (non-hunter) types ----------------------- */
+
+export type OpRankKey = "apprentice" | "journeyman" | "specialist" | "expert" | "master";
+
+export interface OpRankInfo {
+  key: OpRankKey;
+  name: string;
+  subtitle: string;
+  description: string;
+  color: string;
+}
+
+export const OPERATIONAL_RANKS: OpRankInfo[] = [
+  { key: "apprentice",  name: "Apprentice",  subtitle: "Learning the craft",        description: "Working under direct supervision.",          color: "var(--color-rank-bronze)" },
+  { key: "journeyman",  name: "Journeyman",  subtitle: "Independent operator",      description: "Handles a full shift without supervision.",  color: "var(--color-rank-silver)" },
+  { key: "specialist",  name: "Specialist",  subtitle: "Trusted craftsperson",      description: "Deep skill in a chosen discipline.",         color: "var(--color-rank-gold)" },
+  { key: "expert",      name: "Expert",      subtitle: "Sets the standard",         description: "Trains others. Owns process and quality.",   color: "var(--color-rank-platinum)" },
+  { key: "master",      name: "Master",      subtitle: "Pillar of the operation",   description: "Shapes the craft for the whole venue.",      color: "var(--color-rank-diamond)" },
+];
+
+export interface OpSkillNode {
+  id: string;
+  label: string;
+  branch: string;       // discipline name, e.g. "Craft", "Service", "Leadership"
+  tier: 1 | 2 | 3 | 4;
+  status: "mastered" | "active" | "available" | "locked";
+  desc: string;
+}
+
+export interface Certification {
+  id: string;
+  name: string;
+  issuer: string;
+  earnedOn: string;
+  expiresOn?: string;     // optional — undefined = no expiry
+  status: "active" | "expiring" | "expired";
+}
+
+export interface TrainingLevel {
+  track: string;          // e.g. "Service Excellence"
+  level: 1 | 2 | 3 | 4 | 5;
+  progressToNext: number; // 0..100
+  blurb: string;
+}
+
+export interface CareerMilestone {
+  date: string;
+  label: string;
+  detail: string;
+}
+
+export interface OperationalEmployee {
+  id: string;
+  name: string;
+  role: OperationalRole | string;
+  department: string;
+  joinedOn: string;
+  avatar: string;
+  currentGrade: Grade;
+  currentRank: OpRankKey;
+  abcdHistory: { month: string; grade: Grade }[];
+  reviews: MonthlyReview[];
+  skills: OpSkillNode[];
+  certifications: Certification[];
+  training: TrainingLevel[];
+  milestones: CareerMilestone[];
+  nextRankNotes: string[];
 }
 
 export const PARTNER_PATH: PartnerNode[] = [
