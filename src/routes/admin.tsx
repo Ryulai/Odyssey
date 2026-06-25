@@ -157,7 +157,7 @@ function Btn({ children, onClick, variant = "primary", type = "button", disabled
   );
 }
 
-const DEPARTMENTS = ["Sales", "Operations", "Marketing", "Service", "Leadership"];
+const DEPARTMENTS = ["Management", "Sales", "Operations", "Marketing", "Service", "Leadership"];
 
 /* ============ Staff ============ */
 
