@@ -12,19 +12,20 @@ export const ROLE_META: Record<UserRole, { label: string; tagline: string; color
 
 export const PERMISSIONS = {
   director: [
-    "Full access to all modules",
-    "Approve Manager promotions",
-    "Edit all configurations (Staff, Grades, Achievements, Ranks, Legacy)",
+    "Full access",
+    "Create Managers and Staff",
+    "Approve promotions",
+    "Manage configuration",
   ],
   manager: [
-    "Manage own team members",
-    "Approve achievement submissions",
-    "Submit promotion recommendations",
+    "Manage own team",
+    "Review achievement claims",
+    "Recommend promotions",
   ],
   staff: [
-    "View own profile",
-    "View own growth trees",
-    "Submit achievement requests",
+    "View profile",
+    "Submit achievement claims",
+    "View growth tree",
   ],
 } as const;
 
@@ -50,7 +51,7 @@ const CAPS: Record<UserRole, Capability[]> = {
     "claims.submit", "claims.review", "evaluations.write",
   ],
   manager: [
-    "admin.access", "admin.staff", "admin.achievements",
+    "admin.access", "admin.staff",
     "team.manage", "team.approveAchievements", "team.recommendPromotion",
     "claims.submit", "claims.review", "evaluations.write",
   ],
