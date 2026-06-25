@@ -110,12 +110,23 @@ export interface RankProgress {
   notes: string[];
 }
 
+/** Hunter family roles participate in the Achievement Economy (stars/moons/suns). */
+export type HunterRole = "Ambassador" | "Senior Ambassador" | "Sales Leader";
+/** Operational roles use the Professional Development track. */
+export type OperationalRole =
+  | "Bartender" | "Waiter" | "Cashier" | "DJ" | "Designer" | "Manager";
+
+export type RoleFamily = "hunter" | "operational";
+
 export interface Employee {
   id: string;
   name: string;
   guildTitle: string;
   joinedOn: string;
   avatar: string;
+  roleFamily: RoleFamily;
+  role: HunterRole | OperationalRole | string;
+  department?: string;
   currentGrade: Grade;
   currentRank: RankKey;
   partnerStage: PartnerKey;
@@ -128,6 +139,75 @@ export interface Employee {
   rankProgress: RankProgress;
   /** Lifetime stars accumulated from past seasons before tracked history. */
   pastLegacyStars: number;
+}
+
+/* ----------------------- Operational (non-hunter) types ----------------------- */
+
+export type OpRankKey = "apprentice" | "journeyman" | "specialist" | "expert" | "master";
+
+export interface OpRankInfo {
+  key: OpRankKey;
+  name: string;
+  subtitle: string;
+  description: string;
+  color: string;
+}
+
+export const OPERATIONAL_RANKS: OpRankInfo[] = [
+  { key: "apprentice",  name: "Apprentice",  subtitle: "Learning the craft",        description: "Working under direct supervision.",          color: "var(--color-rank-bronze)" },
+  { key: "journeyman",  name: "Journeyman",  subtitle: "Independent operator",      description: "Handles a full shift without supervision.",  color: "var(--color-rank-silver)" },
+  { key: "specialist",  name: "Specialist",  subtitle: "Trusted craftsperson",      description: "Deep skill in a chosen discipline.",         color: "var(--color-rank-gold)" },
+  { key: "expert",      name: "Expert",      subtitle: "Sets the standard",         description: "Trains others. Owns process and quality.",   color: "var(--color-rank-platinum)" },
+  { key: "master",      name: "Master",      subtitle: "Pillar of the operation",   description: "Shapes the craft for the whole venue.",      color: "var(--color-rank-diamond)" },
+];
+
+export interface OpSkillNode {
+  id: string;
+  label: string;
+  branch: string;       // discipline name, e.g. "Craft", "Service", "Leadership"
+  tier: 1 | 2 | 3 | 4;
+  status: "mastered" | "active" | "available" | "locked";
+  desc: string;
+}
+
+export interface Certification {
+  id: string;
+  name: string;
+  issuer: string;
+  earnedOn: string;
+  expiresOn?: string;     // optional — undefined = no expiry
+  status: "active" | "expiring" | "expired";
+}
+
+export interface TrainingLevel {
+  track: string;          // e.g. "Service Excellence"
+  level: 1 | 2 | 3 | 4 | 5;
+  progressToNext: number; // 0..100
+  blurb: string;
+}
+
+export interface CareerMilestone {
+  date: string;
+  label: string;
+  detail: string;
+}
+
+export interface OperationalEmployee {
+  id: string;
+  name: string;
+  role: OperationalRole | string;
+  department: string;
+  joinedOn: string;
+  avatar: string;
+  currentGrade: Grade;
+  currentRank: OpRankKey;
+  abcdHistory: { month: string; grade: Grade }[];
+  reviews: MonthlyReview[];
+  skills: OpSkillNode[];
+  certifications: Certification[];
+  training: TrainingLevel[];
+  milestones: CareerMilestone[];
+  nextRankNotes: string[];
 }
 
 export const PARTNER_PATH: PartnerNode[] = [
@@ -191,6 +271,8 @@ export const SAMPLE_EMPLOYEE: Employee = {
   guildTitle: "Field Hunter, Northwind Division",
   joinedOn: "2022-03-14",
   avatar: "AV",
+  roleFamily: "hunter",
+  role: "Senior Ambassador",
   currentGrade: "A",
   currentRank: "platinum",
   partnerStage: "guardian",
@@ -371,4 +453,81 @@ export const SAMPLE_EMPLOYEE: Employee = {
       "Complete one Tier-4 Career branch.",
     ],
   },
+};
+
+/* ----------------------- Sample operational employee ----------------------- */
+
+export const SAMPLE_OPERATIONAL_EMPLOYEE: OperationalEmployee = {
+  id: "op-002",
+  name: "Mateo Reyes",
+  role: "Bartender",
+  department: "Northwind Lounge · Bar",
+  joinedOn: "2023-08-02",
+  avatar: "MR",
+  currentGrade: "B",
+  currentRank: "specialist",
+  abcdHistory: [
+    { month: "2025-06", grade: "C" },
+    { month: "2025-07", grade: "B" },
+    { month: "2025-08", grade: "B" },
+    { month: "2025-09", grade: "A" },
+    { month: "2025-10", grade: "B" },
+    { month: "2025-11", grade: "B" },
+    { month: "2025-12", grade: "A" },
+    { month: "2026-01", grade: "B" },
+    { month: "2026-02", grade: "B" },
+    { month: "2026-03", grade: "C" },
+    { month: "2026-04", grade: "B" },
+    { month: "2026-05", grade: "A" },
+  ],
+  reviews: [
+    { month: "2026-05", grade: "A", reviewer: "Floor Captain Lin",
+      highlights: ["Designed seasonal cocktail menu adopted house-wide.", "Trained two new bartenders to solo-shift."],
+      improvements: ["Tighten inventory reporting on busy weekends."] },
+    { month: "2026-04", grade: "B", reviewer: "Floor Captain Lin",
+      highlights: ["Held the bar solo on a sold-out Friday."],
+      improvements: ["Speed on classic cocktails could improve."] },
+    { month: "2026-03", grade: "C", reviewer: "Floor Captain Lin",
+      highlights: ["Hit baseline service targets."],
+      improvements: ["Two missed shift changeover handoffs."] },
+  ],
+  skills: [
+    { id: "s1", label: "Classic Cocktails",  branch: "Craft",      tier: 1, status: "mastered",  desc: "Old Fashioned to Negroni, by heart." },
+    { id: "s2", label: "Modern Mixology",    branch: "Craft",      tier: 2, status: "mastered",  desc: "Build balanced original drinks." },
+    { id: "s3", label: "Menu Design",        branch: "Craft",      tier: 3, status: "active",    desc: "Author a seasonal menu." },
+    { id: "s4", label: "Beverage Direction", branch: "Craft",      tier: 4, status: "locked",    desc: "Set program direction for the venue." },
+    { id: "v1", label: "Guest Greeting",     branch: "Service",    tier: 1, status: "mastered",  desc: "Set the tone in the first 10 seconds." },
+    { id: "v2", label: "Reading the Room",   branch: "Service",    tier: 2, status: "mastered",  desc: "Pace service to the night's energy." },
+    { id: "v3", label: "Recovery & Comps",   branch: "Service",    tier: 3, status: "available", desc: "Turn a complaint into a regular." },
+    { id: "v4", label: "Hosting the House",  branch: "Service",    tier: 4, status: "locked",    desc: "Run the floor experience end-to-end." },
+    { id: "l1", label: "Shift Lead",         branch: "Leadership", tier: 1, status: "mastered",  desc: "Open or close a shift solo." },
+    { id: "l2", label: "Training Others",    branch: "Leadership", tier: 2, status: "active",    desc: "Onboard a new hire." },
+    { id: "l3", label: "Process Owner",      branch: "Leadership", tier: 3, status: "locked",    desc: "Own a standard for the team." },
+    { id: "l4", label: "Floor Captain",      branch: "Leadership", tier: 4, status: "locked",    desc: "Run the floor as captain." },
+  ],
+  certifications: [
+    { id: "c1", name: "Responsible Service of Alcohol", issuer: "Regional Authority", earnedOn: "2023-08-10", expiresOn: "2026-08-10", status: "active" },
+    { id: "c2", name: "Food Safety Level 2",            issuer: "Hospitality Institute", earnedOn: "2024-02-12", expiresOn: "2026-07-01", status: "expiring" },
+    { id: "c3", name: "Advanced Mixology Certificate",  issuer: "Bartender Guild",     earnedOn: "2024-11-04", status: "active" },
+    { id: "c4", name: "First Aid (Workplace)",          issuer: "Red Cross",           earnedOn: "2022-06-01", expiresOn: "2025-06-01", status: "expired" },
+  ],
+  training: [
+    { track: "Service Excellence", level: 4, progressToNext: 60, blurb: "Hospitality, recovery, table read." },
+    { track: "Beverage Knowledge", level: 5, progressToNext: 100, blurb: "Spirits, wine, beer fundamentals." },
+    { track: "Safety & Compliance", level: 3, progressToNext: 30, blurb: "RSA, food safety, incident handling." },
+    { track: "Leadership",         level: 2, progressToNext: 45, blurb: "Shift lead, training, feedback." },
+    { track: "Menu Development",   level: 3, progressToNext: 75, blurb: "Costing, balance, presentation." },
+  ],
+  milestones: [
+    { date: "2023-08-02", label: "Joined the House",            detail: "Hired as Apprentice Bartender." },
+    { date: "2024-01-15", label: "Promoted to Journeyman",      detail: "First independent shift cleared." },
+    { date: "2024-09-04", label: "First Menu Item Featured",     detail: "Smoked Pear Old Fashioned." },
+    { date: "2025-03-20", label: "Promoted to Specialist",       detail: "Recognised for consistent craft." },
+    { date: "2026-05-12", label: "Seasonal Menu Adopted House-Wide", detail: "5 of 8 drinks approved by leadership." },
+  ],
+  nextRankNotes: [
+    "Two more Grade A months in the next quarter.",
+    "Complete Service Excellence training to level 5.",
+    "Mentor one new hire to Journeyman.",
+  ],
 };

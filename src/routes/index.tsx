@@ -2,8 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import {
   SAMPLE_EMPLOYEE,
+  SAMPLE_OPERATIONAL_EMPLOYEE,
   GRADE_META,
   HUNTER_RANKS,
+  OPERATIONAL_RANKS,
   PARTNER_PATH,
   computeLegacy,
   totalStars,
@@ -15,69 +17,120 @@ import {
   type RepeatableAchievement,
   type RankProgress,
   type Employee,
+  type OperationalEmployee,
+  type OpRankKey,
+  type OpSkillNode,
+  type Certification,
+  type TrainingLevel,
+  type CareerMilestone,
 } from "@/lib/employee-data";
 
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Guild Ledger — Hunter Legacy System" },
-      { name: "description", content: "An RPG-styled hunter progression journal: ABCD monthly grade, permanent Hunter Rank, repeatable achievement stars, lifetime legacy, and the Partner tree." },
-      { property: "og:title", content: "Guild Ledger — Hunter Legacy System" },
-      { property: "og:description", content: "Monthly grades, permanent rank, repeatable stars, lifetime legacy, and the partner journey." },
+      { title: "Guild Ledger — Two Paths, One Guild" },
+      { name: "description", content: "Hunters earn achievements and legacy stars. Operational staff master ranks, skills, certifications, and training. Both paths, equally respected." },
+      { property: "og:title", content: "Guild Ledger — Two Paths, One Guild" },
+      { property: "og:description", content: "Hunter Achievement Economy and Operational Professional Development, side by side." },
     ],
   }),
   component: Dashboard,
 });
 
 type TabKey = "overview" | "achievements" | "legacy" | "career" | "partner" | "reviews";
+type Path = "hunter" | "operational";
 
 function Dashboard() {
-  const emp = SAMPLE_EMPLOYEE;
-  const [tab, setTab] = useState<TabKey>("overview");
-  const legacy = useMemo(() => computeLegacy(totalStars(emp)), [emp]);
-
+  const [path, setPath] = useState<Path>("hunter");
   return (
     <div className="min-h-screen text-foreground">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         <HunterHeader />
-        <ProfileCard emp={emp} legacy={legacy} />
-
-        <Tabs value={tab} onChange={setTab} />
-
-        <div className="mt-6 space-y-6">
-          {tab === "overview" && (
-            <>
-              <QuestBoard quests={emp.quests} />
-              <div className="grid gap-6 lg:grid-cols-2">
-                <CurrentGradeCard current={emp.currentGrade} />
-                <NextRankProgress current={emp.currentRank} progress={emp.rankProgress} />
-              </div>
-              <LegacyBanner legacy={legacy} />
-              <HunterAttributes attributes={emp.attributes} />
-              <ABCDPanel current={emp.currentGrade} history={emp.abcdHistory} />
-            </>
-          )}
-          {tab === "achievements" && <AchievementsLedger items={emp.achievements} />}
-          {tab === "legacy" && <LegacyHall legacy={legacy} emp={emp} />}
-          {tab === "career" && (
-            <>
-              <RankLadder current={emp.currentRank} />
-              <CareerTree nodes={emp.career} />
-            </>
-          )}
-          {tab === "partner" && <PartnerPath currentKey={emp.partnerStage} expanded />}
-          {tab === "reviews" && <ReviewsPanel reviews={emp.reviews} />}
-        </div>
-
-
+        <PathSwitcher path={path} onChange={setPath} />
+        {path === "hunter" ? <HunterDashboard /> : <OperationalDashboard />}
         <footer className="mt-12 border-t border-border pt-6 text-center text-xs text-muted-foreground">
-          The Guild Ledger · a hunter's adventure journal · all hunters depicted are fictional
+          The Guild Ledger · two paths, one guild · all members depicted are fictional
         </footer>
       </div>
     </div>
   );
 }
+
+function PathSwitcher({ path, onChange }: { path: Path; onChange: (p: Path) => void }) {
+  const options: { key: Path; label: string; tagline: string }[] = [
+    { key: "hunter",      label: "Hunter Path",       tagline: "Measured by achievements & influence" },
+    { key: "operational", label: "Operational Path",  tagline: "Measured by capability & mastery" },
+  ];
+  return (
+    <div className="mb-6 grid gap-2 sm:grid-cols-2">
+      {options.map(o => {
+        const active = path === o.key;
+        return (
+          <button
+            key={o.key}
+            onClick={() => onChange(o.key)}
+            className={`rounded-md border p-3 text-left transition-all ${
+              active ? "border-gold bg-gold/5" : "border-border bg-ink/30 hover:border-gold/40"
+            }`}
+          >
+            <div className={`font-display text-sm uppercase tracking-widest ${active ? "text-gold" : "text-muted-foreground"}`}>
+              {o.label}
+            </div>
+            <div className="text-[11px] italic text-muted-foreground">{o.tagline}</div>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+const HUNTER_TABS: { key: TabKey; label: string }[] = [
+  { key: "overview",     label: "Overview" },
+  { key: "achievements", label: "Achievements" },
+  { key: "legacy",       label: "Legacy" },
+  { key: "career",       label: "Rank & Career" },
+  { key: "partner",      label: "Partner Path" },
+  { key: "reviews",      label: "Reviews" },
+];
+
+function HunterDashboard() {
+  const emp = SAMPLE_EMPLOYEE;
+  const [tab, setTab] = useState<TabKey>("overview");
+  const legacy = useMemo(() => computeLegacy(totalStars(emp)), [emp]);
+
+  return (
+    <>
+      <ProfileCard emp={emp} legacy={legacy} />
+      <Tabs tabs={HUNTER_TABS} value={tab} onChange={(k) => setTab(k as TabKey)} />
+      <div className="mt-6 space-y-6">
+        {tab === "overview" && (
+          <>
+            <QuestBoard quests={emp.quests} />
+            <div className="grid gap-6 lg:grid-cols-2">
+              <CurrentGradeCard current={emp.currentGrade} />
+              <NextRankProgress current={emp.currentRank} progress={emp.rankProgress} />
+            </div>
+            <LegacyBanner legacy={legacy} />
+            <HunterAttributes attributes={emp.attributes} />
+            <ABCDPanel current={emp.currentGrade} history={emp.abcdHistory} />
+          </>
+        )}
+        {tab === "achievements" && <AchievementsLedger items={emp.achievements} />}
+        {tab === "legacy" && <LegacyHall legacy={legacy} emp={emp} />}
+        {tab === "career" && (
+          <>
+            <RankLadder current={emp.currentRank} />
+            <CareerTree nodes={emp.career} />
+          </>
+        )}
+        {tab === "partner" && <PartnerPath currentKey={emp.partnerStage} expanded />}
+        {tab === "reviews" && <ReviewsPanel reviews={emp.reviews} />}
+      </div>
+    </>
+  );
+}
+
 
 /* ----------------------------- Header ----------------------------- */
 
@@ -174,19 +227,10 @@ function Stat({ label, value, sub, color }: { label: string; value: string; sub:
 
 /* ----------------------------- Tabs ----------------------------- */
 
-const TABS: { key: TabKey; label: string }[] = [
-  { key: "overview",     label: "Overview" },
-  { key: "achievements", label: "Achievements" },
-  { key: "legacy",       label: "Legacy" },
-  { key: "career",       label: "Rank & Career" },
-  { key: "partner",      label: "Partner Path" },
-  { key: "reviews",      label: "Reviews" },
-];
-
-function Tabs({ value, onChange }: { value: TabKey; onChange: (k: TabKey) => void }) {
+function Tabs<T extends string>({ tabs, value, onChange }: { tabs: { key: T; label: string }[]; value: T; onChange: (k: T) => void }) {
   return (
     <nav className="mt-6 flex flex-wrap gap-1 border-b border-border" role="tablist">
-      {TABS.map(t => {
+      {tabs.map(t => {
         const active = value === t.key;
         return (
           <button
@@ -1085,3 +1129,273 @@ function ConversionCard({ label, glyph, desc, count }: { label: string; glyph: s
     </div>
   );
 }
+
+/* =====================================================================
+ * OPERATIONAL PATH — Professional Development (no achievement stars)
+ * ===================================================================== */
+
+type OpTabKey = "overview" | "skills" | "training" | "certifications" | "journey" | "reviews";
+
+const OP_TABS: { key: OpTabKey; label: string }[] = [
+  { key: "overview",       label: "Overview" },
+  { key: "skills",         label: "Skill Tree" },
+  { key: "training",       label: "Training" },
+  { key: "certifications", label: "Certifications" },
+  { key: "journey",        label: "Career Journey" },
+  { key: "reviews",        label: "Reviews" },
+];
+
+function OperationalDashboard() {
+  const emp = SAMPLE_OPERATIONAL_EMPLOYEE;
+  const [tab, setTab] = useState<OpTabKey>("overview");
+  return (
+    <>
+      <OpProfileCard emp={emp} />
+      <Tabs tabs={OP_TABS} value={tab} onChange={(k) => setTab(k as OpTabKey)} />
+      <div className="mt-6 space-y-6">
+        {tab === "overview" && (
+          <>
+            <div className="grid gap-6 lg:grid-cols-2">
+              <CurrentGradeCard current={emp.currentGrade} />
+              <OpNextRankProgress current={emp.currentRank} notes={emp.nextRankNotes} />
+            </div>
+            <OpTrainingPanel training={emp.training} />
+            <ABCDPanel current={emp.currentGrade} history={emp.abcdHistory} />
+          </>
+        )}
+        {tab === "skills"         && <OpSkillTree skills={emp.skills} />}
+        {tab === "training"       && <OpTrainingPanel training={emp.training} expanded />}
+        {tab === "certifications" && <OpCertifications items={emp.certifications} />}
+        {tab === "journey"        && <OpJourney milestones={emp.milestones} />}
+        {tab === "reviews"        && <ReviewsPanel reviews={emp.reviews} />}
+      </div>
+    </>
+  );
+}
+
+function OpProfileCard({ emp }: { emp: OperationalEmployee }) {
+  const rank = OPERATIONAL_RANKS.find(r => r.key === emp.currentRank)!;
+  const grade = GRADE_META[emp.currentGrade];
+  const years = Math.max(1, new Date().getFullYear() - new Date(emp.joinedOn).getFullYear());
+  return (
+    <section className="card-ornate-gold relative overflow-hidden p-6 sm:p-8">
+      <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
+        <div className="flex items-center gap-5">
+          <div
+            className="grid h-20 w-20 shrink-0 place-items-center rounded-full font-display text-2xl font-bold"
+            style={{
+              background: `radial-gradient(circle at 30% 30%, ${rank.color}, oklch(0.2 0.03 250))`,
+              color: "oklch(0.15 0.03 250)",
+              boxShadow: `0 0 0 2px ${rank.color}, 0 0 24px -4px ${rank.color}`,
+            }}
+          >
+            {emp.avatar}
+          </div>
+          <div>
+            <div className="text-[10px] uppercase tracking-[0.25em] text-gold">Operational Path</div>
+            <h1 className="font-display text-2xl text-foreground sm:text-3xl">{emp.name}</h1>
+            <p className="text-sm text-muted-foreground">{rank.name} {emp.role} · {emp.department}</p>
+            <p className="mt-1 text-xs italic text-muted-foreground">Measured by capability & mastery — {years} year{years > 1 ? "s" : ""} of service</p>
+          </div>
+        </div>
+        <div className="grid flex-1 grid-cols-3 gap-3 sm:gap-4">
+          <Stat label="Rank" value={rank.name} sub={rank.subtitle} color={rank.color} />
+          <Stat label="This Month" value={`Grade ${emp.currentGrade}`} sub={grade.label} color={grade.color} />
+          <Stat label="Discipline" value={emp.role} sub={emp.department.split("·")[0].trim()} color="var(--color-gold)" />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function OpNextRankProgress({ current, notes }: { current: OpRankKey; notes: string[] }) {
+  const idx = OPERATIONAL_RANKS.findIndex(r => r.key === current);
+  const cur = OPERATIONAL_RANKS[idx];
+  const next = OPERATIONAL_RANKS[idx + 1];
+  return (
+    <section className="card-ornate p-6">
+      <SectionHeader eyebrow="Ascension Trial" title="Path to Next Rank" hint="Rank never decreases. It is a record of proven mastery." />
+      <div className="mt-5 flex items-center justify-between gap-4">
+        <div className="text-center">
+          <div className="mx-auto grid h-14 w-14 place-items-center rounded-full border-2 font-display text-base"
+            style={{ borderColor: cur.color, color: "oklch(0.15 0.03 250)", background: `radial-gradient(circle at 30% 30%, ${cur.color}, oklch(0.18 0.03 250))` }}>
+            {cur.name.charAt(0)}
+          </div>
+          <div className="mt-1 text-[10px] uppercase tracking-widest" style={{ color: cur.color }}>{cur.name}</div>
+        </div>
+        <div className="flex-1 text-center">
+          <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Trial of</div>
+          <div className="font-display text-base text-gold">{next ? next.name : "Pinnacle Reached"}</div>
+          <div className="text-[11px] italic text-muted-foreground">{next ? next.subtitle : "You stand at the summit."}</div>
+        </div>
+        {next && (
+          <div className="text-center opacity-60">
+            <div className="mx-auto grid h-14 w-14 place-items-center rounded-full border-2 font-display text-base"
+              style={{ borderColor: next.color, color: "oklch(0.15 0.03 250)", background: `radial-gradient(circle at 30% 30%, ${next.color}, oklch(0.18 0.03 250))` }}>
+              {next.name.charAt(0)}
+            </div>
+            <div className="mt-1 text-[10px] uppercase tracking-widest" style={{ color: next.color }}>{next.name}</div>
+          </div>
+        )}
+      </div>
+      <ul className="mt-5 space-y-1.5 text-xs text-muted-foreground">
+        {notes.map((n, i) => (
+          <li key={i} className="flex gap-2"><span className="text-gold">◆</span><span>{n}</span></li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function OpSkillTree({ skills }: { skills: OpSkillNode[] }) {
+  const branches = useMemo(() => {
+    const out: Record<string, OpSkillNode[]> = {};
+    for (const n of skills) (out[n.branch] ||= []).push(n);
+    for (const k of Object.keys(out)) out[k].sort((a, b) => a.tier - b.tier);
+    return out;
+  }, [skills]);
+  const tints: Record<string, string> = {
+    Craft: "oklch(0.75 0.15 78)",
+    Service: "oklch(0.7 0.18 240)",
+    Leadership: "oklch(0.7 0.2 300)",
+  };
+  return (
+    <section className="card-ornate p-6">
+      <SectionHeader eyebrow="What I Can Do" title="Skill Tree" hint="Proven craft, service, and leadership skills. Built shift by shift." />
+      <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {Object.keys(branches).map(b => {
+          const tint = tints[b] ?? "var(--color-gold)";
+          return (
+            <div key={b} className="rounded-md border border-border bg-ink/40 p-3">
+              <div className="mb-3 flex items-center gap-2">
+                <span className="font-display text-sm uppercase tracking-widest" style={{ color: tint }}>{b}</span>
+              </div>
+              <ol className="space-y-2">
+                {branches[b].map((node, i) => (
+                  <li key={node.id}>
+                    <OpSkillNodeView node={node} tint={tint} />
+                    {i < branches[b].length - 1 && <div className="ml-4 h-3 w-px bg-border" />}
+                  </li>
+                ))}
+              </ol>
+            </div>
+          );
+        })}
+      </div>
+      <Legend />
+    </section>
+  );
+}
+
+function OpSkillNodeView({ node, tint }: { node: OpSkillNode; tint: string }) {
+  const styleByStatus = {
+    mastered:  { border: tint, bg: `color-mix(in oklch, ${tint} 14%, transparent)`, text: "text-foreground", icon: "✓" },
+    active:    { border: "var(--color-gold)", bg: "color-mix(in oklch, var(--color-gold) 14%, transparent)", text: "text-gold", icon: "◐" },
+    available: { border: "var(--color-border)", bg: "transparent", text: "text-foreground", icon: "○" },
+    locked:    { border: "var(--color-border)", bg: "transparent", text: "text-muted-foreground", icon: "🔒" },
+  }[node.status];
+  return (
+    <div className={`rounded-md border p-2.5 ${node.status === "locked" ? "opacity-55" : ""}`}
+      style={{ borderColor: styleByStatus.border, background: styleByStatus.bg }}>
+      <div className="flex items-baseline justify-between gap-2">
+        <span className={`font-display text-sm ${styleByStatus.text}`}>{node.label}</span>
+        <span className="text-xs opacity-70">{styleByStatus.icon}</span>
+      </div>
+      <div className="text-[11px] text-muted-foreground">Tier {node.tier} · {node.desc}</div>
+    </div>
+  );
+}
+
+function OpTrainingPanel({ training, expanded }: { training: TrainingLevel[]; expanded?: boolean }) {
+  return (
+    <section className="card-ornate p-6">
+      <SectionHeader
+        eyebrow="Training Levels"
+        title="Mastery Tracks"
+        hint="Each track grows 1 → 5 through formal training and verified practice."
+      />
+      <ul className="mt-5 grid gap-3 sm:grid-cols-2">
+        {training.map(t => (
+          <li key={t.track} className="rounded-md border border-border bg-ink/40 p-4">
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="font-display text-sm">{t.track}</span>
+              <span className="font-display text-sm text-gold">Lv {t.level}/5</span>
+            </div>
+            {expanded && <div className="text-[11px] italic text-muted-foreground">{t.blurb}</div>}
+            <div className="mt-2 flex items-center gap-2">
+              {[1,2,3,4,5].map(n => (
+                <span key={n} className={`h-1.5 flex-1 rounded-full ${n <= t.level ? "bg-gold" : "bg-border"}`} />
+              ))}
+            </div>
+            {t.level < 5 && (
+              <div className="mt-2 text-[11px] text-muted-foreground">
+                <span className="text-gold">{t.progressToNext}%</span> to Level {t.level + 1}
+                <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full border border-border bg-ink">
+                  <div className="h-full rounded-full bg-gold/70" style={{ width: `${t.progressToNext}%` }} />
+                </div>
+              </div>
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function OpCertifications({ items }: { items: Certification[] }) {
+  const statusMeta: Record<Certification["status"], { label: string; color: string }> = {
+    active:   { label: "Active",        color: "var(--color-grade-a)" },
+    expiring: { label: "Expiring Soon", color: "var(--color-grade-c)" },
+    expired:  { label: "Expired",       color: "var(--color-grade-d)" },
+  };
+  return (
+    <section className="card-ornate p-6">
+      <SectionHeader eyebrow="Verified Mastery" title="Certifications" hint="Formal proof of capability — awarded by institutions and the house." />
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        {items.map(c => {
+          const s = statusMeta[c.status];
+          return (
+            <div key={c.id} className="rounded-md border border-border bg-ink/40 p-4"
+              style={{ boxShadow: c.status === "active" ? `0 0 14px -8px ${s.color}` : undefined }}>
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="font-display text-sm">{c.name}</span>
+                <span className="rounded-full px-2 py-0.5 text-[10px] uppercase tracking-widest"
+                  style={{ color: s.color, background: `color-mix(in oklch, ${s.color} 15%, transparent)` }}>
+                  {s.label}
+                </span>
+              </div>
+              <div className="mt-1 text-[11px] text-muted-foreground">Issued by {c.issuer}</div>
+              <div className="mt-2 flex justify-between text-[11px] text-muted-foreground">
+                <span>Earned <span className="text-foreground">{c.earnedOn}</span></span>
+                {c.expiresOn && <span>Expires <span className="text-foreground">{c.expiresOn}</span></span>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function OpJourney({ milestones }: { milestones: CareerMilestone[] }) {
+  return (
+    <section className="card-ornate p-6">
+      <SectionHeader eyebrow="The Journey" title="Career Milestones" hint="Every promotion, certification, and signature moment in your career." />
+      <ol className="mt-5 space-y-2">
+        {milestones.slice().reverse().map((m, i) => (
+          <li key={i} className="flex items-start gap-3 rounded-md border border-border bg-ink/40 p-3">
+            <span className="text-gold">◆</span>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <span className="font-display text-sm">{m.label}</span>
+                <span className="text-[11px] text-muted-foreground">{m.date}</span>
+              </div>
+              <div className="text-[11px] text-muted-foreground">{m.detail}</div>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
