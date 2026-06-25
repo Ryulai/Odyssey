@@ -63,15 +63,16 @@ async function replaceUserRole(context: any, userId: string, role: AppRole) {
       if ((count ?? 0) === 0) throw new Error("Cannot remove the final Director. Assign another Director first.");
     }
   }
+  const { error: roleError } = await supabaseAdmin
+    .from("user_roles")
+    .upsert({ user_id: userId, role });
+  if (roleError) throw new Error(roleError.message);
   const { error: delError } = await supabaseAdmin
     .from("user_roles")
     .delete()
-    .eq("user_id", userId);
+    .eq("user_id", userId)
+    .neq("role", role);
   if (delError) throw new Error(delError.message);
-  const { error: roleError } = await supabaseAdmin
-    .from("user_roles")
-    .insert({ user_id: userId, role });
-  if (roleError) throw new Error(roleError.message);
 }
 
 /* ============ Staff ============ */
