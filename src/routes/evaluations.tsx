@@ -92,7 +92,7 @@ function EvaluationsPage() {
               </label>
               <div className="sm:col-span-2 flex items-center justify-between rounded-md border border-gold/30 bg-gold/5 px-3 py-2">
                 <div className="text-xs text-muted-foreground">
-                  Composite preview: <span className="text-gold">{composite}</span>
+                  Voyage Rating preview: <span className="text-gold">{composite}</span>
                 </div>
                 <div className="font-display text-xs uppercase tracking-widest" style={{ color: GRADE_META[projectedGrade as "A"].color }}>
                   Grade {projectedGrade} · {GRADE_META[projectedGrade as "A"].label}
