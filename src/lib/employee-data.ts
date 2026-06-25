@@ -307,9 +307,38 @@ export const SAMPLE_EMPLOYEE: Employee = {
     },
     {
       id: "iron-man", name: "Iron Man", icon: "🛡",
-      description: "12 consecutive months without a missed target.",
+      description: "A quarter without a single missed target.",
+      type: "Season", difficulty: "Legendary", resetCycle: "Seasonal",
+      repeatable: true, maxPerCycle: 1, rewardText: "+1 Star per season",
+      history: [
+        { period: "Q2 2025", date: "2025-06-30", stars: 1 },
+        { period: "Q4 2025", date: "2025-12-31", stars: 1 },
+      ],
+    },
+    {
+      id: "best-assist", name: "Best Assist", icon: "🤝",
+      description: "Tip the scales for a teammate's hunt.",
+      type: "Season", difficulty: "Hard", resetCycle: "Seasonal",
+      repeatable: true, maxPerCycle: 1, rewardText: "+1 Star per season",
+      history: [
+        { period: "Q4 2025", date: "2025-12-20", stars: 1 },
+        { period: "Q1 2026", date: "2026-03-22", stars: 1 },
+      ],
+    },
+    {
+      id: "hunter-champion", name: "Hunter Champion", icon: "🏆",
+      description: "Top hunter of the entire year.",
       type: "Annual", difficulty: "Legendary", resetCycle: "Yearly",
-      repeatable: true, maxPerCycle: 1, rewardText: "+3 Stars per year",
+      repeatable: true, maxPerCycle: 1, rewardText: "+5 Stars per year",
+      history: [
+        { period: "2024", date: "2024-12-31", stars: 5 },
+      ],
+    },
+    {
+      id: "guild-legend", name: "Guild Legend", icon: "🌟",
+      description: "Voted by peers as the guild's heart of the year.",
+      type: "Annual", difficulty: "Legendary", resetCycle: "Yearly",
+      repeatable: true, maxPerCycle: 1, rewardText: "+5 Stars per year",
       history: [],
     },
     {
