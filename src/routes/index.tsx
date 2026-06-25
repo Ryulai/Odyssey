@@ -34,10 +34,10 @@ import {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Guild Ledger — Two Paths, One Guild" },
-      { name: "description", content: "Hunters earn achievements and legacy stars. Operational staff master ranks, skills, certifications, and training. Both paths, equally respected." },
-      { property: "og:title", content: "Guild Ledger — Two Paths, One Guild" },
-      { property: "og:description", content: "Hunter Achievement Economy and Operational Professional Development, side by side." },
+      { title: "The Odyssey Guide — Chart Your Journey. Forge Your Legacy." },
+      { name: "description", content: "A voyage of growth. Navigators chart achievements and legacy stars; Shipbuilders master ranks, skills, certifications, and training. Two routes across the same sea." },
+      { property: "og:title", content: "The Odyssey Guide — Chart Your Journey. Forge Your Legacy." },
+      { property: "og:description", content: "A maritime growth journey: Navigator Achievement Economy and Shipbuilder Professional Development, sailing side by side." },
     ],
   }),
   component: () => <AuthGate><Dashboard /></AuthGate>,
