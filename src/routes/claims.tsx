@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AuthGate } from "@/components/auth-gate";
 import { useAuth, useRole, can } from "@/lib/roles";
@@ -13,6 +13,10 @@ export const Route = createFileRoute("/claims")({
 });
 
 const inputCls = "w-full rounded-md border border-border bg-ink/60 px-3 py-2 text-sm text-foreground focus:border-gold focus:outline-none";
+const MAX_FILES = 10;
+const MAX_BYTES = 10 * 1024 * 1024; // 10 MB / file
+const ACCEPT = "image/jpeg,image/png,image/webp,application/pdf";
+const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf"]);
 
 function ClaimsPage() {
   const { user } = useAuth();
@@ -53,34 +57,50 @@ function SubmitClaim({ userId }: { userId: string | null }) {
   const [staffId, setStaffId] = useState("");
   const [evidence, setEvidence] = useState("");
   const [notes, setNotes] = useState("");
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  // Default staff to self
   const effectiveStaffId = staffId || myStaff?.id || "";
+
+  function onPickFiles(list: FileList | null) {
+    if (!list) return;
+    const incoming = Array.from(list);
+    const valid: File[] = [];
+    for (const f of incoming) {
+      if (!ALLOWED.has(f.type)) { setMsg(`Unsupported type: ${f.name}. Allowed: jpg, png, webp, pdf.`); continue; }
+      if (f.size > MAX_BYTES) { setMsg(`Too large (>10MB): ${f.name}`); continue; }
+      valid.push(f);
+    }
+    const merged = [...files, ...valid].slice(0, MAX_FILES);
+    if (files.length + valid.length > MAX_FILES) setMsg(`Maximum ${MAX_FILES} files.`);
+    setFiles(merged);
+  }
 
   const submit = useMutation({
     mutationFn: async () => {
-      let url: string | null = null;
-      if (file && userId) {
-        const path = `${userId}/${Date.now()}-${file.name}`;
-        const up = await supabase.storage.from("claim-evidence").upload(path, file, { upsert: false });
-        if (up.error) throw up.error;
-        url = path; // store the path; signed URLs generated on demand
+      const paths: string[] = [];
+      if (userId && files.length) {
+        for (const file of files) {
+          const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+          const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safe}`;
+          const up = await supabase.storage.from("claim-evidence").upload(path, file, { upsert: false, contentType: file.type });
+          if (up.error) throw up.error;
+          paths.push(path);
+        }
       }
       return submitClaim({ data: {
         staff_id: effectiveStaffId,
         achievement_id: achievementId,
         evidence_text: evidence,
-        evidence_url: url,
+        evidence_files: paths,
         notes,
       }});
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["claims"] });
       setMsg("Claim submitted. Awaiting review.");
-      setEvidence(""); setNotes(""); setFile(null); setAchievementId("");
+      setEvidence(""); setNotes(""); setFiles([]); setAchievementId("");
     },
     onError: (e: any) => setMsg(e.message ?? "Failed"),
   });
@@ -105,14 +125,27 @@ function SubmitClaim({ userId }: { userId: string | null }) {
           </select>
         </label>
         <label className="block">
-          <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">Evidence</span>
+          <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">Evidence (text)</span>
           <textarea rows={3} className={inputCls} value={evidence} onChange={e => setEvidence(e.target.value)}
             placeholder="Describe what you did, deal IDs, links…" />
         </label>
-        <label className="block">
-          <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">Evidence File (optional)</span>
-          <input type="file" onChange={e => setFile(e.target.files?.[0] ?? null)} className="text-xs text-muted-foreground" />
-        </label>
+        <div>
+          <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">
+            Evidence Files — jpg, png, webp, pdf · up to {MAX_FILES}, 10MB each
+          </span>
+          <input type="file" multiple accept={ACCEPT} onChange={e => { onPickFiles(e.target.files); e.target.value = ""; }}
+            className="block w-full text-xs text-muted-foreground file:mr-3 file:rounded file:border file:border-gold/40 file:bg-gold/10 file:px-3 file:py-1.5 file:text-[10px] file:font-display file:uppercase file:tracking-widest file:text-gold hover:file:bg-gold/20" />
+          {!!files.length && (
+            <ul className="mt-2 space-y-1">
+              {files.map((f, i) => (
+                <li key={i} className="flex items-center justify-between rounded border border-border bg-ink/40 px-2 py-1 text-xs">
+                  <span className="truncate">{f.name} <span className="text-muted-foreground">· {(f.size / 1024).toFixed(0)} KB</span></span>
+                  <button type="button" onClick={() => setFiles(fs => fs.filter((_, j) => j !== i))} className="text-muted-foreground hover:text-red-300">remove</button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
         <label className="block">
           <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">Notes</span>
           <textarea rows={2} className={inputCls} value={notes} onChange={e => setNotes(e.target.value)} />
@@ -164,7 +197,7 @@ function ReviewQueue() {
         <div className="mt-4 space-y-2">
           {claims.map((c: any) => (
             <ClaimCard key={c.id} c={c} action={c.status === "pending" ? (
-              <div className="flex gap-2">
+              <div className="flex shrink-0 gap-2">
                 <button onClick={() => decide.mutate({ id: c.id, decision: "approved" })}
                   className="rounded border border-emerald-400/50 px-3 py-1 text-xs uppercase tracking-widest text-emerald-300 hover:bg-emerald-400/10">Approve</button>
                 <button onClick={() => {
@@ -183,31 +216,93 @@ function ReviewQueue() {
 }
 
 function ClaimCard({ c, action }: { c: any; action?: React.ReactNode }) {
-  const [url, setUrl] = useState<string | null>(null);
-  async function openEvidence() {
-    if (!c.evidence_url) return;
-    const { data, error } = await supabase.storage.from("claim-evidence").createSignedUrl(c.evidence_url, 60);
-    if (!error && data) { setUrl(data.signedUrl); window.open(data.signedUrl, "_blank"); }
-  }
+  const paths: string[] = useMemo(() => {
+    const arr = Array.isArray(c.evidence_files) ? c.evidence_files.filter(Boolean) : [];
+    if (!arr.length && c.evidence_url) return [c.evidence_url];
+    return arr;
+  }, [c.evidence_files, c.evidence_url]);
+
   return (
     <div className="rounded-md border border-border bg-ink/40 p-3">
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
             <div className="font-medium">{c.achievement?.name ?? "?"}</div>
             <span className="text-[10px] uppercase tracking-widest text-muted-foreground">★ {c.achievement?.star_reward ?? 0}</span>
             <StatusPill s={c.status} />
           </div>
-          <div className="text-xs text-muted-foreground">{c.staff?.name} · {new Date(c.created_at).toLocaleString()}</div>
+          <div className="text-xs text-muted-foreground">
+            {c.staff?.name} · submitted {new Date(c.created_at).toLocaleString()}
+            {c.decided_at && <> · decided {new Date(c.decided_at).toLocaleString()}</>}
+          </div>
           {c.evidence_text && <div className="mt-2 text-sm">{c.evidence_text}</div>}
           {c.notes && <div className="mt-1 text-xs italic text-muted-foreground">Notes: {c.notes}</div>}
-          {c.evidence_url && (
-            <button onClick={openEvidence} className="mt-1 text-xs text-gold underline">{url ? "Re-open evidence" : "View evidence file"}</button>
-          )}
-          {c.decision_notes && <div className="mt-1 text-xs text-red-300">Reviewer: {c.decision_notes}</div>}
+          {!!paths.length && <EvidenceGallery paths={paths} />}
+          {c.decision_notes && <div className="mt-2 text-xs text-red-300">Reviewer: {c.decision_notes}</div>}
         </div>
         {action}
       </div>
+    </div>
+  );
+}
+
+function EvidenceGallery({ paths }: { paths: string[] }) {
+  const [active, setActive] = useState<{ url: string; type: "image" | "pdf"; name: string } | null>(null);
+  const [items, setItems] = useState<Array<{ path: string; url: string; type: "image" | "pdf"; name: string } | null>>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const next = await Promise.all(paths.map(async (p) => {
+        const { data } = await supabase.storage.from("claim-evidence").createSignedUrl(p, 60 * 30);
+        if (!data?.signedUrl) return null;
+        const name = p.split("/").pop() ?? p;
+        const isPdf = /\.pdf($|\?)/i.test(name);
+        return { path: p, url: data.signedUrl, type: isPdf ? "pdf" as const : "image" as const, name };
+      }));
+      if (!cancelled) setItems(next);
+    })();
+    return () => { cancelled = true; };
+  }, [paths.join("|")]);
+
+  return (
+    <div className="mt-2">
+      <div className="mb-1 text-[10px] uppercase tracking-widest text-muted-foreground">Evidence · {paths.length} file{paths.length === 1 ? "" : "s"}</div>
+      <div className="flex flex-wrap gap-2">
+        {items.map((it, i) => it && (
+          <button key={i} type="button" onClick={() => setActive(it)}
+            className="group relative h-20 w-20 overflow-hidden rounded border border-border bg-ink/60 transition-colors hover:border-gold/60">
+            {it.type === "image" ? (
+              <img src={it.url} alt={it.name} className="h-full w-full object-cover" loading="lazy" />
+            ) : (
+              <div className="flex h-full w-full flex-col items-center justify-center gap-1 text-[10px] font-display uppercase tracking-widest text-gold">
+                <span className="text-base">PDF</span>
+                <span className="truncate px-1 text-[8px] text-muted-foreground">{it.name.slice(0, 12)}</span>
+              </div>
+            )}
+          </button>
+        ))}
+      </div>
+      {active && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" onClick={() => setActive(null)}>
+          <div className="relative max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-lg border border-gold/40 bg-ink" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-border px-4 py-2 text-xs">
+              <span className="truncate font-display uppercase tracking-widest text-gold">{active.name}</span>
+              <div className="flex gap-2">
+                <a href={active.url} target="_blank" rel="noreferrer" className="rounded border border-border px-2 py-1 text-[10px] uppercase tracking-widest text-muted-foreground hover:border-gold/40 hover:text-gold">Open</a>
+                <button onClick={() => setActive(null)} className="rounded border border-border px-2 py-1 text-[10px] uppercase tracking-widest text-muted-foreground hover:border-gold/40 hover:text-gold">Close</button>
+              </div>
+            </div>
+            <div className="h-[80vh] bg-black/60">
+              {active.type === "image" ? (
+                <img src={active.url} alt={active.name} className="h-full w-full object-contain" />
+              ) : (
+                <iframe src={active.url} title={active.name} className="h-full w-full" />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
