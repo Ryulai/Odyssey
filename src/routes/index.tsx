@@ -227,19 +227,10 @@ function Stat({ label, value, sub, color }: { label: string; value: string; sub:
 
 /* ----------------------------- Tabs ----------------------------- */
 
-const TABS: { key: TabKey; label: string }[] = [
-  { key: "overview",     label: "Overview" },
-  { key: "achievements", label: "Achievements" },
-  { key: "legacy",       label: "Legacy" },
-  { key: "career",       label: "Rank & Career" },
-  { key: "partner",      label: "Partner Path" },
-  { key: "reviews",      label: "Reviews" },
-];
-
-function Tabs({ value, onChange }: { value: TabKey; onChange: (k: TabKey) => void }) {
+function Tabs<T extends string>({ tabs, value, onChange }: { tabs: { key: T; label: string }[]; value: T; onChange: (k: T) => void }) {
   return (
     <nav className="mt-6 flex flex-wrap gap-1 border-b border-border" role="tablist">
-      {TABS.map(t => {
+      {tabs.map(t => {
         const active = value === t.key;
         return (
           <button
