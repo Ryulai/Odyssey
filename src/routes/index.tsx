@@ -177,9 +177,9 @@ function HunterHeader() {
         <CrestIcon />
         <div>
           <div className="font-display text-lg font-semibold tracking-widest text-gold uppercase">
-            The Guild Ledger
+            The Odyssey Guide
           </div>
-          <div className="text-xs text-muted-foreground">Adventure journal of a guild hunter</div>
+          <div className="text-xs text-muted-foreground">Chart Your Journey. Forge Your Legacy.</div>
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-2">
