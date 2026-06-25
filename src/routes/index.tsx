@@ -117,6 +117,7 @@ function HunterDashboard() {
             <ABCDPanel current={emp.currentGrade} history={emp.abcdHistory} />
           </>
         )}
+        {tab === "growth" && <GrowthTrees />}
         {tab === "achievements" && <AchievementsLedger items={emp.achievements} />}
         {tab === "legacy" && <LegacyHall legacy={legacy} emp={emp} />}
         {tab === "career" && (
