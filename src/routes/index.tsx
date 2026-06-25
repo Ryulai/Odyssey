@@ -1578,7 +1578,7 @@ const GROWTH_TREES: GrowthTree[] = [
   },
   {
     id: "leadership",
-    title: "Leadership Tree",
+    title: "Captain Tree",
     question: "Who follows me?",
     icon: "🛡",
     accent: "var(--color-rank-diamond)",
