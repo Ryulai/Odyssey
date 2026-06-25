@@ -236,7 +236,7 @@ function ClaimCard({ c, action }: { c: any; action?: React.ReactNode }) {
             {c.decided_at && <> · decided {new Date(c.decided_at).toLocaleString()}</>}
           </div>
           {c.evidence_text && <div className="mt-2 text-sm">{c.evidence_text}</div>}
-          {c.notes && <div className="mt-1 text-xs italic text-muted-foreground">Notes: {c.notes}</div>}
+          {c.notes && <div className="mt-1 text-xs italic text-muted-foreground">Captain Notes: {c.notes}</div>}
           {!!paths.length && <EvidenceGallery paths={paths} />}
           {c.decision_notes && <div className="mt-2 text-xs text-red-300">Reviewer: {c.decision_notes}</div>}
         </div>
