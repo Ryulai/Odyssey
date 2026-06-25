@@ -111,7 +111,7 @@ function SubmitClaim({ userId }: { userId: string | null }) {
       <form onSubmit={(e) => { e.preventDefault(); if (!achievementId || !effectiveStaffId) return; setBusy(true); submit.mutate(undefined, { onSettled: () => setBusy(false) }); }}
         className="mt-4 space-y-3">
         <label className="block">
-          <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">Hunter (staff)</span>
+          <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">Navigator (crew)</span>
           <select className={inputCls} value={effectiveStaffId} onChange={e => setStaffId(e.target.value)} required>
             <option value="">— Select —</option>
             {staff.map((s: any) => <option key={s.id} value={s.id}>{s.name}{s.user_id === userId ? " (me)" : ""}</option>)}
