@@ -4,8 +4,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AuthGate } from "@/components/auth-gate";
 import { useRole, can } from "@/lib/roles";
 import { GRADE_META } from "@/lib/employee-data";
-import { listStaff, getGradeConfig } from "@/lib/server/config.functions";
-import { listEvaluations, submitEvaluation, deleteEvaluation } from "@/lib/server/evaluations.functions";
+import { listStaff, getGradeConfig } from "@/lib/config.functions";
+import { listEvaluations, submitEvaluation, deleteEvaluation } from "@/lib/evaluations.functions";
 
 export const Route = createFileRoute("/evaluations")({
   head: () => ({ meta: [{ title: "Monthly Evaluations — Guild Ledger" }] }),
