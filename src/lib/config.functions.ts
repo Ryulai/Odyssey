@@ -90,7 +90,8 @@ export const listStaff = createServerFn({ method: "GET" })
     const { data, error } = await query.order("name");
     if (error) throw new Error(error.message);
     if (actorRole !== "director") return data ?? [];
-    const { data: roles, error: roleError } = await context.supabase
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: roles, error: roleError } = await supabaseAdmin
       .from("user_roles")
       .select("user_id, role");
     if (roleError) throw new Error(roleError.message);
@@ -111,7 +112,8 @@ export const listUserAccounts = createServerFn({ method: "GET" })
       .select("id, full_name, email")
       .order("email");
     if (error) throw new Error(error.message);
-    const { data: roles, error: roleError } = await context.supabase
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: roles, error: roleError } = await supabaseAdmin
       .from("user_roles")
       .select("user_id, role");
     if (roleError) throw new Error(roleError.message);
