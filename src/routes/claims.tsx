@@ -125,13 +125,13 @@ function SubmitClaim({ userId }: { userId: string | null }) {
           </select>
         </label>
         <label className="block">
-          <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">Evidence (text)</span>
+          <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">Voyage Proof (text)</span>
           <textarea rows={3} className={inputCls} value={evidence} onChange={e => setEvidence(e.target.value)}
             placeholder="Describe what you did, deal IDs, links…" />
         </label>
         <div>
           <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">
-            Evidence Files — jpg, png, webp, pdf · up to {MAX_FILES}, 10MB each
+            Voyage Proof Files — jpg, png, webp, pdf · up to {MAX_FILES}, 10MB each
           </span>
           <input type="file" multiple accept={ACCEPT} onChange={e => { onPickFiles(e.target.files); e.target.value = ""; }}
             className="block w-full text-xs text-muted-foreground file:mr-3 file:rounded file:border file:border-gold/40 file:bg-gold/10 file:px-3 file:py-1.5 file:text-[10px] file:font-display file:uppercase file:tracking-widest file:text-gold hover:file:bg-gold/20" />
