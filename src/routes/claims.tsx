@@ -192,7 +192,7 @@ function ReviewQueue() {
 
   return (
     <section className="rounded-md border border-border bg-ink/30 p-5">
-      <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">Review Queue</h2>
+      <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">Harbor Review Queue</h2>
       {isLoading ? <div className="py-4 text-xs text-muted-foreground">Loading…</div> : (
         <div className="mt-4 space-y-2">
           {claims.map((c: any) => (
@@ -208,7 +208,7 @@ function ReviewQueue() {
               </div>
             ) : null} />
           ))}
-          {!claims.length && <div className="py-6 text-center text-xs text-muted-foreground">No claims yet.</div>}
+          {!claims.length && <div className="py-6 text-center text-xs text-muted-foreground">No voyages recorded yet.</div>}
         </div>
       )}
     </section>
