@@ -340,3 +340,44 @@ export const deleteLegacyTitle = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+/* ============ Locations / Fleets ============ */
+export const listLocations = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase.from("locations").select("*").order("name");
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
+
+export const upsertLocation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: {
+    id?: string; name: string; code?: string | null; kind?: string;
+    manager_id?: string | null; notes?: string | null; status?: "active" | "inactive";
+  }) => d)
+  .handler(async ({ context, data }) => {
+    requireDirector(await currentUserRole(context));
+    const payload: any = {
+      name: data.name,
+      code: data.code ?? null,
+      kind: data.kind ?? "venue",
+      manager_id: data.manager_id ?? null,
+      notes: data.notes ?? null,
+      status: data.status ?? "active",
+    };
+    if (data.id) payload.id = data.id;
+    const { data: row, error } = await context.supabase.from("locations").upsert(payload).select().single();
+    if (error) throw new Error(error.message);
+    return row;
+  });
+
+export const deleteLocation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => d)
+  .handler(async ({ context, data }) => {
+    requireDirector(await currentUserRole(context));
+    const { error } = await context.supabase.from("locations").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
