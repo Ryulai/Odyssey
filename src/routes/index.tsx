@@ -770,83 +770,109 @@ const DIFFICULTY_COLOR: Record<string, string> = {
 
 function AchievementsLedger({ items }: { items: RepeatableAchievement[] }) {
   const totalEarnedStars = items.reduce((s, a) => s + a.history.reduce((x, h) => x + h.stars, 0), 0);
+  const totalEarned = items.reduce((s, a) => s + a.history.length, 0);
+  const mostEarned = items.slice().sort((a, b) => b.history.length - a.history.length)[0];
+
+  const groups: { key: string; label: string; tint: string; blurb: string; items: RepeatableAchievement[] }[] = [
+    { key: "Monthly",  label: "Monthly",  tint: "oklch(0.78 0.12 150)", blurb: "Reset every month.",       items: items.filter(a => a.type === "Monthly") },
+    { key: "Season",   label: "Seasonal", tint: "oklch(0.72 0.16 230)", blurb: "Reset every quarter.",     items: items.filter(a => a.type === "Season") },
+    { key: "Annual",   label: "Annual",   tint: "oklch(0.82 0.16 78)",  blurb: "Once per year.",           items: items.filter(a => a.type === "Annual") },
+    { key: "Other",    label: "Other",    tint: "oklch(0.7 0.2 300)",   blurb: "One-time or milestone.",    items: items.filter(a => !["Monthly","Season","Annual"].includes(a.type)) },
+  ].filter(g => g.items.length > 0);
+
   return (
-    <section className="card-ornate p-6">
-      <SectionHeader
-        eyebrow="Hall of Records"
-        title="Achievement Ledger"
-        hint="Achievements are repeatable. Earning the same achievement again grants another star."
-      />
-      <div className="mt-3 text-xs text-muted-foreground">
-        <span className="text-gold font-display">{totalEarnedStars}★</span> stars earned across <span className="text-foreground">{items.length}</span> achievements in this ledger.
-      </div>
-      <div className="mt-5 grid gap-3 lg:grid-cols-2">
-        {items.map(a => <AchievementRow key={a.id} a={a} />)}
-      </div>
-    </section>
+    <div className="space-y-6">
+      <section className="card-ornate p-6">
+        <SectionHeader
+          eyebrow="Hall of Records"
+          title="Achievement Collection"
+          hint="Achievements are repeatable. Earning the same achievement again adds another star to your legacy."
+        />
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <Stat2 label="Stars Generated"      value={`${totalEarnedStars}⭐`} />
+          <Stat2 label="Total Times Earned"   value={String(totalEarned)} />
+          <Stat2 label="Unique Achievements"  value={`${items.filter(a=>a.history.length>0).length} / ${items.length}`} />
+          <Stat2 label="Most Frequent"        value={mostEarned && mostEarned.history.length > 0 ? `${mostEarned.name} ×${mostEarned.history.length}` : "—"} />
+        </div>
+      </section>
+
+      {groups.map(g => (
+        <section key={g.key} className="card-ornate p-6">
+          <div className="flex items-baseline justify-between gap-2">
+            <div>
+              <div className="text-[10px] uppercase tracking-[0.25em]" style={{ color: g.tint }}>{g.label} Achievements</div>
+              <h2 className="mt-1 font-display text-lg">{g.label}</h2>
+            </div>
+            <span className="text-xs italic text-muted-foreground">{g.blurb}</span>
+          </div>
+          <div className="mt-4 grid gap-3 lg:grid-cols-2">
+            {g.items.map(a => <AchievementRow key={a.id} a={a} groupTint={g.tint} />)}
+          </div>
+        </section>
+      ))}
+    </div>
   );
 }
 
-function AchievementRow({ a }: { a: RepeatableAchievement }) {
+function AchievementRow({ a, groupTint }: { a: RepeatableAchievement; groupTint: string }) {
   const stars = a.history.reduce((s, h) => s + h.stars, 0);
   const times = a.history.length;
   const last = a.history[a.history.length - 1];
   const diffColor = DIFFICULTY_COLOR[a.difficulty] ?? "var(--color-gold)";
+  const everEarned = times > 0;
+
   return (
     <div className="rounded-md border border-border bg-ink/40 p-4">
       <div className="flex items-start gap-3">
         <div
           className="grid h-12 w-12 shrink-0 place-items-center rounded-md border text-xl"
           style={{
-            borderColor: diffColor,
-            background: `radial-gradient(circle at 30% 30%, color-mix(in oklch, ${diffColor} 35%, transparent), oklch(0.2 0.03 250))`,
-            boxShadow: times > 0 ? `0 0 14px -6px ${diffColor}` : undefined,
+            borderColor: everEarned ? diffColor : "var(--color-border)",
+            background: everEarned
+              ? `radial-gradient(circle at 30% 30%, color-mix(in oklch, ${diffColor} 35%, transparent), oklch(0.2 0.03 250))`
+              : "oklch(0.22 0.02 250)",
+            boxShadow: everEarned ? `0 0 14px -6px ${diffColor}` : undefined,
+            filter: everEarned ? undefined : "grayscale(0.6)",
           }}
         >
           {a.icon}
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <span className="font-display text-sm">{a.name}</span>
-            <span className="font-display text-sm text-gold">{stars}★</span>
+            <span className="font-display text-sm">
+              {a.name} <span className="text-gold">×{times}</span>
+            </span>
+            <span className="font-display text-sm text-gold">{stars}⭐</span>
           </div>
           <div className="text-[11px] text-muted-foreground">{a.description}</div>
           <div className="mt-2 flex flex-wrap gap-1.5 text-[10px] uppercase tracking-widest">
-            <Chip>{a.type}</Chip>
+            <Chip color={groupTint}>{a.type}</Chip>
             <Chip color={diffColor}>{a.difficulty}</Chip>
-            <Chip>Resets · {a.resetCycle}</Chip>
             <Chip>{a.repeatable ? "Repeatable" : "One-Time"}</Chip>
-            <Chip>Max {a.maxPerCycle}/cycle</Chip>
+            <Chip>{a.rewardText}</Chip>
+          </div>
+          <div className="mt-2 flex flex-wrap items-baseline justify-between gap-2 text-[11px] text-muted-foreground">
+            <span>Last earned: <span className="text-foreground">{last ? last.period : "never"}</span></span>
+            {last && <span>{last.date}</span>}
           </div>
         </div>
       </div>
 
-      <div className="mt-3 grid grid-cols-2 gap-2 text-[11px]">
-        <Stat2 label="Times Earned" value={String(times)} />
-        <Stat2 label="Stars Generated" value={`${stars}★`} />
-        <Stat2 label="Reward" value={a.rewardText} />
-        <Stat2 label="Latest" value={last ? last.period : "—"} />
-      </div>
-
-      {times > 0 ? (
-        <div className="mt-3">
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">History</div>
-          <ol className="mt-1.5 space-y-1">
+      {everEarned && (
+        <details className="mt-3 text-[11px]">
+          <summary className="cursor-pointer text-muted-foreground hover:text-gold">View history ({times})</summary>
+          <ol className="mt-2 space-y-1">
             {a.history.slice().reverse().map((h, i) => (
-              <li key={i} className="flex items-center justify-between rounded border border-border/70 bg-ink/60 px-2 py-1 text-[11px]">
+              <li key={i} className="flex items-center justify-between rounded border border-border/70 bg-ink/60 px-2 py-1">
                 <span className="text-foreground">{h.period}</span>
                 <span className="flex items-center gap-2">
                   <span className="text-muted-foreground">{h.date}</span>
-                  <span className="text-gold">{"★".repeat(h.stars)}</span>
+                  <span className="text-gold">{"⭐".repeat(h.stars)}</span>
                 </span>
               </li>
             ))}
           </ol>
-        </div>
-      ) : (
-        <div className="mt-3 rounded border border-dashed border-border/60 bg-ink/40 px-3 py-2 text-[11px] italic text-muted-foreground">
-          Not yet claimed. {a.repeatable ? "Earn it and the ledger will remember every time." : "A relic yet to be forged — a one-time honor."}
-        </div>
+        </details>
       )}
     </div>
   );
@@ -879,22 +905,24 @@ function Stat2({ label, value }: { label: string; value: string }) {
 
 function LegacyGlyphs({ suns, moons, stars, compact }: { suns: number; moons: number; stars: number; compact?: boolean }) {
   const size = compact ? "text-base" : "text-3xl";
-  const cap = (n: number, max = 5) => Math.min(n, max);
   return (
-    <span className={`flex items-center gap-1.5 ${size}`}>
+    <span className={`inline-flex items-center gap-3 ${size}`}>
       {suns > 0 && (
-        <span className="flex items-center gap-0.5" title={`${suns} suns`}>
-          {"☀".repeat(cap(suns))}{suns > 5 && <span className="text-xs text-muted-foreground">×{suns}</span>}
+        <span className="inline-flex items-baseline gap-1" title={`${suns} sun${suns > 1 ? "s" : ""}`}>
+          <span style={{ color: "oklch(0.86 0.16 78)" }}>☀</span>
+          <span className="font-display text-sm text-foreground">×{suns}</span>
         </span>
       )}
       {moons > 0 && (
-        <span className="flex items-center gap-0.5" title={`${moons} moons`}>
-          {"☾".repeat(cap(moons))}{moons > 5 && <span className="text-xs text-muted-foreground">×{moons}</span>}
+        <span className="inline-flex items-baseline gap-1" title={`${moons} moon${moons > 1 ? "s" : ""}`}>
+          <span style={{ color: "oklch(0.85 0.05 250)" }}>🌙</span>
+          <span className="font-display text-sm text-foreground">×{moons}</span>
         </span>
       )}
       {stars > 0 && (
-        <span className="flex items-center gap-0.5 text-gold" title={`${stars} stars`}>
-          {"★".repeat(cap(stars))}{stars > 5 && <span className="text-xs text-muted-foreground">×{stars}</span>}
+        <span className="inline-flex items-baseline gap-1 text-gold" title={`${stars} star${stars > 1 ? "s" : ""}`}>
+          <span>⭐</span>
+          <span className="font-display text-sm text-foreground">×{stars}</span>
         </span>
       )}
       {suns + moons + stars === 0 && <span className="text-xs text-muted-foreground">No legacy yet</span>}
@@ -930,6 +958,22 @@ function LegacyBanner({ legacy }: { legacy: ReturnType<typeof computeLegacy> }) 
 
 function LegacyHall({ legacy, emp }: { legacy: ReturnType<typeof computeLegacy>; emp: Employee }) {
   const earned = emp.achievements.reduce((s, a) => s + a.history.reduce((x, h) => x + h.stars, 0), 0);
+  const totalAchievementsEarned = emp.achievements.reduce((s, a) => s + a.history.length, 0);
+  const uniqueEarned = emp.achievements.filter(a => a.history.length > 0).length;
+  const yearsOfService = Math.max(1, Math.floor((Date.now() - new Date(emp.joinedOn).getTime()) / (365.25 * 24 * 3600 * 1000)));
+
+  // career milestones derived from history
+  const allHistory = emp.achievements.flatMap(a => a.history.map(h => ({ ...h, name: a.name, icon: a.icon })));
+  allHistory.sort((a, b) => a.date.localeCompare(b.date));
+  const firstEarn = allHistory[0];
+  const milestones: { label: string; date?: string; detail: string }[] = [
+    { label: "Sworn to the Guild", date: emp.joinedOn, detail: emp.guildTitle },
+    ...(firstEarn ? [{ label: "First Star Earned", date: firstEarn.date, detail: `${firstEarn.icon} ${firstEarn.name}` }] : []),
+    { label: "First Moon Forged", date: allHistory[9]?.date, detail: "10 lifetime stars" },
+    ...(legacy.suns >= 1 ? [{ label: "First Sun Risen", date: allHistory[49]?.date, detail: "50 lifetime stars" }] : []),
+    { label: `Title: ${legacy.title.name}`, detail: legacy.title.flavor },
+  ].filter(m => m.label);
+
   return (
     <div className="space-y-6">
       <section className="card-ornate-gold p-8 text-center">
@@ -939,29 +983,59 @@ function LegacyHall({ legacy, emp }: { legacy: ReturnType<typeof computeLegacy>;
         <div className="mt-5 flex justify-center">
           <LegacyGlyphs suns={legacy.suns} moons={legacy.moons} stars={legacy.stars} />
         </div>
-        <div className="mt-3 font-display text-xl text-gold">{legacy.total}★ <span className="text-sm text-muted-foreground">Lifetime Stars</span></div>
+        <div className="mt-3 font-display text-xl text-gold">{legacy.total}⭐ <span className="text-sm text-muted-foreground">Lifetime Stars</span></div>
         <p className="mx-auto mt-4 max-w-md text-xs text-muted-foreground">
-          10 stars become a moon. 10 moons become a sun. Legacy never resets. This is the record carried across every season.
+          10 stars become a moon. 5 moons become a sun. Legacy never resets — it is the record carried across every season.
         </p>
+      </section>
+
+      <section className="card-ornate p-6">
+        <SectionHeader eyebrow="The Long Tally" title="Legacy Statistics" />
+        <div className="mt-4 grid gap-3 grid-cols-2 sm:grid-cols-3">
+          <Stat2 label="Lifetime Stars"        value={`${legacy.total}⭐`} />
+          <Stat2 label="Total Moons"           value={`${Math.floor(legacy.total / 10)}🌙`} />
+          <Stat2 label="Total Suns"            value={`${Math.floor(legacy.total / 50)}☀`} />
+          <Stat2 label="Achievements Earned"   value={String(totalAchievementsEarned)} />
+          <Stat2 label="Unique Achievements"   value={`${uniqueEarned} / ${emp.achievements.length}`} />
+          <Stat2 label="Years of Service"      value={`${yearsOfService} yr`} />
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div className="rounded border border-border bg-ink/40 p-3 text-xs">
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">From this ledger</div>
+            <div className="font-display text-base">{earned}⭐ tracked</div>
+          </div>
+          <div className="rounded border border-border bg-ink/40 p-3 text-xs">
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">From earlier seasons</div>
+            <div className="font-display text-base">{emp.pastLegacyStars}⭐ archived</div>
+          </div>
+        </div>
       </section>
 
       <section className="card-ornate p-6">
         <SectionHeader eyebrow="The Conversion" title="How Legacy is Forged" />
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          <ConversionCard label="Star" glyph="★" desc="Earned from a single achievement." count={legacy.stars} />
-          <ConversionCard label="Moon" glyph="☾" desc="10 stars become a moon." count={legacy.moons} />
-          <ConversionCard label="Sun"  glyph="☀" desc="10 moons become a sun." count={legacy.suns} />
+          <ConversionCard label="Star" glyph="⭐" desc="Earned from a single achievement." count={legacy.stars} />
+          <ConversionCard label="Moon" glyph="🌙" desc="10 stars become a moon." count={legacy.moons} />
+          <ConversionCard label="Sun"  glyph="☀" desc="5 moons become a sun (50 stars)." count={legacy.suns} />
         </div>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <div className="rounded border border-border bg-ink/40 p-3 text-xs">
-            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">From this ledger</div>
-            <div className="font-display text-base">{earned}★ tracked</div>
-          </div>
-          <div className="rounded border border-border bg-ink/40 p-3 text-xs">
-            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">From earlier seasons</div>
-            <div className="font-display text-base">{emp.pastLegacyStars}★ archived</div>
-          </div>
-        </div>
+      </section>
+
+      <section className="card-ornate p-6">
+        <SectionHeader eyebrow="The Saga" title="Career Milestones" />
+        <ol className="mt-4 space-y-2">
+          {milestones.map((m, i) => (
+            <li key={i} className="flex items-start gap-3 rounded-md border border-border bg-ink/40 p-3">
+              <span className="text-gold">◆</span>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <span className="font-display text-sm">{m.label}</span>
+                  {m.date && <span className="text-[11px] text-muted-foreground">{m.date}</span>}
+                </div>
+                <div className="text-[11px] text-muted-foreground">{m.detail}</div>
+              </div>
+            </li>
+          ))}
+        </ol>
       </section>
 
       <section className="card-ornate p-6">
@@ -969,12 +1043,12 @@ function LegacyHall({ legacy, emp }: { legacy: ReturnType<typeof computeLegacy>;
         <ol className="mt-4 space-y-2">
           {[
             { name: "Wanderer",           min: 0,   glyph: "·" },
-            { name: "Pathfinder",         min: 10,  glyph: "☾" },
-            { name: "Voyager",            min: 30,  glyph: "☾☾☾" },
-            { name: "Shipbuilder",        min: 50,  glyph: "☾☾☾☾☾" },
-            { name: "Master Shipbuilder", min: 100, glyph: "☀" },
-            { name: "Guild Elder",        min: 300, glyph: "☀☀☀" },
-            { name: "Living Legend",      min: 500, glyph: "☀☀☀☀☀" },
+            { name: "Pathfinder",         min: 10,  glyph: "🌙" },
+            { name: "Voyager",            min: 30,  glyph: "🌙🌙🌙" },
+            { name: "Shipbuilder",        min: 50,  glyph: "☀" },
+            { name: "Master Shipbuilder", min: 150, glyph: "☀☀☀" },
+            { name: "Guild Elder",        min: 250, glyph: "☀×5" },
+            { name: "Living Legend",      min: 500, glyph: "☀×10" },
           ].map(t => {
             const reached = legacy.total >= t.min;
             const current = legacy.title.name === t.name;
@@ -987,7 +1061,7 @@ function LegacyHall({ legacy, emp }: { legacy: ReturnType<typeof computeLegacy>;
                   <span className="text-lg" style={{ color: reached ? "var(--color-gold)" : undefined }}>{t.glyph}</span>
                   <div>
                     <div className={`font-display text-sm ${current ? "text-gold" : ""}`}>{t.name}</div>
-                    <div className="text-[11px] text-muted-foreground">{t.min}★ lifetime</div>
+                    <div className="text-[11px] text-muted-foreground">{t.min}⭐ lifetime</div>
                   </div>
                 </div>
                 {current && <span className="rounded-full bg-gold/15 px-2 py-0.5 text-[10px] uppercase tracking-widest text-gold">Bearing now</span>}

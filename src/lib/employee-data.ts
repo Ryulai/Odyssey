@@ -8,7 +8,7 @@ export const GRADE_META: Record<Grade, { label: string; tagline: string; color: 
 };
 
 export type RankKey =
-  | "bronze" | "silver" | "gold" | "platinum" | "diamond" | "mythic" | "legend";
+  | "bronze" | "silver" | "gold" | "platinum" | "diamond" | "blackdiamond" | "mythic" | "legend";
 
 export interface RankInfo {
   key: RankKey;
@@ -20,13 +20,14 @@ export interface RankInfo {
 }
 
 export const HUNTER_RANKS: RankInfo[] = [
-  { key: "bronze",   name: "Bronze Hunter",   subtitle: "Apprentice",            description: "Learning the craft.",            color: "var(--color-rank-bronze)" },
-  { key: "silver",   name: "Silver Hunter",   subtitle: "Independent Hunter",    description: "Operates without supervision.",  color: "var(--color-rank-silver)" },
-  { key: "gold",     name: "Gold Hunter",     subtitle: "Professional Hunter",   description: "Consistent professional output.",color: "var(--color-rank-gold)" },
-  { key: "platinum", name: "Platinum Hunter", subtitle: "Elite Hunter",          description: "Influential contributor.",       color: "var(--color-rank-platinum)" },
-  { key: "diamond",  name: "Black Diamond",   subtitle: "Master Hunter",         description: "Builds and shapes teams.",       color: "var(--color-rank-diamond)" },
-  { key: "mythic",   name: "Mythic Hunter",   subtitle: "Department Legend",     description: "Locked tier.",                    color: "var(--color-rank-mythic)", locked: true },
-  { key: "legend",   name: "Legend Hunter",   subtitle: "Company Legend",        description: "Locked tier.",                    color: "var(--color-rank-legend)", locked: true },
+  { key: "bronze",       name: "Bronze Hunter",       subtitle: "Apprentice",         description: "Learning the craft.",            color: "var(--color-rank-bronze)" },
+  { key: "silver",       name: "Silver Hunter",       subtitle: "Independent",        description: "Operates without supervision.",  color: "var(--color-rank-silver)" },
+  { key: "gold",         name: "Gold Hunter",         subtitle: "Professional",       description: "Consistent professional output.",color: "var(--color-rank-gold)" },
+  { key: "platinum",     name: "Platinum Hunter",     subtitle: "Elite",              description: "Influential contributor.",       color: "var(--color-rank-platinum)" },
+  { key: "diamond",      name: "Diamond Hunter",      subtitle: "Veteran Master",     description: "Defines excellence in the craft.", color: "var(--color-rank-diamond)" },
+  { key: "blackdiamond", name: "Black Diamond Hunter",subtitle: "Guild Pillar",       description: "Builds and shapes whole teams.", color: "oklch(0.45 0.05 280)" },
+  { key: "mythic",       name: "Mythic Hunter",       subtitle: "Department Legend",  description: "Locked tier.",                    color: "var(--color-rank-mythic)", locked: true },
+  { key: "legend",       name: "Legend Hunter",       subtitle: "Company Legend",     description: "Locked tier.",                    color: "var(--color-rank-legend)", locked: true },
 ];
 
 export type PartnerKey =
@@ -153,19 +154,21 @@ export interface LegacyTitle {
 }
 
 export const LEGACY_TITLES: LegacyTitle[] = [
-  { name: "Wanderer",          minStars: 0,    flavor: "The journey has just begun." },
-  { name: "Pathfinder",        minStars: 10,   flavor: "One moon claimed. A path emerges." },
-  { name: "Voyager",           minStars: 30,   flavor: "Three moons. The map widens." },
-  { name: "Shipbuilder",       minStars: 50,   flavor: "Five moons. You forge what others sail." },
-  { name: "Master Shipbuilder",minStars: 100,  flavor: "A sun rises. Your fleet is your own." },
-  { name: "Guild Elder",       minStars: 300,  flavor: "Three suns. Your name carries weight." },
-  { name: "Living Legend",     minStars: 500,  flavor: "Five suns. Songs are sung in your name." },
+  { name: "Wanderer",          minStars: 0,   flavor: "The journey has just begun." },
+  { name: "Pathfinder",        minStars: 10,  flavor: "One moon claimed. A path emerges." },
+  { name: "Voyager",           minStars: 30,  flavor: "Three moons. The map widens." },
+  { name: "Shipbuilder",       minStars: 50,  flavor: "A sun rises. You forge what others sail." },
+  { name: "Master Shipbuilder",minStars: 150, flavor: "Three suns. Your fleet is your own." },
+  { name: "Guild Elder",       minStars: 250, flavor: "Five suns. Your name carries weight." },
+  { name: "Living Legend",     minStars: 500, flavor: "Ten suns. Songs are sung in your name." },
 ];
 
+// Compression: 10 stars = 1 moon, 5 moons = 1 sun (so 1 sun = 50 stars)
 export function computeLegacy(totalStars: number) {
-  const suns  = Math.floor(totalStars / 100);
-  const moons = Math.floor((totalStars % 100) / 10);
-  const stars = totalStars % 10;
+  const suns  = Math.floor(totalStars / 50);
+  const remAfterSuns = totalStars - suns * 50;
+  const moons = Math.floor(remAfterSuns / 10);
+  const stars = remAfterSuns - moons * 10;
   let title = LEGACY_TITLES[0];
   for (const t of LEGACY_TITLES) if (totalStars >= t.minStars) title = t;
   const next = LEGACY_TITLES.find(t => t.minStars > totalStars);
@@ -304,9 +307,38 @@ export const SAMPLE_EMPLOYEE: Employee = {
     },
     {
       id: "iron-man", name: "Iron Man", icon: "🛡",
-      description: "12 consecutive months without a missed target.",
+      description: "A quarter without a single missed target.",
+      type: "Season", difficulty: "Legendary", resetCycle: "Seasonal",
+      repeatable: true, maxPerCycle: 1, rewardText: "+1 Star per season",
+      history: [
+        { period: "Q2 2025", date: "2025-06-30", stars: 1 },
+        { period: "Q4 2025", date: "2025-12-31", stars: 1 },
+      ],
+    },
+    {
+      id: "best-assist", name: "Best Assist", icon: "🤝",
+      description: "Tip the scales for a teammate's hunt.",
+      type: "Season", difficulty: "Hard", resetCycle: "Seasonal",
+      repeatable: true, maxPerCycle: 1, rewardText: "+1 Star per season",
+      history: [
+        { period: "Q4 2025", date: "2025-12-20", stars: 1 },
+        { period: "Q1 2026", date: "2026-03-22", stars: 1 },
+      ],
+    },
+    {
+      id: "hunter-champion", name: "Hunter Champion", icon: "🏆",
+      description: "Top hunter of the entire year.",
       type: "Annual", difficulty: "Legendary", resetCycle: "Yearly",
-      repeatable: true, maxPerCycle: 1, rewardText: "+3 Stars per year",
+      repeatable: true, maxPerCycle: 1, rewardText: "+5 Stars per year",
+      history: [
+        { period: "2024", date: "2024-12-31", stars: 5 },
+      ],
+    },
+    {
+      id: "guild-legend", name: "Guild Legend", icon: "🌟",
+      description: "Voted by peers as the guild's heart of the year.",
+      type: "Annual", difficulty: "Legendary", resetCycle: "Yearly",
+      repeatable: true, maxPerCycle: 1, rewardText: "+5 Stars per year",
       history: [],
     },
     {
