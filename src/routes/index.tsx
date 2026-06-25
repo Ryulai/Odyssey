@@ -1,14 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRole, ROLE_META, can, useAuth } from "@/lib/roles";
 import { AuthGate } from "@/components/auth-gate";
 import { getStaffDashboard } from "@/lib/workflow.functions";
 
 import {
+  SAMPLE_EMPLOYEE,
+  SAMPLE_OPERATIONAL_EMPLOYEE,
   GRADE_META,
   HUNTER_RANKS,
+  OPERATIONAL_RANKS,
   PARTNER_PATH,
+  computeLegacy,
+  totalStars,
   type Grade,
   type RankKey,
   type CareerTreeNode,
