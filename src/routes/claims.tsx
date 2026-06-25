@@ -4,8 +4,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AuthGate } from "@/components/auth-gate";
 import { useAuth, useRole, can } from "@/lib/roles";
 import { supabase } from "@/integrations/supabase/client";
-import { listAchievements, listStaff } from "@/lib/server/config.functions";
-import { listClaims, submitClaim, decideClaim, listMyRecords } from "@/lib/server/claims.functions";
+import { listAchievements, listStaff } from "@/lib/config.functions";
+import { listClaims, submitClaim, decideClaim, listMyRecords } from "@/lib/claims.functions";
 
 export const Route = createFileRoute("/claims")({
   head: () => ({ meta: [{ title: "Achievement Claims — Guild Ledger" }] }),
