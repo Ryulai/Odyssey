@@ -101,10 +101,12 @@ function AdminPage() {
         {active && <div className="mb-4 text-xs italic text-muted-foreground">{active.hint}</div>}
 
         {tab === "staff"        && <StaffModule />}
+        {tab === "locations"    && <LocationsModule />}
         {tab === "grades"       && can(role, "admin.grades")       && <GradesModule />}
         {tab === "achievements" && <AchievementsModule />}
         {tab === "ranks"        && can(role, "admin.ranks")        && <RanksModule />}
         {tab === "legacy"       && can(role, "admin.legacy")       && <LegacyModule />}
+
       </div>
     </div>
   );
