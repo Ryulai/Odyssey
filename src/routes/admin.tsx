@@ -34,6 +34,7 @@ const TABS: { key: AdminTab; label: string; hint: string; cap: Capability }[] = 
 
 function AdminPage() {
   const { role } = useRole();
+  const displayRole = role ?? "staff";
   const visibleTabs = useMemo(() => TABS.filter(t => can(role, t.cap)), [role]);
   const [tab, setTab] = useState<AdminTab>(visibleTabs[0]?.key ?? "staff");
   useEffect(() => {
@@ -53,7 +54,7 @@ function AdminPage() {
               The Admin Console is reserved for Directors and Managers.
             </p>
             <ul className="mx-auto mt-4 max-w-sm space-y-1 text-left text-xs text-muted-foreground">
-              {PERMISSIONS[role].map(p => <li key={p}>· {p}</li>)}
+              {PERMISSIONS[displayRole].map(p => <li key={p}>· {p}</li>)}
             </ul>
             <Link to="/" className="mt-6 inline-block rounded-md border border-gold/50 bg-gold/10 px-4 py-2 font-display text-xs uppercase tracking-widest text-gold hover:bg-gold/20">
               ← Back to the Ledger
