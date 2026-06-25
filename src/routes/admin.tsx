@@ -589,3 +589,96 @@ function LegacyTitleRow({ title, onSave, onDelete }: { title: any; onSave: (d: a
     </div>
   );
 }
+
+/* ============ Locations / Fleets ============ */
+function LocationsModule() {
+  const qc = useQueryClient();
+  const { data: locations = [], isLoading } = useQuery({ queryKey: ["locations"], queryFn: () => listLocations() });
+  const { data: staff = [] } = useQuery({ queryKey: ["staff"], queryFn: () => listStaff() });
+  const save = useMutation({ mutationFn: (d: any) => upsertLocation({ data: d }), onSuccess: () => qc.invalidateQueries({ queryKey: ["locations"] }) });
+  const del = useMutation({ mutationFn: (id: string) => deleteLocation({ data: { id } }), onSuccess: () => qc.invalidateQueries({ queryKey: ["locations"] }) });
+  const [editing, setEditing] = useState<any | null>(null);
+
+  return (
+    <Section title="Fleet Locations" action={
+      <Btn onClick={() => setEditing({ id: "", name: "", code: "", kind: "venue", manager_id: null, notes: "", status: "active" })}>+ New Fleet</Btn>
+    }>
+      {isLoading ? <div className="py-6 text-center text-xs text-muted-foreground">Loading…</div> : (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {locations.map((loc: any) => {
+            const captain = staff.find((s: any) => s.id === loc.manager_id);
+            const crew = staff.filter((s: any) => s.location_id === loc.id);
+            return (
+              <div key={loc.id} className="rounded-md border border-gold/30 bg-ink/40 p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <div className="font-display text-lg text-gold">{loc.name}</div>
+                    <div className="text-[11px] uppercase tracking-widest text-muted-foreground">
+                      {loc.kind ?? "venue"}{loc.code ? ` · ${loc.code}` : ""}
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Btn variant="ghost" onClick={() => setEditing(loc)}>Edit</Btn>
+                    <Btn variant="danger" onClick={() => del.mutate(loc.id)}>Delete</Btn>
+                  </div>
+                </div>
+                <div className="mt-3 text-sm">
+                  <div><span className="text-muted-foreground">Captain:</span> {captain?.name ?? "— Unassigned —"}</div>
+                  <div className="mt-1"><span className="text-muted-foreground">Crew ({crew.length}):</span> {crew.map((c: any) => c.name).join(", ") || "—"}</div>
+                </div>
+              </div>
+            );
+          })}
+          {!locations.length && <div className="sm:col-span-2 py-6 text-center text-xs text-muted-foreground">No fleets yet.</div>}
+        </div>
+      )}
+      {editing && (
+        <LocationForm row={editing} managers={staff}
+          onCancel={() => setEditing(null)}
+          onSave={(d) => save.mutate(d, { onSuccess: () => setEditing(null) })}
+          busy={save.isPending} />
+      )}
+    </Section>
+  );
+}
+
+function LocationForm({ row, managers, onSave, onCancel, busy }: {
+  row: any; managers: any[]; onSave: (r: any) => void; onCancel: () => void; busy: boolean;
+}) {
+  const [d, setD] = useState(row);
+  return (
+    <form onSubmit={(e) => { e.preventDefault(); const p = { ...d }; if (!p.id) delete p.id; onSave(p); }}
+      className="mt-5 grid gap-3 rounded-md border border-gold/30 bg-ink/50 p-4 sm:grid-cols-2">
+      <div className="sm:col-span-2 font-display text-xs uppercase tracking-widest text-gold">
+        {row.id ? "Edit Fleet" : "Create Fleet"}
+      </div>
+      <Field label="Name"><input className={inputCls} value={d.name} onChange={e => setD({ ...d, name: e.target.value })} required /></Field>
+      <Field label="Code"><input className={inputCls} value={d.code ?? ""} onChange={e => setD({ ...d, code: e.target.value })} placeholder="e.g. TING" /></Field>
+      <Field label="Kind">
+        <select className={inputCls} value={d.kind ?? "venue"} onChange={e => setD({ ...d, kind: e.target.value })}>
+          <option value="venue">Venue</option>
+          <option value="livehouse">Livehouse</option>
+          <option value="ktv">KTV</option>
+          <option value="reserve">Reserve</option>
+          <option value="hq">HQ</option>
+        </select>
+      </Field>
+      <Field label="Captain (Manager)">
+        <select className={inputCls} value={d.manager_id ?? ""} onChange={e => setD({ ...d, manager_id: e.target.value || null })}>
+          <option value="">— None —</option>
+          {managers.map((m: any) => <option key={m.id} value={m.id}>{m.name} · {m.role}</option>)}
+        </select>
+      </Field>
+      <Field label="Status">
+        <select className={inputCls} value={d.status ?? "active"} onChange={e => setD({ ...d, status: e.target.value })}>
+          <option value="active">Active</option><option value="inactive">Inactive</option>
+        </select>
+      </Field>
+      <Field label="Notes"><input className={inputCls} value={d.notes ?? ""} onChange={e => setD({ ...d, notes: e.target.value })} /></Field>
+      <div className="sm:col-span-2 mt-2 flex justify-end gap-2">
+        <Btn variant="ghost" onClick={onCancel}>Cancel</Btn>
+        <Btn type="submit" disabled={busy}>{busy ? "Saving…" : "Save"}</Btn>
+      </div>
+    </form>
+  );
+}
