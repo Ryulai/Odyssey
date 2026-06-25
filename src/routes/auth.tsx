@@ -63,16 +63,16 @@ function AuthPage() {
   return (
     <div className="min-h-screen text-foreground">
       <div className="mx-auto flex max-w-md flex-col px-4 py-16">
-        <Link to="/" className="mb-6 text-xs uppercase tracking-widest text-muted-foreground hover:text-gold">← Guild Ledger</Link>
+        <Link to="/" className="mb-6 text-xs uppercase tracking-widest text-muted-foreground hover:text-gold">← The Odyssey Guide</Link>
         <div className="card-ornate p-8">
           <div className="font-display text-xs uppercase tracking-[0.3em] text-muted-foreground">
-            {mode === "signup" ? "Enlist" : "Re-enter"}
+            {mode === "signup" ? "Board the Ship" : "Return to Port"}
           </div>
           <h1 className="mt-1 font-display text-2xl text-gold">
-            {mode === "signup" ? "Join the Guild" : "Sign in"}
+            {mode === "signup" ? "Begin Your Odyssey" : "Sign in"}
           </h1>
           <p className="mt-2 text-xs italic text-muted-foreground">
-            The first hunter to enlist becomes the Guild Director.
+            The first navigator to board becomes the Fleet Director.
           </p>
 
           <form onSubmit={submit} className="mt-6 space-y-3">
