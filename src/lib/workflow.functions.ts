@@ -232,17 +232,29 @@ export const getManagerDashboard = createServerFn({ method: "GET" })
 export const getFleetOverview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const [locsRes, staffRes, gradesRes, claimsRes] = await Promise.all([
+    const [locsRes, staffRes, gradesRes, claimsRes, ranksRes] = await Promise.all([
       context.supabase.from("locations").select("*").order("name"),
       context.supabase.from("staff").select("id, name, role, role_family, manager_id, location_id, current_rank_key, status, email"),
       context.supabase.from("monthly_evaluations").select("staff_id, grade, month, composite_score").order("month", { ascending: false }),
       context.supabase.from("achievement_claims").select("staff_id, status"),
+      context.supabase.from("ranks").select("key, name, position").order("position"),
     ]);
-    for (const r of [locsRes, staffRes, gradesRes, claimsRes] as any[]) if (r.error) throw new Error(r.error.message);
+    for (const r of [locsRes, staffRes, gradesRes, claimsRes, ranksRes] as any[]) if (r.error) throw new Error(r.error.message);
+
+    const hunters = (staffRes.data ?? []).filter((s: any) => s.role_family === "hunter" && s.status !== "inactive");
+    const evaluations = await Promise.all(
+      hunters.map(async (s: any) => {
+        const { data } = await context.supabase.rpc("evaluate_rank", { _staff_id: s.id }).maybeSingle();
+        return { staff_id: s.id, evaluation: data as RankEvaluation | null };
+      }),
+    );
+
     return {
       locations: locsRes.data ?? [],
       staff: staffRes.data ?? [],
       grades: gradesRes.data ?? [],
       claims: claimsRes.data ?? [],
+      ranks: ranksRes.data ?? [],
+      evaluations,
     };
   });
