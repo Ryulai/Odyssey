@@ -261,9 +261,10 @@ function roleToAppRole(role: string): "director" | "manager" | "staff" {
   return "staff";
 }
 
-function StaffForm({ row, managers, accounts, isDirector, onSave, onCancel, busy }: {
-  row: StaffRow; managers: any[]; accounts: any[]; isDirector: boolean; onSave: (r: any) => void; onCancel: () => void; busy: boolean;
+function StaffForm({ row, managers, accounts, locations, isDirector, onSave, onCancel, busy }: {
+  row: StaffRow; managers: any[]; accounts: any[]; locations: any[]; isDirector: boolean; onSave: (r: any) => void; onCancel: () => void; busy: boolean;
 }) {
+
   const [d, setD] = useState<StaffRow>({ ...row, status: row.status ?? "active", user_id: row.user_id ?? null, app_role: row.app_role ?? roleToAppRole(row.role) });
   const set = <K extends keyof StaffRow>(k: K, v: StaffRow[K]) => setD(x => ({ ...x, [k]: v }));
   const matched = emailMatchesAccount(d.email, accounts);
