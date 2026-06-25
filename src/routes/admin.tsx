@@ -10,7 +10,9 @@ import {
   listAchievements, upsertAchievement, deleteAchievement,
   listRanks, updateRank, reorderRanks,
   getLegacy, updateLegacyConfig, upsertLegacyTitle, deleteLegacyTitle,
+  listLocations, upsertLocation, deleteLocation,
 } from "@/lib/config.functions";
+
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
