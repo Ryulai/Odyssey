@@ -291,12 +291,19 @@ function StaffForm({ row, managers, accounts, locations, isDirector, onSave, onC
           {DEPARTMENTS.map(x => <option key={x} value={x}>{x}</option>)}
         </select>
       </Field>
-      {isDirector && <Field label="Manager">
+      {isDirector && <Field label="Manager (Captain)">
         <select className={inputCls} value={d.manager_id ?? ""} onChange={e => set("manager_id", e.target.value || null)}>
           <option value="">— None —</option>
           {managers.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
         </select>
       </Field>}
+      <Field label="Assigned Fleet / Location">
+        <select className={inputCls} value={d.location_id ?? ""} onChange={e => set("location_id", e.target.value || null)}>
+          <option value="">— Unassigned —</option>
+          {locations.map((l: any) => <option key={l.id} value={l.id}>{l.name}{l.code ? ` · ${l.code}` : ""}</option>)}
+        </select>
+      </Field>
+
       <Field label="Status">
         <select className={inputCls} value={d.status} onChange={e => set("status", e.target.value as any)}>
           <option value="active">Active</option><option value="inactive">Inactive</option>
