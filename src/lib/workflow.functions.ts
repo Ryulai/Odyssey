@@ -40,7 +40,12 @@ export const getStaffDashboard = createServerFn({ method: "GET" })
     let staffId = data.staff_id ?? "";
     if (!staffId) {
       const me = await context.supabase
-        .from("staff").select("id").eq("user_id", context.userId).maybeSingle();
+        .from("staff")
+        .select("id")
+        .eq("user_id", context.userId)
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
       if (me.error) throw new Error(me.error.message);
       staffId = me.data?.id ?? "";
 
@@ -56,7 +61,9 @@ export const getStaffDashboard = createServerFn({ method: "GET" })
           const candidate = await context.supabase
             .from("staff")
             .select("id, user_id")
-            .ilike("email", email)
+            .eq("email", email)
+            .order("updated_at", { ascending: false })
+            .limit(1)
             .maybeSingle();
           if (candidate.error) throw new Error(candidate.error.message);
           if (candidate.data?.id && !candidate.data.user_id) {

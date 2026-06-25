@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -129,17 +129,17 @@ export function RoleProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  async function refreshRole() {
+  const refreshRole = useCallback(async () => {
     if (!session?.user) return;
     const r = await fetchRoleFor(session.user.id);
     setRole(r);
-  }
+  }, [session]);
 
-  async function signOut() {
+  const signOut = useCallback(async () => {
     await supabase.auth.signOut();
     setRole(null);
     setSession(null);
-  }
+  }, []);
 
   return (
     <Ctx.Provider value={{ session, user: session?.user ?? null, role, loading, refreshRole, signOut }}>

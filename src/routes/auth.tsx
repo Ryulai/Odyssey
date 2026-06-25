@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/roles";
+import { ensureBootstrapDirector } from "@/lib/bootstrap.functions";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({ meta: [{ title: "Sign in — Guild Ledger" }] }),
@@ -19,7 +20,16 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (session) nav({ to: "/" });
+    let cancelled = false;
+    if (session) {
+      ensureBootstrapDirector({ data: {} }).then((result) => {
+        if (cancelled) return;
+        nav({ to: result?.redirectTo === "/admin" ? "/admin" : "/" });
+      }).catch(() => {
+        if (!cancelled) nav({ to: "/" });
+      });
+    }
+    return () => { cancelled = true; };
   }, [session, nav]);
 
   async function submit(e: React.FormEvent) {
@@ -39,7 +49,8 @@ function AuthPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       }
-      nav({ to: "/" });
+      const result = await ensureBootstrapDirector({ data: {} });
+      nav({ to: result?.redirectTo === "/admin" ? "/admin" : "/" });
     } catch (e: any) {
       setError(e.message ?? "Authentication failed");
     } finally {
