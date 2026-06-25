@@ -292,7 +292,7 @@ function GradesCard({ grades }: { grades: any[] }) {
             <li key={g.month} className="flex justify-between py-2 text-sm">
               <div>
                 <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{g.month}</div>
-                <div className="text-xs text-muted-foreground">Composite {g.composite_score}</div>
+                <div className="text-xs text-muted-foreground">Voyage Rating {g.composite_score}</div>
               </div>
               <span className="rounded border px-2 py-0.5 font-display text-sm" style={{ color: meta.color, borderColor: meta.color }}>{g.grade}</span>
             </li>
