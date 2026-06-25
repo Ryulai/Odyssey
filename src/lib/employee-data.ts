@@ -153,19 +153,21 @@ export interface LegacyTitle {
 }
 
 export const LEGACY_TITLES: LegacyTitle[] = [
-  { name: "Wanderer",          minStars: 0,    flavor: "The journey has just begun." },
-  { name: "Pathfinder",        minStars: 10,   flavor: "One moon claimed. A path emerges." },
-  { name: "Voyager",           minStars: 30,   flavor: "Three moons. The map widens." },
-  { name: "Shipbuilder",       minStars: 50,   flavor: "Five moons. You forge what others sail." },
-  { name: "Master Shipbuilder",minStars: 100,  flavor: "A sun rises. Your fleet is your own." },
-  { name: "Guild Elder",       minStars: 300,  flavor: "Three suns. Your name carries weight." },
-  { name: "Living Legend",     minStars: 500,  flavor: "Five suns. Songs are sung in your name." },
+  { name: "Wanderer",          minStars: 0,   flavor: "The journey has just begun." },
+  { name: "Pathfinder",        minStars: 10,  flavor: "One moon claimed. A path emerges." },
+  { name: "Voyager",           minStars: 30,  flavor: "Three moons. The map widens." },
+  { name: "Shipbuilder",       minStars: 50,  flavor: "A sun rises. You forge what others sail." },
+  { name: "Master Shipbuilder",minStars: 150, flavor: "Three suns. Your fleet is your own." },
+  { name: "Guild Elder",       minStars: 250, flavor: "Five suns. Your name carries weight." },
+  { name: "Living Legend",     minStars: 500, flavor: "Ten suns. Songs are sung in your name." },
 ];
 
+// Compression: 10 stars = 1 moon, 5 moons = 1 sun (so 1 sun = 50 stars)
 export function computeLegacy(totalStars: number) {
-  const suns  = Math.floor(totalStars / 100);
-  const moons = Math.floor((totalStars % 100) / 10);
-  const stars = totalStars % 10;
+  const suns  = Math.floor(totalStars / 50);
+  const remAfterSuns = totalStars - suns * 50;
+  const moons = Math.floor(remAfterSuns / 10);
+  const stars = remAfterSuns - moons * 10;
   let title = LEGACY_TITLES[0];
   for (const t of LEGACY_TITLES) if (totalStars >= t.minStars) title = t;
   const next = LEGACY_TITLES.find(t => t.minStars > totalStars);
