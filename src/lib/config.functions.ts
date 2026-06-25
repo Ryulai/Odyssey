@@ -266,6 +266,11 @@ export const transferStaff = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return row;
   });
+export const DEFAULT_FACTOR_WEIGHTS = {
+  sales_w: 30, attendance_w: 15, achievements_w: 15,
+  review_w: 15, discipline_w: 10, kpi_w: 15,
+};
+
 export const getGradeConfig = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -276,17 +281,23 @@ export const getGradeConfig = createServerFn({ method: "GET" })
     if (weights.error) throw new Error(weights.error.message);
     if (rules.error) throw new Error(rules.error.message);
     return {
-      weights: weights.data ?? { id: 1, sales_weight: 60, review_weight: 40 },
+      weights: weights.data ?? { id: 1, sales_weight: 60, review_weight: 40, ...DEFAULT_FACTOR_WEIGHTS },
       rules: rules.data ?? [],
     };
   });
 
 export const updateGradeWeights = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { sales_weight: number; review_weight: number }) => d)
+  .inputValidator((d: {
+    sales_w: number; attendance_w: number; achievements_w: number;
+    review_w: number; discipline_w: number; kpi_w: number;
+  }) => d)
   .handler(async ({ context, data }) => {
-    const { error } = await context.supabase.from("grade_weights")
-      .upsert({ id: 1, ...data });
+    const { error } = await context.supabase.from("grade_weights").upsert({
+      id: 1, ...data,
+      sales_weight: data.sales_w,
+      review_weight: data.review_w,
+    });
     if (error) throw new Error(error.message);
     return { ok: true };
   });
