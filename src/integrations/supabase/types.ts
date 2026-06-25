@@ -267,6 +267,50 @@ export type Database = {
         }
         Relationships: []
       }
+      locations: {
+        Row: {
+          code: string | null
+          created_at: string
+          id: string
+          kind: string
+          manager_id: string | null
+          name: string
+          notes: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          code?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          manager_id?: string | null
+          name: string
+          notes?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          manager_id?: string | null
+          name?: string
+          notes?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "locations_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       monthly_evaluations: {
         Row: {
           composite_score: number
@@ -396,6 +440,7 @@ export type Database = {
           department: string
           email: string | null
           id: string
+          location_id: string | null
           manager_id: string | null
           name: string
           role: string
@@ -411,6 +456,7 @@ export type Database = {
           department?: string
           email?: string | null
           id?: string
+          location_id?: string | null
           manager_id?: string | null
           name: string
           role?: string
@@ -426,6 +472,7 @@ export type Database = {
           department?: string
           email?: string | null
           id?: string
+          location_id?: string | null
           manager_id?: string | null
           name?: string
           role?: string
@@ -442,6 +489,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "ranks"
             referencedColumns: ["key"]
+          },
+          {
+            foreignKeyName: "staff_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "staff_manager_id_fkey"
