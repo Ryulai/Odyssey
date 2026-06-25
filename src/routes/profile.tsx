@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AuthGate } from "@/components/auth-gate";
 import { getStaffDashboard } from "@/lib/workflow.functions";
 import { GRADE_META } from "@/lib/employee-data";
-import { useRole } from "@/lib/roles";
+
 
 
 export const Route = createFileRoute("/profile")({
