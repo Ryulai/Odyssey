@@ -243,6 +243,57 @@ export type Database = {
         }
         Relationships: []
       }
+      legacy_holdings: {
+        Row: {
+          created_at: string
+          ended_at: string | null
+          granted_at: string | null
+          id: string
+          location_id: string | null
+          note: string
+          staff_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          ended_at?: string | null
+          granted_at?: string | null
+          id?: string
+          location_id?: string | null
+          note?: string
+          staff_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          ended_at?: string | null
+          granted_at?: string | null
+          id?: string
+          location_id?: string | null
+          note?: string
+          staff_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "legacy_holdings_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "legacy_holdings_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       legacy_titles: {
         Row: {
           flavor: string
@@ -433,6 +484,51 @@ export type Database = {
         }
         Relationships: []
       }
+      rpg_identity: {
+        Row: {
+          career_tree: string | null
+          class: string
+          created_at: string
+          current_rank_key: string | null
+          shipbuilder_tree: string | null
+          staff_id: string
+          updated_at: string
+        }
+        Insert: {
+          career_tree?: string | null
+          class?: string
+          created_at?: string
+          current_rank_key?: string | null
+          shipbuilder_tree?: string | null
+          staff_id: string
+          updated_at?: string
+        }
+        Update: {
+          career_tree?: string | null
+          class?: string
+          created_at?: string
+          current_rank_key?: string | null
+          shipbuilder_tree?: string | null
+          staff_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rpg_identity_current_rank_key_fkey"
+            columns: ["current_rank_key"]
+            isOneToOne: false
+            referencedRelation: "ranks"
+            referencedColumns: ["key"]
+          },
+          {
+            foreignKeyName: "rpg_identity_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: true
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       staff: {
         Row: {
           career_path: string | null
@@ -538,6 +634,64 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      work_identity: {
+        Row: {
+          created_at: string
+          department: string
+          employment_status: string
+          location_id: string | null
+          manager_id: string | null
+          position: string
+          staff_id: string
+          start_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          department?: string
+          employment_status?: string
+          location_id?: string | null
+          manager_id?: string | null
+          position?: string
+          staff_id: string
+          start_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          department?: string
+          employment_status?: string
+          location_id?: string | null
+          manager_id?: string | null
+          position?: string
+          staff_id?: string
+          start_date?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_identity_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_identity_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_identity_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: true
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
