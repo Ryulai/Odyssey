@@ -401,6 +401,7 @@ export type Database = {
           role: string
           role_family: string
           status: string
+          system_role: Database["public"]["Enums"]["app_role"]
           updated_at: string
           user_id: string | null
         }
@@ -415,6 +416,7 @@ export type Database = {
           role?: string
           role_family?: string
           status?: string
+          system_role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
           user_id?: string | null
         }
@@ -429,6 +431,7 @@ export type Database = {
           role?: string
           role_family?: string
           status?: string
+          system_role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
           user_id?: string | null
         }
