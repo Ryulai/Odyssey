@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { useRole, ROLE_META, can, type UserRole } from "@/lib/roles";
+import { useRole, ROLE_META, can, useAuth } from "@/lib/roles";
+import { AuthGate } from "@/components/auth-gate";
 
 import {
   SAMPLE_EMPLOYEE,
@@ -37,7 +38,7 @@ export const Route = createFileRoute("/")({
       { property: "og:description", content: "Hunter Achievement Economy and Operational Professional Development, side by side." },
     ],
   }),
-  component: Dashboard,
+  component: () => <AuthGate><Dashboard /></AuthGate>,
 });
 
 type TabKey = "overview" | "growth" | "achievements" | "legacy" | "career" | "partner" | "reviews";
@@ -140,6 +141,8 @@ function HunterDashboard() {
 
 function HunterHeader() {
   const { role } = useRole();
+  const { user, signOut } = useAuth();
+  const navLink = "rounded-md border border-border px-3 py-2 font-display text-[10px] uppercase tracking-widest text-muted-foreground hover:border-gold/40 hover:text-gold";
   return (
     <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center gap-3">
@@ -151,45 +154,21 @@ function HunterHeader() {
           <div className="text-xs text-muted-foreground">Adventure journal of a guild hunter</div>
         </div>
       </div>
-      <div className="flex items-center gap-3">
-        <RoleSwitcher />
+      <div className="flex flex-wrap items-center gap-2">
+        <Link to="/claims" className={navLink}>Claims</Link>
+        {can(role, "evaluations.write") && <Link to="/evaluations" className={navLink}>Evaluations</Link>}
         {can(role, "admin.access") && (
-          <Link
-            to="/admin"
-            className="rounded-md border border-gold/50 bg-gold/10 px-3 py-2 font-display text-xs uppercase tracking-widest text-gold transition-colors hover:bg-gold/20"
-          >
-            Admin Console
+          <Link to="/admin" className="rounded-md border border-gold/50 bg-gold/10 px-3 py-2 font-display text-[10px] uppercase tracking-widest text-gold hover:bg-gold/20">
+            Admin
           </Link>
         )}
+        <div className="flex flex-col items-end pl-2">
+          <span className="text-[9px] uppercase tracking-[0.25em] text-muted-foreground">{user?.email}</span>
+          <span className="font-display text-[10px] uppercase tracking-widest text-gold">{ROLE_META[role].label}</span>
+        </div>
+        <button onClick={signOut} className={navLink}>Sign out</button>
       </div>
     </header>
-  );
-}
-
-function RoleSwitcher() {
-  const { role, setRole } = useRole();
-  const roles: UserRole[] = ["director", "manager", "staff"];
-  return (
-    <div className="flex flex-col items-end">
-      <div className="text-[9px] uppercase tracking-[0.25em] text-muted-foreground">Viewing as</div>
-      <div className="mt-1 flex rounded-md border border-border bg-ink/40 p-0.5">
-        {roles.map(r => {
-          const active = role === r;
-          return (
-            <button
-              key={r}
-              onClick={() => setRole(r)}
-              title={ROLE_META[r].tagline}
-              className={`rounded px-2.5 py-1 font-display text-[10px] uppercase tracking-widest transition-colors ${
-                active ? "bg-gold/15 text-gold" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {ROLE_META[r].label}
-            </button>
-          );
-        })}
-      </div>
-    </div>
   );
 }
 
