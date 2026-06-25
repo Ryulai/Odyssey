@@ -75,7 +75,7 @@ function AdminPage() {
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="font-display text-xs uppercase tracking-[0.25em] text-gold">Admin Console</div>
             <div className="rounded border border-gold/30 bg-gold/5 px-2 py-0.5 font-display text-[10px] uppercase tracking-widest text-gold">
-              {ROLE_META[role].label} access
+              {ROLE_META[displayRole].label} access
             </div>
           </div>
           <div className="mt-1 text-sm text-muted-foreground">
