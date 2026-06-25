@@ -159,6 +159,8 @@ export const upsertStaff = createServerFn({ method: "POST" })
       department: data.department,
       manager_id: actorRole === "manager" ? actorStaffId : (data.manager_id || null),
       status: data.status ?? "active",
+      location_id: data.location_id ?? null,
+
     };
     if (isDirector) payload.user_id = linkedUserId ?? null;
     if (isDirector) payload.system_role = data.app_role ?? "staff";
