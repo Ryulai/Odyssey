@@ -252,7 +252,20 @@ export const deleteStaff = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-/* ============ Grades ============ */
+export const transferStaff = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string; manager_id?: string | null; location_id?: string | null; status?: "active" | "inactive" }) => d)
+  .handler(async ({ context, data }) => {
+    requireDirector(await currentUserRole(context));
+    const patch: any = {};
+    if (data.manager_id !== undefined) patch.manager_id = data.manager_id || null;
+    if (data.location_id !== undefined) patch.location_id = data.location_id || null;
+    if (data.status !== undefined) patch.status = data.status;
+    const { data: row, error } = await context.supabase
+      .from("staff").update(patch).eq("id", data.id).select().single();
+    if (error) throw new Error(error.message);
+    return row;
+  });
 export const getGradeConfig = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
