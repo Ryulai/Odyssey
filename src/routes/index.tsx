@@ -477,7 +477,7 @@ function PartnerPath({ currentKey, expanded }: { currentKey: string; expanded?: 
     <section className="card-ornate p-6">
       <SectionHeader
         eyebrow="The Long Journey"
-        title="Partner Tree"
+        title="Shipbuilder Tree"
         hint="Ownership mindset and leadership. A path entirely separate from rank or grade."
       />
 
