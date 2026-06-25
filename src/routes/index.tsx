@@ -139,8 +139,9 @@ function HunterDashboard() {
 /* ----------------------------- Header ----------------------------- */
 
 function HunterHeader() {
+  const { role } = useRole();
   return (
-    <header className="mb-8 flex items-center justify-between">
+    <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center gap-3">
         <CrestIcon />
         <div>
@@ -150,12 +151,48 @@ function HunterHeader() {
           <div className="text-xs text-muted-foreground">Adventure journal of a guild hunter</div>
         </div>
       </div>
-      <div className="hidden text-right text-xs text-muted-foreground sm:block">
-        Season · Year of the Azure Tide
+      <div className="flex items-center gap-3">
+        <RoleSwitcher />
+        {can(role, "admin.access") && (
+          <Link
+            to="/admin"
+            className="rounded-md border border-gold/50 bg-gold/10 px-3 py-2 font-display text-xs uppercase tracking-widest text-gold transition-colors hover:bg-gold/20"
+          >
+            Admin Console
+          </Link>
+        )}
       </div>
     </header>
   );
 }
+
+function RoleSwitcher() {
+  const { role, setRole } = useRole();
+  const roles: UserRole[] = ["director", "manager", "staff"];
+  return (
+    <div className="flex flex-col items-end">
+      <div className="text-[9px] uppercase tracking-[0.25em] text-muted-foreground">Viewing as</div>
+      <div className="mt-1 flex rounded-md border border-border bg-ink/40 p-0.5">
+        {roles.map(r => {
+          const active = role === r;
+          return (
+            <button
+              key={r}
+              onClick={() => setRole(r)}
+              title={ROLE_META[r].tagline}
+              className={`rounded px-2.5 py-1 font-display text-[10px] uppercase tracking-widest transition-colors ${
+                active ? "bg-gold/15 text-gold" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {ROLE_META[r].label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 
 function CrestIcon() {
   return (
