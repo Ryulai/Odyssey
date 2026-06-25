@@ -34,10 +34,10 @@ import {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Guild Ledger — Two Paths, One Guild" },
-      { name: "description", content: "Hunters earn achievements and legacy stars. Operational staff master ranks, skills, certifications, and training. Both paths, equally respected." },
-      { property: "og:title", content: "Guild Ledger — Two Paths, One Guild" },
-      { property: "og:description", content: "Hunter Achievement Economy and Operational Professional Development, side by side." },
+      { title: "The Odyssey Guide — Chart Your Journey. Forge Your Legacy." },
+      { name: "description", content: "A voyage of growth. Navigators chart achievements and legacy stars; Shipbuilders master ranks, skills, certifications, and training. Two routes across the same sea." },
+      { property: "og:title", content: "The Odyssey Guide — Chart Your Journey. Forge Your Legacy." },
+      { property: "og:description", content: "A maritime growth journey: Navigator Achievement Economy and Shipbuilder Professional Development, sailing side by side." },
     ],
   }),
   component: () => <AuthGate><Dashboard /></AuthGate>,
@@ -55,7 +55,7 @@ function Dashboard() {
         <HunterHeader />
         {isLoading ? (
           <div className="rounded-md border border-border bg-ink/30 p-12 text-center text-xs uppercase tracking-widest text-muted-foreground">
-            Loading your ledger…
+            Charting your course…
           </div>
         ) : !data?.staff ? (
           <OnboardingCard />
@@ -63,7 +63,7 @@ function Dashboard() {
           <LinkedHome d={data} />
         )}
         <footer className="mt-12 border-t border-border pt-6 text-center text-xs text-muted-foreground">
-          The Guild Ledger · two paths, one guild
+          The Odyssey Guide · Chart Your Journey. Forge Your Legacy.
         </footer>
       </div>
     </div>
@@ -74,11 +74,11 @@ function OnboardingCard() {
   const { user } = useAuth();
   return (
     <section className="rounded-md border border-gold/40 bg-ink/40 p-8 text-center">
-      <div className="font-display text-xs uppercase tracking-[0.25em] text-gold">Welcome to the Guild</div>
-      <h1 className="mt-2 font-display text-2xl text-foreground">Your account isn't linked to a staff record yet</h1>
+      <div className="font-display text-xs uppercase tracking-[0.25em] text-gold">Welcome Aboard</div>
+      <h1 className="mt-2 font-display text-2xl text-foreground">Your account hasn't been added to the ship's manifest yet</h1>
       <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground">
-        Signed in as <span className="text-foreground">{user?.email}</span>. A Director needs to create a staff record
-        with this exact email — once created, your profile, rank, stars and legacy will appear here automatically.
+        Signed in as <span className="text-foreground">{user?.email}</span>. A Director needs to add you to the crew manifest
+        with this exact email — once logged, your profile, rank, stars and legacy will chart themselves here automatically.
       </p>
       <div className="mt-5 flex flex-wrap justify-center gap-2">
         <Link to="/admin" className="rounded-md border border-gold bg-gold/10 px-3 py-2 font-display text-[10px] uppercase tracking-widest text-gold hover:bg-gold/20">
@@ -177,9 +177,9 @@ function HunterHeader() {
         <CrestIcon />
         <div>
           <div className="font-display text-lg font-semibold tracking-widest text-gold uppercase">
-            The Guild Ledger
+            The Odyssey Guide
           </div>
-          <div className="text-xs text-muted-foreground">Adventure journal of a guild hunter</div>
+          <div className="text-xs text-muted-foreground">Chart Your Journey. Forge Your Legacy.</div>
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-2">

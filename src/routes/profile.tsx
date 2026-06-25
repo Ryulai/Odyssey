@@ -5,7 +5,7 @@ import { getStaffDashboard } from "@/lib/workflow.functions";
 import { GRADE_META } from "@/lib/employee-data";
 
 export const Route = createFileRoute("/profile")({
-  head: () => ({ meta: [{ title: "My Profile — Guild Ledger" }] }),
+  head: () => ({ meta: [{ title: "My Profile — The Odyssey Guide" }] }),
   component: () => <AuthGate><ProfilePage /></AuthGate>,
 });
 

@@ -5,7 +5,7 @@ import { useRole, can } from "@/lib/roles";
 import { listTeamPromotions } from "@/lib/workflow.functions";
 
 export const Route = createFileRoute("/promotions")({
-  head: () => ({ meta: [{ title: "Promotion Engine — Guild Ledger" }] }),
+  head: () => ({ meta: [{ title: "Promotion Engine — The Odyssey Guide" }] }),
   component: () => <AuthGate><PromotionsPage /></AuthGate>,
 });
 
