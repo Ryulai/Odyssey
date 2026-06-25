@@ -121,30 +121,75 @@ const INITIAL_LEGACY: LegacyConfig = {
 
 type AdminTab = "staff" | "grades" | "achievements" | "ranks" | "legacy";
 
-const TABS: { key: AdminTab; label: string; hint: string }[] = [
-  { key: "staff",        label: "Staff",        hint: "Create, edit, assign department & manager" },
-  { key: "grades",       label: "Grades",       hint: "Define A/B/C/D rules and weights" },
-  { key: "achievements", label: "Achievements", hint: "Define achievements & star rewards" },
-  { key: "ranks",        label: "Ranks",        hint: "Configure Hunter ranks & promotion rules" },
-  { key: "legacy",       label: "Legacy",       hint: "Conversion ratios & legacy titles" },
+const TABS: { key: AdminTab; label: string; hint: string; cap: Capability }[] = [
+  { key: "staff",        label: "Staff",        hint: "Create, edit, assign department & manager", cap: "admin.staff" },
+  { key: "grades",       label: "Grades",       hint: "Define A/B/C/D rules and weights",          cap: "admin.grades" },
+  { key: "achievements", label: "Achievements", hint: "Define achievements & star rewards",         cap: "admin.achievements" },
+  { key: "ranks",        label: "Ranks",        hint: "Configure Hunter ranks & promotion rules",   cap: "admin.ranks" },
+  { key: "legacy",       label: "Legacy",       hint: "Conversion ratios & legacy titles",          cap: "admin.legacy" },
 ];
 
 function AdminPage() {
-  const [tab, setTab] = useState<AdminTab>("staff");
-  const active = TABS.find(t => t.key === tab)!;
+  const { role } = useRole();
+  const visibleTabs = useMemo(() => TABS.filter(t => can(role, t.cap)), [role]);
+  const [tab, setTab] = useState<AdminTab>(visibleTabs[0]?.key ?? "staff");
+
+  // If role changes and current tab is no longer permitted, snap to first allowed.
+  useEffect(() => {
+    if (!visibleTabs.find(t => t.key === tab)) {
+      setTab(visibleTabs[0]?.key ?? "staff");
+    }
+  }, [visibleTabs, tab]);
+
+  // Staff have no admin access at all.
+  if (!can(role, "admin.access")) {
+    return (
+      <div className="min-h-screen text-foreground">
+        <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 lg:px-8">
+          <AdminHeader />
+          <section className="card-ornate p-8 text-center">
+            <div className="font-display text-xs uppercase tracking-[0.3em] text-muted-foreground">Restricted</div>
+            <h1 className="mt-2 font-display text-2xl text-gold">Admin Console is sealed</h1>
+            <p className="mt-3 text-sm text-muted-foreground">
+              You are signed in as <span className="text-foreground">{ROLE_META[role].label}</span>.
+              The Admin Console is reserved for Directors and Managers.
+            </p>
+            <ul className="mx-auto mt-4 max-w-sm space-y-1 text-left text-xs text-muted-foreground">
+              {PERMISSIONS[role].map(p => <li key={p}>· {p}</li>)}
+            </ul>
+            <Link
+              to="/"
+              className="mt-6 inline-block rounded-md border border-gold/50 bg-gold/10 px-4 py-2 font-display text-xs uppercase tracking-widest text-gold hover:bg-gold/20"
+            >
+              ← Back to the Ledger
+            </Link>
+          </section>
+        </div>
+      </div>
+    );
+  }
+
+  const active = visibleTabs.find(t => t.key === tab) ?? visibleTabs[0];
+
   return (
     <div className="min-h-screen text-foreground">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         <AdminHeader />
         <div className="mb-6 rounded-md border border-border bg-ink/40 p-4">
-          <div className="font-display text-xs uppercase tracking-[0.25em] text-gold">Admin Console</div>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="font-display text-xs uppercase tracking-[0.25em] text-gold">Admin Console</div>
+            <div className="rounded border border-gold/30 bg-gold/5 px-2 py-0.5 font-display text-[10px] uppercase tracking-widest text-gold">
+              {ROLE_META[role].label} access
+            </div>
+          </div>
           <div className="mt-1 text-sm text-muted-foreground">
             Configuration only. No analytics, no charts. Everything here defines the rules of the Guild Ledger.
           </div>
+          <div className="mt-2 text-[11px] italic text-muted-foreground">{ROLE_META[role].tagline}</div>
         </div>
 
         <nav role="tablist" className="mb-4 flex flex-wrap gap-2">
-          {TABS.map(t => {
+          {visibleTabs.map(t => {
             const isActive = t.key === tab;
             return (
               <button
@@ -161,13 +206,13 @@ function AdminPage() {
             );
           })}
         </nav>
-        <div className="mb-4 text-xs italic text-muted-foreground">{active.hint}</div>
+        {active && <div className="mb-4 text-xs italic text-muted-foreground">{active.hint}</div>}
 
-        {tab === "staff"        && <StaffModule />}
-        {tab === "grades"       && <GradesModule />}
-        {tab === "achievements" && <AchievementsModule />}
-        {tab === "ranks"        && <RanksModule />}
-        {tab === "legacy"       && <LegacyModule />}
+        {tab === "staff"        && can(role, "admin.staff")        && <StaffModule />}
+        {tab === "grades"       && can(role, "admin.grades")       && <GradesModule />}
+        {tab === "achievements" && can(role, "admin.achievements") && <AchievementsModule />}
+        {tab === "ranks"        && can(role, "admin.ranks")        && <RanksModule />}
+        {tab === "legacy"       && can(role, "admin.legacy")       && <LegacyModule />}
 
         <footer className="mt-12 border-t border-border pt-6 text-center text-xs text-muted-foreground">
           Admin Console · Configuration prototype · changes are in-memory only
@@ -176,6 +221,7 @@ function AdminPage() {
     </div>
   );
 }
+
 
 function AdminHeader() {
   return (
