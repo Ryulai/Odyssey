@@ -90,17 +90,19 @@ function OnboardingCard() {
 }
 
 function LinkedHome({ d }: { d: any }) {
+  const { role } = useRole();
   const s = d.staff;
   const isHunter = (s.role_family ?? "hunter") === "hunter";
+  const isShipbuilder = role === "director";
   const totals = d.totals ?? { stars: 0, moons: 0, suns: 0 };
   const latestGrade = d.grades?.[0]?.grade ?? "—";
   const rankName = s.rank?.name ?? d.evaluation?.current_rank_name ?? "Unranked";
   const rankSub  = s.rank?.subtitle ?? "";
-  const rankColor = s.rank?.color ?? "var(--color-gold)";
+  const rankColor = isShipbuilder ? "var(--color-gold)" : (s.rank?.color ?? "var(--color-gold)");
   const gradeMeta = GRADE_META[latestGrade as Grade] ?? null;
   const initials = (s.name ?? "")
     .split(/\s+/).filter(Boolean).slice(0, 2).map((w: string) => w[0]?.toUpperCase()).join("") || "—";
-  const legacyTitle = d.legacy?.currentTitle?.name ?? "Wanderer";
+  const legacyTitle = isShipbuilder ? "The Shipbuilder" : (d.legacy?.currentTitle?.name ?? "Wanderer");
 
   return (
     <>
@@ -115,28 +117,38 @@ function LinkedHome({ d }: { d: any }) {
                 boxShadow: `0 0 0 2px ${rankColor}, 0 0 24px -4px ${rankColor}`,
               }}
             >
-              {initials}
+              {isShipbuilder ? "⚓" : initials}
             </div>
             <div>
               <div className="text-[10px] uppercase tracking-[0.25em] text-gold">{legacyTitle}</div>
               <h1 className="font-display text-2xl text-foreground sm:text-3xl">{s.name}</h1>
-              <p className="text-sm text-muted-foreground">{s.role} · {s.department ?? "—"} · {isHunter ? "Hunter Path" : "Operational Path"}</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Manager: <span className="text-foreground">{s.manager?.name ?? "Unassigned"}</span>
-              </p>
+              <p className="text-sm text-muted-foreground">{s.role} · {s.department ?? "—"} · {isShipbuilder ? "System Builder" : (isHunter ? "Hunter Path" : "Operational Path")}</p>
+              {!isShipbuilder ? (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Manager: <span className="text-foreground">{s.manager?.name ?? "Unassigned"}</span>
+                </p>
+              ) : (
+                <p className="mt-1 text-xs italic text-gold/80">Charts the course. Builds the ship. Beyond rank.</p>
+              )}
             </div>
           </div>
 
           <div className="grid flex-1 grid-cols-3 gap-3 sm:gap-4">
-            <MiniStat label="Rank" value={rankName.replace(" Hunter", "")} sub={rankSub} color={rankColor} />
+            {isShipbuilder
+              ? <MiniStat label="Status" value="Beyond Rank" sub="System builder" color="var(--color-gold)" />
+              : <MiniStat label="Rank" value={rankName.replace(" Hunter", "")} sub={rankSub} color={rankColor} />
+            }
             <MiniStat label="This Month" value={`Grade ${latestGrade}`} sub={gradeMeta?.label ?? "no review yet"} color={gradeMeta?.color ?? "var(--color-muted-foreground)"} />
-            {isHunter
-              ? <MiniStat label="Legacy" value={`${totals.stars}★`} sub={`${totals.moons}🌙 · ${totals.suns}☀️`} color="var(--color-gold)" />
-              : <MiniStat label="Discipline" value={s.role} sub={(s.department ?? "").split("·")[0].trim() || "—"} color="var(--color-gold)" />
+            {isShipbuilder
+              ? <MiniStat label="Role" value="Shipbuilder" sub="Forges the fleet" color="var(--color-gold)" />
+              : isHunter
+                ? <MiniStat label="Legacy" value={`${totals.stars}★`} sub={`${totals.moons}🌙 · ${totals.suns}☀️`} color="var(--color-gold)" />
+                : <MiniStat label="Discipline" value={s.role} sub={(s.department ?? "").split("·")[0].trim() || "—"} color="var(--color-gold)" />
             }
           </div>
         </div>
       </section>
+
 
       <div className="mt-6 flex flex-wrap gap-2">
         <Link to="/profile" className="rounded-md border border-gold bg-gold/10 px-4 py-2 font-display text-[10px] uppercase tracking-widest text-gold hover:bg-gold/20">
