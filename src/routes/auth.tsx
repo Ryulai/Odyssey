@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/roles";
 import { ensureBootstrapDirector } from "@/lib/bootstrap.functions";
 
 export const Route = createFileRoute("/auth")({
-  head: () => ({ meta: [{ title: "Sign in — Guild Ledger" }] }),
+  head: () => ({ meta: [{ title: "Sign in — The Odyssey Guide" }] }),
   component: AuthPage,
 });
 
