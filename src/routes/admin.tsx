@@ -12,6 +12,9 @@ import {
   getLegacy, updateLegacyConfig, upsertLegacyTitle, deleteLegacyTitle,
   listLocations, upsertLocation, deleteLocation,
 } from "@/lib/config.functions";
+import {
+  listLegacyHoldings, upsertLegacyHolding, deleteLegacyHolding,
+} from "@/lib/legacy.functions";
 
 
 export const Route = createFileRoute("/admin")({
@@ -24,15 +27,16 @@ export const Route = createFileRoute("/admin")({
   component: () => <AuthGate><AdminPage /></AuthGate>,
 });
 
-type AdminTab = "staff" | "locations" | "grades" | "achievements" | "ranks" | "legacy";
+type AdminTab = "staff" | "locations" | "holdings" | "grades" | "achievements" | "ranks" | "legacy";
 
 const TABS: { key: AdminTab; label: string; hint: string; cap: Capability }[] = [
-  { key: "staff",        label: "Staff",        hint: "Create, edit, assign department, manager & location", cap: "admin.staff" },
-  { key: "locations",    label: "Fleets",       hint: "Manage locations / venues and their captain",         cap: "admin.staff" },
-  { key: "grades",       label: "Grades",       hint: "Define A/B/C/D rules and weights",          cap: "admin.grades" },
-  { key: "achievements", label: "Achievements", hint: "Define achievements & star rewards",        cap: "admin.achievements" },
-  { key: "ranks",        label: "Ranks",        hint: "Configure Hunter ranks & promotion rules",  cap: "admin.ranks" },
-  { key: "legacy",       label: "Legacy",       hint: "Conversion ratios & legacy titles",         cap: "admin.legacy" },
+  { key: "staff",        label: "Staff",            hint: "Work Identity — fleet, department, position, manager", cap: "admin.staff" },
+  { key: "locations",    label: "Fleets",           hint: "Manage locations / venues and their captain",         cap: "admin.staff" },
+  { key: "holdings",     label: "Legacy Registry",  hint: "Founders, Partners, Investors — independent of current workplace", cap: "admin.legacy" },
+  { key: "grades",       label: "Grades",           hint: "Define A/B/C/D rules and weights",          cap: "admin.grades" },
+  { key: "achievements", label: "Achievements",     hint: "Define achievements & star rewards",        cap: "admin.achievements" },
+  { key: "ranks",        label: "Ranks",            hint: "Configure Hunter ranks & promotion rules",  cap: "admin.ranks" },
+  { key: "legacy",       label: "Legacy Economy",   hint: "Star/Moon/Sun conversion ratios & flavor titles", cap: "admin.legacy" },
 ];
 
 
@@ -102,6 +106,7 @@ function AdminPage() {
 
         {tab === "staff"        && <StaffModule />}
         {tab === "locations"    && <LocationsModule />}
+        {tab === "holdings"     && can(role, "admin.legacy")       && <HoldingsModule />}
         {tab === "grades"       && can(role, "admin.grades")       && <GradesModule />}
         {tab === "achievements" && <AchievementsModule />}
         {tab === "ranks"        && can(role, "admin.ranks")        && <RanksModule />}
@@ -363,15 +368,17 @@ function StaffForm({ row, managers, accounts, locations, isDirector, onSave, onC
       <div className="sm:col-span-2 font-display text-xs uppercase tracking-widest text-gold">
         {row.id ? "Edit Staff" : "Create Staff"}
       </div>
+
+      {/* Identity */}
+      <div className="sm:col-span-2 -mb-1 mt-2 border-b border-border/60 pb-1 text-[10px] font-display uppercase tracking-[0.25em] text-muted-foreground">Identity</div>
       <Field label="Name"><input className={inputCls} value={d.name} onChange={e => set("name", e.target.value)} required /></Field>
       <Field label="Employee ID"><input className={inputCls} value={d.employee_code ?? ""} onChange={e => set("employee_code", e.target.value)} placeholder="e.g. NAV-0042" /></Field>
       <Field label="Email"><input type="email" className={inputCls} value={d.email ?? ""} onChange={e => set("email", e.target.value)} /></Field>
-      <Field label="Position"><input className={inputCls} value={d.role} onChange={e => { set("role", e.target.value); set("app_role", roleToAppRole(e.target.value)); }} placeholder="e.g. Senior Ambassador" /></Field>
-      <Field label="Path">
-        <select className={inputCls} value={d.role_family} onChange={e => set("role_family", e.target.value as any)}>
-          <option value="hunter">Hunter</option><option value="operational">Operational</option>
-        </select>
-      </Field>
+      <Field label="Join Date"><input type="date" className={inputCls} value={d.join_date ?? ""} onChange={e => set("join_date", e.target.value)} /></Field>
+
+      {/* Work Identity */}
+      <div className="sm:col-span-2 -mb-1 mt-3 border-b border-border/60 pb-1 text-[10px] font-display uppercase tracking-[0.25em] text-muted-foreground">Work Identity — where they report today</div>
+      <Field label="Position"><input className={inputCls} value={d.role} onChange={e => { set("role", e.target.value); set("app_role", roleToAppRole(e.target.value)); }} placeholder="e.g. Finance Manager" /></Field>
       <Field label="Department">
         <select className={inputCls} value={d.department} onChange={e => set("department", e.target.value)}>
           {DEPARTMENTS.map(x => <option key={x} value={x}>{x}</option>)}
@@ -389,9 +396,18 @@ function StaffForm({ row, managers, accounts, locations, isDirector, onSave, onC
           {locations.map((l: any) => <option key={l.id} value={l.id}>{l.name}{l.code ? ` · ${l.code}` : ""}</option>)}
         </select>
       </Field>
-      <Field label="Join Date"><input type="date" className={inputCls} value={d.join_date ?? ""} onChange={e => set("join_date", e.target.value)} /></Field>
+
+      {/* RPG Identity */}
+      <div className="sm:col-span-2 -mb-1 mt-3 border-b border-border/60 pb-1 text-[10px] font-display uppercase tracking-[0.25em] text-muted-foreground">RPG Identity — character class & progression</div>
+      <Field label="Class / Path">
+        <select className={inputCls} value={d.role_family} onChange={e => set("role_family", e.target.value as any)}>
+          <option value="hunter">Hunter (progression)</option><option value="operational">Operational (skills)</option>
+        </select>
+      </Field>
       <Field label="Career Tree Path"><input className={inputCls} value={d.career_path ?? ""} onChange={e => set("career_path", e.target.value)} placeholder="e.g. Master Ambassador" /></Field>
       <Field label="Shipbuilder Tree Path"><input className={inputCls} value={d.shipbuilder_path ?? ""} onChange={e => set("shipbuilder_path", e.target.value)} placeholder="e.g. Venue Partner" /></Field>
+
+      <div className="sm:col-span-2 -mb-1 mt-3 border-b border-border/60 pb-1 text-[10px] font-display uppercase tracking-[0.25em] text-muted-foreground">Account</div>
 
 
       <Field label="Status">
@@ -765,6 +781,122 @@ function LocationForm({ row, managers, onSave, onCancel, busy }: {
         </select>
       </Field>
       <Field label="Notes"><input className={inputCls} value={d.notes ?? ""} onChange={e => setD({ ...d, notes: e.target.value })} /></Field>
+      <div className="sm:col-span-2 mt-2 flex justify-end gap-2">
+        <Btn variant="ghost" onClick={onCancel}>Cancel</Btn>
+        <Btn type="submit" disabled={busy}>{busy ? "Saving…" : "Save"}</Btn>
+      </div>
+    </form>
+  );
+}
+
+/* ============ Legacy Registry (Holdings) ============ */
+
+const HOLDING_TITLES = ["Founder", "Co-Founder", "Partner", "Shareholder", "Investor", "Builder", "Pioneer", "Mentor"];
+
+function HoldingsModule() {
+  const qc = useQueryClient();
+  const { data: holdings = [], isLoading } = useQuery({ queryKey: ["legacy-holdings"], queryFn: () => listLegacyHoldings() });
+  const { data: staff = [] } = useQuery({ queryKey: ["staff"], queryFn: () => listStaff() });
+  const { data: locations = [] } = useQuery({ queryKey: ["locations"], queryFn: () => listLocations() });
+  const save = useMutation({ mutationFn: (d: any) => upsertLegacyHolding({ data: d }), onSuccess: () => qc.invalidateQueries({ queryKey: ["legacy-holdings"] }) });
+  const del  = useMutation({ mutationFn: (id: string) => deleteLegacyHolding({ data: { id } }), onSuccess: () => qc.invalidateQueries({ queryKey: ["legacy-holdings"] }) });
+  const [editing, setEditing] = useState<any | null>(null);
+
+  const blank = { id: "", staff_id: "", title: "Founder", location_id: null, note: "", granted_at: "", ended_at: "" };
+
+  return (
+    <Section title="Legacy Registry — Founders, Partners, Investors"
+      action={<Btn onClick={() => setEditing(blank)}>+ New Holding</Btn>}>
+      <p className="mb-4 text-[11px] italic text-muted-foreground">
+        Legendary titles independent of current Work Identity. A person may hold many — e.g. Founder of one fleet while working at another.
+      </p>
+      {isLoading ? <div className="py-6 text-center text-xs text-muted-foreground">Loading…</div> : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="text-left text-[10px] uppercase tracking-widest text-muted-foreground">
+              <tr className="border-b border-border">
+                <th className="py-2 pr-3">Holder</th>
+                <th className="py-2 pr-3">Title</th>
+                <th className="py-2 pr-3">Fleet</th>
+                <th className="py-2 pr-3">Granted</th>
+                <th className="py-2 pr-3">Ended</th>
+                <th className="py-2 pr-3">Note</th>
+                <th className="py-2 pr-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {holdings.map((h: any) => (
+                <tr key={h.id} className="border-b border-border/40">
+                  <td className="py-2 pr-3">
+                    <div className="font-medium">{h.staff?.name ?? "—"}</div>
+                    <div className="text-[10px] text-muted-foreground">{h.staff?.email ?? ""}</div>
+                  </td>
+                  <td className="py-2 pr-3">
+                    <span className="rounded border border-gold/40 bg-gold/5 px-2 py-0.5 text-[11px] font-display uppercase tracking-widest text-gold">{h.title}</span>
+                  </td>
+                  <td className="py-2 pr-3 text-muted-foreground">{h.location?.name ?? <span className="italic text-muted-foreground/70">Company-wide</span>}</td>
+                  <td className="py-2 pr-3 text-muted-foreground">{h.granted_at ?? "—"}</td>
+                  <td className="py-2 pr-3 text-muted-foreground">{h.ended_at ?? <span className="text-emerald-300">Active</span>}</td>
+                  <td className="py-2 pr-3 text-muted-foreground">{h.note || "—"}</td>
+                  <td className="py-2 pr-3 text-right">
+                    <div className="inline-flex gap-2">
+                      <Btn variant="ghost" onClick={() => setEditing({ ...h, location_id: h.location_id ?? null, granted_at: h.granted_at ?? "", ended_at: h.ended_at ?? "" })}>Edit</Btn>
+                      <Btn variant="danger" onClick={() => { if (confirm(`Remove ${h.title} holding?`)) del.mutate(h.id); }}>Remove</Btn>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {!holdings.length && (<tr><td colSpan={7} className="py-6 text-center text-xs text-muted-foreground">No legacy holdings recorded yet.</td></tr>)}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {editing && (
+        <HoldingForm row={editing} staff={staff} locations={locations}
+          onCancel={() => setEditing(null)}
+          onSave={(d) => save.mutate(d, { onSuccess: () => setEditing(null) })}
+          busy={save.isPending} />
+      )}
+    </Section>
+  );
+}
+
+function HoldingForm({ row, staff, locations, onSave, onCancel, busy }: {
+  row: any; staff: any[]; locations: any[]; onSave: (d: any) => void; onCancel: () => void; busy: boolean;
+}) {
+  const [d, setD] = useState<any>(row);
+  return (
+    <form onSubmit={(e) => { e.preventDefault();
+      if (!d.staff_id || !d.title?.trim()) return;
+      const payload: any = {
+        staff_id: d.staff_id, title: d.title.trim(), location_id: d.location_id || null,
+        note: d.note ?? "", granted_at: d.granted_at || null, ended_at: d.ended_at || null,
+      };
+      if (d.id) payload.id = d.id;
+      onSave(payload);
+    }} className="mt-5 grid gap-3 rounded-md border border-gold/30 bg-ink/50 p-4 sm:grid-cols-2">
+      <div className="sm:col-span-2 font-display text-xs uppercase tracking-widest text-gold">
+        {row.id ? "Edit Holding" : "Grant Legacy Title"}
+      </div>
+      <Field label="Holder">
+        <select className={inputCls} value={d.staff_id ?? ""} onChange={e => setD({ ...d, staff_id: e.target.value })} required>
+          <option value="">— Select person —</option>
+          {staff.map((s: any) => <option key={s.id} value={s.id}>{s.name}{s.email ? ` · ${s.email}` : ""}</option>)}
+        </select>
+      </Field>
+      <Field label="Title">
+        <input className={inputCls} list="holding-titles" value={d.title ?? ""} onChange={e => setD({ ...d, title: e.target.value })} required />
+        <datalist id="holding-titles">{HOLDING_TITLES.map(t => <option key={t} value={t} />)}</datalist>
+      </Field>
+      <Field label="Fleet (optional — leave blank for company-wide)">
+        <select className={inputCls} value={d.location_id ?? ""} onChange={e => setD({ ...d, location_id: e.target.value || null })}>
+          <option value="">— Company-wide —</option>
+          {locations.map((l: any) => <option key={l.id} value={l.id}>{l.name}{l.code ? ` · ${l.code}` : ""}</option>)}
+        </select>
+      </Field>
+      <Field label="Note"><input className={inputCls} value={d.note ?? ""} onChange={e => setD({ ...d, note: e.target.value })} placeholder="e.g. Founding partner, 30% stake" /></Field>
+      <Field label="Granted"><input type="date" className={inputCls} value={d.granted_at ?? ""} onChange={e => setD({ ...d, granted_at: e.target.value })} /></Field>
+      <Field label="Ended (leave blank if active)"><input type="date" className={inputCls} value={d.ended_at ?? ""} onChange={e => setD({ ...d, ended_at: e.target.value })} /></Field>
       <div className="sm:col-span-2 mt-2 flex justify-end gap-2">
         <Btn variant="ghost" onClick={onCancel}>Cancel</Btn>
         <Btn type="submit" disabled={busy}>{busy ? "Saving…" : "Save"}</Btn>

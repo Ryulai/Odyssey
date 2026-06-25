@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AuthGate } from "@/components/auth-gate";
 import { getStaffDashboard } from "@/lib/workflow.functions";
 import { GRADE_META } from "@/lib/employee-data";
-import { useRole } from "@/lib/roles";
+
 
 
 export const Route = createFileRoute("/profile")({
@@ -45,13 +45,16 @@ function ProfilePage() {
 function Skel() { return <div className="animate-pulse rounded-md border border-border bg-ink/30 p-12 text-center text-xs text-muted-foreground">Calculating…</div>; }
 
 function ProfileBody({ data }: { data: any }) {
-  const { role } = useRole();
-  const isShipbuilder = role === "director";
+  const holdings: any[] = data.holdings ?? [];
+  const activeHoldings = holdings.filter((h) => !h.ended_at);
+  const SHIPBUILDER_TITLES = new Set(["founder", "co-founder", "partner", "shareholder"]);
+  const isShipbuilder = activeHoldings.some((h) => SHIPBUILDER_TITLES.has((h.title ?? "").toLowerCase().trim()));
   return (
     <div className="space-y-6">
       <CharacterSheet d={data} isShipbuilder={isShipbuilder} />
+      {activeHoldings.length > 0 && <LegacyRibbon holdings={activeHoldings} />}
       {isShipbuilder ? (
-        <ShipbuilderCard />
+        <ShipbuilderCard holdings={activeHoldings} />
       ) : (
         <div className="grid gap-6 lg:grid-cols-2">
           <LegacyCard d={data} />
@@ -69,13 +72,35 @@ function ProfileBody({ data }: { data: any }) {
   );
 }
 
-function ShipbuilderCard() {
+function LegacyRibbon({ holdings }: { holdings: any[] }) {
+  return (
+    <section className="rounded-md border border-gold/40 bg-gradient-to-r from-gold/5 via-ink/30 to-gold/5 p-4">
+      <div className="mb-2 flex items-center justify-between">
+        <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">Legendary Titles</h2>
+        <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Independent of current workplace</span>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {holdings.map((h) => (
+          <div key={h.id} className="rounded-md border border-gold/40 bg-ink/40 px-3 py-1.5">
+            <div className="font-display text-xs uppercase tracking-widest text-gold">{h.title}</div>
+            <div className="text-[10px] text-muted-foreground">
+              {h.location?.name ?? "Company-wide"}{h.granted_at ? ` · since ${h.granted_at}` : ""}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ShipbuilderCard({ holdings }: { holdings: any[] }) {
+  const fleets = new Set(holdings.map((h) => h.location?.name).filter(Boolean));
   return (
     <section className="rounded-md border border-gold/30 bg-ink/30 p-5">
       <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">The Shipbuilder</h2>
       <div className="mt-1 text-xs italic text-muted-foreground">Charts the course. Builds the ship. Beyond rank.</div>
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
-        <SbStat label="Fleet Built" value="—" sub="Systems forged" />
+        <SbStat label="Fleet Built" value={String(fleets.size || holdings.length)} sub="Ventures founded" />
         <SbStat label="Voyagers Guided" value="—" sub="Crew elevated" />
         <SbStat label="Legacy Created" value="Beyond Rank" sub="Shipbuilder" />
       </div>
