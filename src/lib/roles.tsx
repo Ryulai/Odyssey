@@ -1,4 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import type { Session, User } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 
 export type UserRole = "director" | "manager" | "staff";
 
@@ -26,7 +28,6 @@ export const PERMISSIONS = {
   ],
 } as const;
 
-/** Module-level capabilities used to gate admin tabs. */
 export type Capability =
   | "admin.access"
   | "admin.staff"
@@ -37,54 +38,118 @@ export type Capability =
   | "team.manage"
   | "team.approveAchievements"
   | "team.recommendPromotion"
-  | "promotions.approve";
+  | "promotions.approve"
+  | "claims.submit"
+  | "claims.review"
+  | "evaluations.write";
 
 const CAPS: Record<UserRole, Capability[]> = {
   director: [
     "admin.access", "admin.staff", "admin.grades", "admin.achievements", "admin.ranks", "admin.legacy",
     "team.manage", "team.approveAchievements", "team.recommendPromotion", "promotions.approve",
+    "claims.submit", "claims.review", "evaluations.write",
   ],
   manager: [
     "admin.access", "admin.staff", "admin.achievements",
     "team.manage", "team.approveAchievements", "team.recommendPromotion",
+    "claims.submit", "claims.review", "evaluations.write",
   ],
-  staff: [],
+  staff: ["claims.submit"],
 };
 
-export function can(role: UserRole, cap: Capability) {
+export function can(role: UserRole | null | undefined, cap: Capability) {
+  if (!role) return false;
   return CAPS[role].includes(cap);
 }
 
-/* ---------------- Context ---------------- */
-
-interface RoleCtx {
-  role: UserRole;
-  setRole: (r: UserRole) => void;
+interface AuthCtx {
+  session: Session | null;
+  user: User | null;
+  role: UserRole | null;
+  loading: boolean;
+  refreshRole: () => Promise<void>;
+  signOut: () => Promise<void>;
 }
-const RoleContext = createContext<RoleCtx>({ role: "director", setRole: () => {} });
 
-const STORAGE_KEY = "guild.role";
+const Ctx = createContext<AuthCtx>({
+  session: null, user: null, role: null, loading: true,
+  refreshRole: async () => {}, signOut: async () => {},
+});
+
+async function fetchRoleFor(userId: string): Promise<UserRole | null> {
+  const { data, error } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId);
+  if (error || !data?.length) return null;
+  const order: UserRole[] = ["director", "manager", "staff"];
+  const roles = data.map((r) => r.role as UserRole);
+  return order.find((r) => roles.includes(r)) ?? null;
+}
 
 export function RoleProvider({ children }: { children: ReactNode }) {
-  const [role, setRoleState] = useState<UserRole>("director");
+  const [session, setSession] = useState<Session | null>(null);
+  const [role, setRole] = useState<UserRole | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Hydrate from localStorage AFTER mount to avoid SSR/CSR mismatch.
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const stored = window.localStorage.getItem(STORAGE_KEY) as UserRole | null;
-    if (stored === "director" || stored === "manager" || stored === "staff") {
-      setRoleState(stored);
-    }
+    let mounted = true;
+
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
+      if (!mounted) return;
+      setSession(s);
+      if (s?.user) {
+        // Defer DB call out of the auth callback
+        setTimeout(() => {
+          fetchRoleFor(s.user.id).then((r) => mounted && setRole(r));
+        }, 0);
+      } else {
+        setRole(null);
+      }
+    });
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (!mounted) return;
+      setSession(data.session);
+      if (data.session?.user) {
+        fetchRoleFor(data.session.user.id).then((r) => {
+          if (!mounted) return;
+          setRole(r);
+          setLoading(false);
+        });
+      } else {
+        setLoading(false);
+      }
+    });
+
+    return () => {
+      mounted = false;
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
-  function setRole(r: UserRole) {
-    setRoleState(r);
-    if (typeof window !== "undefined") window.localStorage.setItem(STORAGE_KEY, r);
+  async function refreshRole() {
+    if (!session?.user) return;
+    const r = await fetchRoleFor(session.user.id);
+    setRole(r);
   }
 
-  return <RoleContext.Provider value={{ role, setRole }}>{children}</RoleContext.Provider>;
+  async function signOut() {
+    await supabase.auth.signOut();
+    setRole(null);
+    setSession(null);
+  }
+
+  return (
+    <Ctx.Provider value={{ session, user: session?.user ?? null, role, loading, refreshRole, signOut }}>
+      {children}
+    </Ctx.Provider>
+  );
 }
 
+export function useAuth() { return useContext(Ctx); }
+/** Back-compat: existing code reads `useRole().role`. */
 export function useRole() {
-  return useContext(RoleContext);
+  const { role } = useContext(Ctx);
+  return { role: (role ?? "staff") as UserRole, setRole: (_: UserRole) => {} };
 }
