@@ -50,7 +50,7 @@ function AdminPage() {
             <div className="font-display text-xs uppercase tracking-[0.3em] text-muted-foreground">Restricted</div>
             <h1 className="mt-2 font-display text-2xl text-gold">Admin Console is sealed</h1>
             <p className="mt-3 text-sm text-muted-foreground">
-              You are signed in as <span className="text-foreground">{ROLE_META[role].label}</span>.
+              You are signed in as <span className="text-foreground">{ROLE_META[displayRole].label}</span>.
               The Admin Console is reserved for Directors and Managers.
             </p>
             <ul className="mx-auto mt-4 max-w-sm space-y-1 text-left text-xs text-muted-foreground">
