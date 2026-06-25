@@ -8,7 +8,7 @@ import { listStaff, getGradeConfig } from "@/lib/config.functions";
 import { listEvaluations, submitEvaluation, deleteEvaluation } from "@/lib/evaluations.functions";
 
 export const Route = createFileRoute("/evaluations")({
-  head: () => ({ meta: [{ title: "Monthly Evaluations — The Odyssey Guide" }] }),
+  head: () => ({ meta: [{ title: "Voyage Review — The Odyssey Guide" }] }),
   component: () => <AuthGate><EvaluationsPage /></AuthGate>,
 });
 
@@ -54,9 +54,9 @@ function EvaluationsPage() {
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
         <header className="mb-8 flex items-center justify-between">
           <div>
-            <div className="font-display text-lg font-semibold uppercase tracking-widest text-gold">Monthly Evaluations</div>
+            <div className="font-display text-lg font-semibold uppercase tracking-widest text-gold">Voyage Review</div>
             <div className="text-xs text-muted-foreground">
-              Composite = Sales × {w.sales_weight}% + Reviews × {w.review_weight}% · Grade by configured thresholds.
+              Voyage Rating = Trade Performance × {w.sales_weight}% + Crew Reputation × {w.review_weight}% · Grade by configured thresholds.
             </div>
           </div>
           <Link to="/" className="rounded-md border border-border px-3 py-2 text-xs uppercase tracking-widest text-muted-foreground hover:border-gold/40 hover:text-gold">← Ledger</Link>
@@ -64,7 +64,7 @@ function EvaluationsPage() {
 
         {canWrite ? (
           <section className="rounded-md border border-border bg-ink/30 p-5">
-            <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">Submit Evaluation</h2>
+            <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">Record Voyage Review</h2>
             <form onSubmit={(e) => { e.preventDefault(); if (staffId) submit.mutate(); }} className="mt-4 grid gap-3 sm:grid-cols-2">
               <label className="block">
                 <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">Staff</span>
@@ -79,20 +79,20 @@ function EvaluationsPage() {
                   value={month.slice(0,7)} onChange={e => setMonth(`${e.target.value}-01`)} required />
               </label>
               <label className="block">
-                <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">Sales Score (0–100)</span>
+                <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">Trade Performance (0–100)</span>
                 <input type="number" min={0} max={100} className={inputCls} value={sales} onChange={e => setSales(Number(e.target.value))} />
               </label>
               <label className="block">
-                <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">Review Score (0–100)</span>
+                <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">Crew Reputation (0–100)</span>
                 <input type="number" min={0} max={100} className={inputCls} value={review} onChange={e => setReview(Number(e.target.value))} />
               </label>
               <label className="block sm:col-span-2">
-                <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">Notes</span>
+                <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">Captain Notes</span>
                 <textarea rows={2} className={inputCls} value={notes} onChange={e => setNotes(e.target.value)} />
               </label>
               <div className="sm:col-span-2 flex items-center justify-between rounded-md border border-gold/30 bg-gold/5 px-3 py-2">
                 <div className="text-xs text-muted-foreground">
-                  Composite preview: <span className="text-gold">{composite}</span>
+                  Voyage Rating preview: <span className="text-gold">{composite}</span>
                 </div>
                 <div className="font-display text-xs uppercase tracking-widest" style={{ color: GRADE_META[projectedGrade as "A"].color }}>
                   Grade {projectedGrade} · {GRADE_META[projectedGrade as "A"].label}
@@ -114,16 +114,16 @@ function EvaluationsPage() {
         )}
 
         <section className="mt-8 rounded-md border border-border bg-ink/30 p-5">
-          <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">Evaluation Records</h2>
+          <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">Voyage Records</h2>
           {isLoading ? <div className="py-4 text-xs text-muted-foreground">Loading…</div> : (
             <div className="mt-4 overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="text-left text-[10px] uppercase tracking-widest text-muted-foreground">
                   <tr className="border-b border-border">
-                    <th className="py-2 pr-3">Month</th><th className="py-2 pr-3">Staff</th>
-                    <th className="py-2 pr-3">Sales</th><th className="py-2 pr-3">Review</th>
-                    <th className="py-2 pr-3">Composite</th><th className="py-2 pr-3">Grade</th>
-                    <th className="py-2 pr-3">Notes</th>{canWrite && <th></th>}
+                    <th className="py-2 pr-3">Month</th><th className="py-2 pr-3">Crew</th>
+                    <th className="py-2 pr-3">Trade</th><th className="py-2 pr-3">Reputation</th>
+                    <th className="py-2 pr-3">Voyage Rating</th><th className="py-2 pr-3">Grade</th>
+                    <th className="py-2 pr-3">Captain Notes</th>{canWrite && <th></th>}
                   </tr>
                 </thead>
                 <tbody>

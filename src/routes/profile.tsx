@@ -50,15 +50,45 @@ function ProfileBody({ data }: { data: any }) {
   return (
     <div className="space-y-6">
       <CharacterSheet d={data} isShipbuilder={isShipbuilder} />
-      <div className={`grid gap-6 ${isShipbuilder ? "" : "lg:grid-cols-2"}`}>
-        <LegacyCard d={data} />
-        {!isShipbuilder && <PromotionCard d={data} />}
+      {isShipbuilder ? (
+        <ShipbuilderCard />
+      ) : (
+        <div className="grid gap-6 lg:grid-cols-2">
+          <LegacyCard d={data} />
+          <PromotionCard d={data} />
+        </div>
+      )}
+      {!isShipbuilder && <ClaimSummary d={data} />}
+      {!isShipbuilder && (
+        <div className="grid gap-6 lg:grid-cols-2">
+          <RecordsCard records={data.records} />
+          <GradesCard grades={data.grades} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ShipbuilderCard() {
+  return (
+    <section className="rounded-md border border-gold/30 bg-ink/30 p-5">
+      <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">The Shipbuilder</h2>
+      <div className="mt-1 text-xs italic text-muted-foreground">Charts the course. Builds the ship. Beyond rank.</div>
+      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        <SbStat label="Fleet Built" value="—" sub="Systems forged" />
+        <SbStat label="Voyagers Guided" value="—" sub="Crew elevated" />
+        <SbStat label="Legacy Created" value="Beyond Rank" sub="Shipbuilder" />
       </div>
-      <ClaimSummary d={data} />
-      <div className="grid gap-6 lg:grid-cols-2">
-        <RecordsCard records={data.records} />
-        <GradesCard grades={data.grades} />
-      </div>
+    </section>
+  );
+}
+
+function SbStat({ label, value, sub }: { label: string; value: string; sub: string }) {
+  return (
+    <div className="rounded-md border border-border bg-ink/40 p-3 text-center">
+      <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
+      <div className="mt-1 font-display text-lg text-gold">{value}</div>
+      <div className="text-[11px] text-muted-foreground">{sub}</div>
     </div>
   );
 }
@@ -103,19 +133,23 @@ function CharacterSheet({ d, isShipbuilder = false }: { d: any; isShipbuilder?: 
         </div>
       </div>
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-4">
-        <Stat label="Total Stars" value={d.totals?.stars ?? 0} icon="⭐" />
-        <Stat label="Moons" value={d.totals?.moons ?? 0} icon="🌙" />
-        <Stat label="Suns" value={d.totals?.suns ?? 0} icon="☀️" />
-        <div className="rounded-md border border-border bg-ink/40 p-3 text-center">
-          <div className="text-2xl">⚓</div>
-          <div className="font-display text-xl text-gold">{latestGrade}</div>
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Current Grade</div>
-        </div>
-      </div>
-      <div className="mt-3 rounded-md border border-border bg-ink/30 px-3 py-2 text-xs text-muted-foreground">
-        Achievements: <span className="text-gold">{ev?.unique_achievements ?? 0}</span> unique records · Status: <span className="capitalize text-foreground">{s.status ?? "active"}</span>
-      </div>
+      {!isShipbuilder && (
+        <>
+          <div className="mt-5 grid gap-3 sm:grid-cols-4">
+            <Stat label="Total Stars" value={d.totals?.stars ?? 0} icon="⭐" />
+            <Stat label="Moons" value={d.totals?.moons ?? 0} icon="🌙" />
+            <Stat label="Suns" value={d.totals?.suns ?? 0} icon="☀️" />
+            <div className="rounded-md border border-border bg-ink/40 p-3 text-center">
+              <div className="text-2xl">⚓</div>
+              <div className="font-display text-xl text-gold">{latestGrade}</div>
+              <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Current Grade</div>
+            </div>
+          </div>
+          <div className="mt-3 rounded-md border border-border bg-ink/30 px-3 py-2 text-xs text-muted-foreground">
+            Achievements: <span className="text-gold">{ev?.unique_achievements ?? 0}</span> unique records · Status: <span className="capitalize text-foreground">{s.status ?? "active"}</span>
+          </div>
+        </>
+      )}
     </section>
   );
 }
@@ -165,7 +199,7 @@ function PromotionCard({ d }: { d: any }) {
   ];
   return (
     <section className={`rounded-md border p-5 ${ev.eligible ? "border-emerald-400/60 bg-emerald-400/5" : "border-border bg-ink/30"}`}>
-      <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">Rank Promotion Engine</h2>
+      <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">Voyage Progression</h2>
       {!ev.next_rank_key ? (
         <div className="mt-3 text-sm text-muted-foreground">Max rank achieved.</div>
       ) : (
@@ -201,14 +235,14 @@ function PromotionCard({ d }: { d: any }) {
 function ClaimSummary({ d }: { d: any }) {
   return (
     <section className="rounded-md border border-border bg-ink/30 p-5">
-      <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">My Claims</h2>
+      <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">My Harbor Records</h2>
       <div className="mt-3 grid grid-cols-3 gap-3 text-center">
         <Pill label="Pending"  value={d.claims.pending}  tone="gold" />
         <Pill label="Approved" value={d.claims.approved} tone="emerald" />
         <Pill label="Rejected" value={d.claims.rejected} tone="red" />
       </div>
       <div className="mt-4 text-right">
-        <Link to="/claims" className="text-xs uppercase tracking-widest text-gold hover:underline">Submit a claim →</Link>
+        <Link to="/claims" className="text-xs uppercase tracking-widest text-gold hover:underline">Record a voyage →</Link>
       </div>
     </section>
   );
@@ -258,7 +292,7 @@ function GradesCard({ grades }: { grades: any[] }) {
             <li key={g.month} className="flex justify-between py-2 text-sm">
               <div>
                 <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{g.month}</div>
-                <div className="text-xs text-muted-foreground">Composite {g.composite_score}</div>
+                <div className="text-xs text-muted-foreground">Voyage Rating {g.composite_score}</div>
               </div>
               <span className="rounded border px-2 py-0.5 font-display text-sm" style={{ color: meta.color, borderColor: meta.color }}>{g.grade}</span>
             </li>

@@ -5,7 +5,7 @@ import { useRole, can } from "@/lib/roles";
 import { listTeamPromotions } from "@/lib/workflow.functions";
 
 export const Route = createFileRoute("/promotions")({
-  head: () => ({ meta: [{ title: "Promotion Engine — The Odyssey Guide" }] }),
+  head: () => ({ meta: [{ title: "Voyage Progression — The Odyssey Guide" }] }),
   component: () => <AuthGate><PromotionsPage /></AuthGate>,
 });
 
@@ -23,7 +23,7 @@ function PromotionsPage() {
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         <header className="mb-6 flex items-center justify-between">
           <div>
-            <div className="font-display text-lg font-semibold uppercase tracking-widest text-gold">Promotion Engine</div>
+            <div className="font-display text-lg font-semibold uppercase tracking-widest text-gold">Voyage Progression</div>
             <div className="text-xs text-muted-foreground">Live evaluation of every Hunter against configured rank criteria.</div>
           </div>
           <Link to="/" className="rounded-md border border-border px-3 py-2 text-xs uppercase tracking-widest text-muted-foreground hover:border-gold/40 hover:text-gold">← Ledger</Link>

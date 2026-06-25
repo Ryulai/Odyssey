@@ -8,7 +8,7 @@ import { listAchievements, listStaff } from "@/lib/config.functions";
 import { listClaims, submitClaim, decideClaim, listMyRecords } from "@/lib/claims.functions";
 
 export const Route = createFileRoute("/claims")({
-  head: () => ({ meta: [{ title: "Achievement Claims — The Odyssey Guide" }] }),
+  head: () => ({ meta: [{ title: "Harbor Records — The Odyssey Guide" }] }),
   component: () => <AuthGate><ClaimsPage /></AuthGate>,
 });
 
@@ -28,8 +28,8 @@ function ClaimsPage() {
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
         <header className="mb-8 flex items-center justify-between">
           <div>
-            <div className="font-display text-lg font-semibold uppercase tracking-widest text-gold">Achievement Claims</div>
-            <div className="text-xs text-muted-foreground">Submit claims, attach evidence, await harbor approval.</div>
+            <div className="font-display text-lg font-semibold uppercase tracking-widest text-gold">Harbor Records</div>
+            <div className="text-xs text-muted-foreground">Record your voyages, attach voyage proof, await harbor approval.</div>
           </div>
           <Link to="/" className="rounded-md border border-border px-3 py-2 text-xs uppercase tracking-widest text-muted-foreground hover:border-gold/40 hover:text-gold">← Ledger</Link>
         </header>
@@ -99,7 +99,7 @@ function SubmitClaim({ userId }: { userId: string | null }) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["claims"] });
-      setMsg("Claim submitted. Awaiting review.");
+      setMsg("Voyage recorded. Awaiting harbor review.");
       setEvidence(""); setNotes(""); setFiles([]); setAchievementId("");
     },
     onError: (e: any) => setMsg(e.message ?? "Failed"),
@@ -107,11 +107,11 @@ function SubmitClaim({ userId }: { userId: string | null }) {
 
   return (
     <section className="rounded-md border border-border bg-ink/30 p-5">
-      <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">Submit a Claim</h2>
+      <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">Record a Voyage</h2>
       <form onSubmit={(e) => { e.preventDefault(); if (!achievementId || !effectiveStaffId) return; setBusy(true); submit.mutate(undefined, { onSettled: () => setBusy(false) }); }}
         className="mt-4 space-y-3">
         <label className="block">
-          <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">Hunter (staff)</span>
+          <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">Navigator (crew)</span>
           <select className={inputCls} value={effectiveStaffId} onChange={e => setStaffId(e.target.value)} required>
             <option value="">— Select —</option>
             {staff.map((s: any) => <option key={s.id} value={s.id}>{s.name}{s.user_id === userId ? " (me)" : ""}</option>)}
@@ -125,13 +125,13 @@ function SubmitClaim({ userId }: { userId: string | null }) {
           </select>
         </label>
         <label className="block">
-          <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">Evidence (text)</span>
+          <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">Voyage Proof (text)</span>
           <textarea rows={3} className={inputCls} value={evidence} onChange={e => setEvidence(e.target.value)}
             placeholder="Describe what you did, deal IDs, links…" />
         </label>
         <div>
           <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">
-            Evidence Files — jpg, png, webp, pdf · up to {MAX_FILES}, 10MB each
+            Voyage Proof Files — jpg, png, webp, pdf · up to {MAX_FILES}, 10MB each
           </span>
           <input type="file" multiple accept={ACCEPT} onChange={e => { onPickFiles(e.target.files); e.target.value = ""; }}
             className="block w-full text-xs text-muted-foreground file:mr-3 file:rounded file:border file:border-gold/40 file:bg-gold/10 file:px-3 file:py-1.5 file:text-[10px] file:font-display file:uppercase file:tracking-widest file:text-gold hover:file:bg-gold/20" />
@@ -147,13 +147,13 @@ function SubmitClaim({ userId }: { userId: string | null }) {
           )}
         </div>
         <label className="block">
-          <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">Notes</span>
+          <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">Captain Notes</span>
           <textarea rows={2} className={inputCls} value={notes} onChange={e => setNotes(e.target.value)} />
         </label>
         {msg && <div className="rounded border border-gold/30 bg-gold/5 px-3 py-2 text-xs text-gold">{msg}</div>}
         <button type="submit" disabled={busy || !achievementId || !effectiveStaffId}
           className="w-full rounded-md border border-gold bg-gold/10 px-4 py-2 font-display text-xs uppercase tracking-widest text-gold hover:bg-gold/20 disabled:opacity-50">
-          {busy ? "Submitting…" : "Submit Claim"}
+          {busy ? "Recording…" : "Record Voyage"}
         </button>
       </form>
     </section>
@@ -173,11 +173,11 @@ function MyClaims({ userId }: { userId: string | null }) {
   const mine = claims.filter((c: any) => c.submitted_by === userId);
   return (
     <section className="rounded-md border border-border bg-ink/30 p-5">
-      <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">My Claims</h2>
+      <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">My Voyages</h2>
       {isLoading ? <div className="py-4 text-xs text-muted-foreground">Loading…</div> : (
         <div className="mt-4 space-y-2">
           {mine.map((c: any) => <ClaimCard key={c.id} c={c} />)}
-          {!mine.length && <div className="py-6 text-center text-xs text-muted-foreground">No claims yet.</div>}
+          {!mine.length && <div className="py-6 text-center text-xs text-muted-foreground">No voyages recorded yet.</div>}
         </div>
       )}
     </section>
@@ -192,7 +192,7 @@ function ReviewQueue() {
 
   return (
     <section className="rounded-md border border-border bg-ink/30 p-5">
-      <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">Review Queue</h2>
+      <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">Harbor Review Queue</h2>
       {isLoading ? <div className="py-4 text-xs text-muted-foreground">Loading…</div> : (
         <div className="mt-4 space-y-2">
           {claims.map((c: any) => (
@@ -208,7 +208,7 @@ function ReviewQueue() {
               </div>
             ) : null} />
           ))}
-          {!claims.length && <div className="py-6 text-center text-xs text-muted-foreground">No claims yet.</div>}
+          {!claims.length && <div className="py-6 text-center text-xs text-muted-foreground">No voyages recorded yet.</div>}
         </div>
       )}
     </section>
@@ -236,7 +236,7 @@ function ClaimCard({ c, action }: { c: any; action?: React.ReactNode }) {
             {c.decided_at && <> · decided {new Date(c.decided_at).toLocaleString()}</>}
           </div>
           {c.evidence_text && <div className="mt-2 text-sm">{c.evidence_text}</div>}
-          {c.notes && <div className="mt-1 text-xs italic text-muted-foreground">Notes: {c.notes}</div>}
+          {c.notes && <div className="mt-1 text-xs italic text-muted-foreground">Captain Notes: {c.notes}</div>}
           {!!paths.length && <EvidenceGallery paths={paths} />}
           {c.decision_notes && <div className="mt-2 text-xs text-red-300">Reviewer: {c.decision_notes}</div>}
         </div>
@@ -267,7 +267,7 @@ function EvidenceGallery({ paths }: { paths: string[] }) {
 
   return (
     <div className="mt-2">
-      <div className="mb-1 text-[10px] uppercase tracking-widest text-muted-foreground">Evidence · {paths.length} file{paths.length === 1 ? "" : "s"}</div>
+      <div className="mb-1 text-[10px] uppercase tracking-widest text-muted-foreground">Voyage Proof · {paths.length} file{paths.length === 1 ? "" : "s"}</div>
       <div className="flex flex-wrap gap-2">
         {items.map((it, i) => it && (
           <button key={i} type="button" onClick={() => setActive(it)}

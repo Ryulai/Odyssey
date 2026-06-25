@@ -134,17 +134,22 @@ function LinkedHome({ d }: { d: any }) {
           </div>
 
           <div className="grid flex-1 grid-cols-3 gap-3 sm:gap-4">
-            {isShipbuilder
-              ? <MiniStat label="Status" value="Beyond Rank" sub="System builder" color="var(--color-gold)" />
-              : <MiniStat label="Rank" value={rankName.replace(" Hunter", "")} sub={rankSub} color={rankColor} />
-            }
-            <MiniStat label="This Month" value={`Grade ${latestGrade}`} sub={gradeMeta?.label ?? "no review yet"} color={gradeMeta?.color ?? "var(--color-muted-foreground)"} />
-            {isShipbuilder
-              ? <MiniStat label="Role" value="Shipbuilder" sub="Forges the fleet" color="var(--color-gold)" />
-              : isHunter
-                ? <MiniStat label="Legacy" value={`${totals.stars}★`} sub={`${totals.moons}🌙 · ${totals.suns}☀️`} color="var(--color-gold)" />
-                : <MiniStat label="Discipline" value={s.role} sub={(s.department ?? "").split("·")[0].trim() || "—"} color="var(--color-gold)" />
-            }
+            {isShipbuilder ? (
+              <>
+                <MiniStat label="Fleet Built" value="—" sub="Systems forged" color="var(--color-gold)" />
+                <MiniStat label="Voyagers Guided" value="—" sub="Crew elevated" color="var(--color-gold)" />
+                <MiniStat label="Legacy Created" value="Beyond Rank" sub="Shipbuilder" color="var(--color-gold)" />
+              </>
+            ) : (
+              <>
+                <MiniStat label="Rank" value={rankName.replace(" Hunter", "")} sub={rankSub} color={rankColor} />
+                <MiniStat label="This Month" value={`Grade ${latestGrade}`} sub={gradeMeta?.label ?? "no review yet"} color={gradeMeta?.color ?? "var(--color-muted-foreground)"} />
+                {isHunter
+                  ? <MiniStat label="Legacy" value={`${totals.stars}★`} sub={`${totals.moons}🌙 · ${totals.suns}☀️`} color="var(--color-gold)" />
+                  : <MiniStat label="Discipline" value={s.role} sub={(s.department ?? "").split("·")[0].trim() || "—"} color="var(--color-gold)" />
+                }
+              </>
+            )}
           </div>
         </div>
       </section>
@@ -155,7 +160,7 @@ function LinkedHome({ d }: { d: any }) {
           Open My Profile →
         </Link>
         <Link to="/claims" className="rounded-md border border-border px-4 py-2 font-display text-[10px] uppercase tracking-widest text-muted-foreground hover:border-gold/40 hover:text-gold">
-          Submit a Claim
+          Record a Voyage
         </Link>
       </div>
 
@@ -196,9 +201,9 @@ function HunterHeader() {
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <Link to="/profile" className={navLink}>My Profile</Link>
-        <Link to="/claims" className={navLink}>Claims</Link>
-        {can(role, "team.recommendPromotion") && <Link to="/promotions" className={navLink}>Promotions</Link>}
-        {can(role, "evaluations.write") && <Link to="/evaluations" className={navLink}>Evaluations</Link>}
+        <Link to="/claims" className={navLink}>Harbor Records</Link>
+        {can(role, "team.recommendPromotion") && <Link to="/promotions" className={navLink}>Voyage Progression</Link>}
+        {can(role, "evaluations.write") && <Link to="/evaluations" className={navLink}>Voyage Review</Link>}
         {can(role, "admin.access") && (
           <Link to="/admin" className="rounded-md border border-gold/50 bg-gold/10 px-3 py-2 font-display text-[10px] uppercase tracking-widest text-gold hover:bg-gold/20">
             Admin
@@ -472,7 +477,7 @@ function PartnerPath({ currentKey, expanded }: { currentKey: string; expanded?: 
     <section className="card-ornate p-6">
       <SectionHeader
         eyebrow="The Long Journey"
-        title="Partner Tree"
+        title="Shipbuilder Tree"
         hint="Ownership mindset and leadership. A path entirely separate from rank or grade."
       />
 
@@ -1514,7 +1519,7 @@ const GROWTH_TREES: GrowthTree[] = [
   },
   {
     id: "partner",
-    title: "Partner Tree",
+    title: "Shipbuilder Tree",
     question: "What can I build?",
     icon: "⚓",
     accent: "var(--color-gold)",
@@ -1545,7 +1550,7 @@ const GROWTH_TREES: GrowthTree[] = [
   },
   {
     id: "mentor",
-    title: "Mentor Tree",
+    title: "Navigator Tree",
     question: "Who have I helped grow?",
     icon: "📖",
     accent: "var(--color-grade-a)",
@@ -1573,7 +1578,7 @@ const GROWTH_TREES: GrowthTree[] = [
   },
   {
     id: "leadership",
-    title: "Leadership Tree",
+    title: "Captain Tree",
     question: "Who follows me?",
     icon: "🛡",
     accent: "var(--color-rank-diamond)",
