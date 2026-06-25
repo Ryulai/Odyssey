@@ -15,7 +15,7 @@ import {
 export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [
-      { title: "Admin Console — Guild Ledger" },
+      { title: "Admin Console — The Odyssey Guide" },
       { name: "description", content: "Configure staff, grades, achievements, ranks and legacy economy." },
     ],
   }),
