@@ -8,7 +8,7 @@ export const GRADE_META: Record<Grade, { label: string; tagline: string; color: 
 };
 
 export type RankKey =
-  | "bronze" | "silver" | "gold" | "platinum" | "diamond" | "mythic" | "legend";
+  | "bronze" | "silver" | "gold" | "platinum" | "diamond" | "blackdiamond" | "mythic" | "legend";
 
 export interface RankInfo {
   key: RankKey;
@@ -20,13 +20,14 @@ export interface RankInfo {
 }
 
 export const HUNTER_RANKS: RankInfo[] = [
-  { key: "bronze",   name: "Bronze Hunter",   subtitle: "Apprentice",            description: "Learning the craft.",            color: "var(--color-rank-bronze)" },
-  { key: "silver",   name: "Silver Hunter",   subtitle: "Independent Hunter",    description: "Operates without supervision.",  color: "var(--color-rank-silver)" },
-  { key: "gold",     name: "Gold Hunter",     subtitle: "Professional Hunter",   description: "Consistent professional output.",color: "var(--color-rank-gold)" },
-  { key: "platinum", name: "Platinum Hunter", subtitle: "Elite Hunter",          description: "Influential contributor.",       color: "var(--color-rank-platinum)" },
-  { key: "diamond",  name: "Black Diamond",   subtitle: "Master Hunter",         description: "Builds and shapes teams.",       color: "var(--color-rank-diamond)" },
-  { key: "mythic",   name: "Mythic Hunter",   subtitle: "Department Legend",     description: "Locked tier.",                    color: "var(--color-rank-mythic)", locked: true },
-  { key: "legend",   name: "Legend Hunter",   subtitle: "Company Legend",        description: "Locked tier.",                    color: "var(--color-rank-legend)", locked: true },
+  { key: "bronze",       name: "Bronze Hunter",       subtitle: "Apprentice",         description: "Learning the craft.",            color: "var(--color-rank-bronze)" },
+  { key: "silver",       name: "Silver Hunter",       subtitle: "Independent",        description: "Operates without supervision.",  color: "var(--color-rank-silver)" },
+  { key: "gold",         name: "Gold Hunter",         subtitle: "Professional",       description: "Consistent professional output.",color: "var(--color-rank-gold)" },
+  { key: "platinum",     name: "Platinum Hunter",     subtitle: "Elite",              description: "Influential contributor.",       color: "var(--color-rank-platinum)" },
+  { key: "diamond",      name: "Diamond Hunter",      subtitle: "Veteran Master",     description: "Defines excellence in the craft.", color: "var(--color-rank-diamond)" },
+  { key: "blackdiamond", name: "Black Diamond Hunter",subtitle: "Guild Pillar",       description: "Builds and shapes whole teams.", color: "oklch(0.45 0.05 280)" },
+  { key: "mythic",       name: "Mythic Hunter",       subtitle: "Department Legend",  description: "Locked tier.",                    color: "var(--color-rank-mythic)", locked: true },
+  { key: "legend",       name: "Legend Hunter",       subtitle: "Company Legend",     description: "Locked tier.",                    color: "var(--color-rank-legend)", locked: true },
 ];
 
 export type PartnerKey =
