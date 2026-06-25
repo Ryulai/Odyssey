@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useRole, ROLE_META, can, useAuth } from "@/lib/roles";
 import { AuthGate } from "@/components/auth-gate";
+import { getStaffDashboard } from "@/lib/workflow.functions";
 
 import {
   SAMPLE_EMPLOYEE,
@@ -41,107 +43,124 @@ export const Route = createFileRoute("/")({
   component: () => <AuthGate><Dashboard /></AuthGate>,
 });
 
-type TabKey = "overview" | "growth" | "achievements" | "legacy" | "career" | "partner" | "reviews";
-type Path = "hunter" | "operational";
-
 function Dashboard() {
-  const [path, setPath] = useState<Path>("hunter");
+  const { data, isLoading } = useQuery({
+    queryKey: ["dashboard", "me", "home"],
+    queryFn: () => getStaffDashboard({ data: {} }),
+  });
+
   return (
     <div className="min-h-screen text-foreground">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         <HunterHeader />
-        <PathSwitcher path={path} onChange={setPath} />
-        {path === "hunter" ? <HunterDashboard /> : <OperationalDashboard />}
+        {isLoading ? (
+          <div className="rounded-md border border-border bg-ink/30 p-12 text-center text-xs uppercase tracking-widest text-muted-foreground">
+            Loading your ledger…
+          </div>
+        ) : !data?.staff ? (
+          <OnboardingCard />
+        ) : (
+          <LinkedHome d={data} />
+        )}
         <footer className="mt-12 border-t border-border pt-6 text-center text-xs text-muted-foreground">
-          The Guild Ledger · two paths, one guild · all members depicted are fictional
+          The Guild Ledger · two paths, one guild
         </footer>
       </div>
     </div>
   );
 }
 
-function PathSwitcher({ path, onChange }: { path: Path; onChange: (p: Path) => void }) {
-  const options: { key: Path; label: string; tagline: string }[] = [
-    { key: "hunter",      label: "Hunter Path",       tagline: "Measured by achievements & influence" },
-    { key: "operational", label: "Operational Path",  tagline: "Measured by capability & mastery" },
-  ];
+function OnboardingCard() {
+  const { user } = useAuth();
   return (
-    <div className="mb-6 grid gap-2 sm:grid-cols-2">
-      {options.map(o => {
-        const active = path === o.key;
-        return (
-          <button
-            key={o.key}
-            onClick={() => onChange(o.key)}
-            className={`rounded-md border p-3 text-left transition-all ${
-              active ? "border-gold bg-gold/5" : "border-border bg-ink/30 hover:border-gold/40"
-            }`}
-          >
-            <div className={`font-display text-sm uppercase tracking-widest ${active ? "text-gold" : "text-muted-foreground"}`}>
-              {o.label}
-            </div>
-            <div className="text-[11px] italic text-muted-foreground">{o.tagline}</div>
-          </button>
-        );
-      })}
-    </div>
+    <section className="rounded-md border border-gold/40 bg-ink/40 p-8 text-center">
+      <div className="font-display text-xs uppercase tracking-[0.25em] text-gold">Welcome to the Guild</div>
+      <h1 className="mt-2 font-display text-2xl text-foreground">Your account isn't linked to a staff record yet</h1>
+      <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground">
+        Signed in as <span className="text-foreground">{user?.email}</span>. A Director needs to create a staff record
+        with this exact email — once created, your profile, rank, stars and legacy will appear here automatically.
+      </p>
+      <div className="mt-5 flex flex-wrap justify-center gap-2">
+        <Link to="/admin" className="rounded-md border border-gold bg-gold/10 px-3 py-2 font-display text-[10px] uppercase tracking-widest text-gold hover:bg-gold/20">
+          Open Admin → Staff
+        </Link>
+      </div>
+    </section>
   );
 }
 
-const HUNTER_TABS: { key: TabKey; label: string }[] = [
-  { key: "overview",     label: "Overview" },
-  { key: "growth",       label: "Growth Trees" },
-  { key: "achievements", label: "Achievements" },
-  { key: "legacy",       label: "Legacy" },
-  { key: "career",       label: "Rank & Career" },
-  { key: "partner",      label: "Partner Path" },
-  { key: "reviews",      label: "Reviews" },
-];
-
-function HunterDashboard() {
-  const emp = SAMPLE_EMPLOYEE;
-  const [tab, setTab] = useState<TabKey>("overview");
-  const legacy = useMemo(() => computeLegacy(totalStars(emp)), [emp]);
+function LinkedHome({ d }: { d: any }) {
+  const s = d.staff;
+  const isHunter = (s.role_family ?? "hunter") === "hunter";
+  const totals = d.totals ?? { stars: 0, moons: 0, suns: 0 };
+  const latestGrade = d.grades?.[0]?.grade ?? "—";
+  const rankName = s.rank?.name ?? d.evaluation?.current_rank_name ?? "Unranked";
+  const rankSub  = s.rank?.subtitle ?? "";
+  const rankColor = s.rank?.color ?? "var(--color-gold)";
+  const gradeMeta = GRADE_META[latestGrade as Grade] ?? null;
+  const initials = (s.name ?? "")
+    .split(/\s+/).filter(Boolean).slice(0, 2).map((w: string) => w[0]?.toUpperCase()).join("") || "—";
+  const legacyTitle = d.legacy?.currentTitle?.name ?? "Wanderer";
 
   return (
     <>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-md border border-gold/40 bg-gold/5 px-4 py-3">
-        <div className="text-xs text-muted-foreground">
-          <span className="font-display text-[10px] uppercase tracking-widest text-gold">Workflow Engine Live</span>
-          {" — "}your real stars, rank progress and legacy are calculated from the database.
+      <section className="card-ornate-gold relative overflow-hidden p-6 sm:p-8">
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
+          <div className="flex items-center gap-5">
+            <div
+              className="grid h-20 w-20 shrink-0 place-items-center rounded-full font-display text-2xl font-bold"
+              style={{
+                background: `radial-gradient(circle at 30% 30%, ${rankColor}, oklch(0.2 0.03 250))`,
+                color: "oklch(0.15 0.03 250)",
+                boxShadow: `0 0 0 2px ${rankColor}, 0 0 24px -4px ${rankColor}`,
+              }}
+            >
+              {initials}
+            </div>
+            <div>
+              <div className="text-[10px] uppercase tracking-[0.25em] text-gold">{legacyTitle}</div>
+              <h1 className="font-display text-2xl text-foreground sm:text-3xl">{s.name}</h1>
+              <p className="text-sm text-muted-foreground">{s.role} · {s.department ?? "—"} · {isHunter ? "Hunter Path" : "Operational Path"}</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Manager: <span className="text-foreground">{s.manager?.name ?? "Unassigned"}</span>
+              </p>
+            </div>
+          </div>
+
+          <div className="grid flex-1 grid-cols-3 gap-3 sm:gap-4">
+            <MiniStat label="Rank" value={rankName.replace(" Hunter", "")} sub={rankSub} color={rankColor} />
+            <MiniStat label="This Month" value={`Grade ${latestGrade}`} sub={gradeMeta?.label ?? "no review yet"} color={gradeMeta?.color ?? "var(--color-muted-foreground)"} />
+            {isHunter
+              ? <MiniStat label="Legacy" value={`${totals.stars}★`} sub={`${totals.moons}🌙 · ${totals.suns}☀️`} color="var(--color-gold)" />
+              : <MiniStat label="Discipline" value={s.role} sub={(s.department ?? "").split("·")[0].trim() || "—"} color="var(--color-gold)" />
+            }
+          </div>
         </div>
-        <Link to="/profile" className="rounded-md border border-gold bg-gold/10 px-3 py-1.5 font-display text-[10px] uppercase tracking-widest text-gold hover:bg-gold/20">
+      </section>
+
+      <div className="mt-6 flex flex-wrap gap-2">
+        <Link to="/profile" className="rounded-md border border-gold bg-gold/10 px-4 py-2 font-display text-[10px] uppercase tracking-widest text-gold hover:bg-gold/20">
           Open My Profile →
         </Link>
+        <Link to="/claims" className="rounded-md border border-border px-4 py-2 font-display text-[10px] uppercase tracking-widest text-muted-foreground hover:border-gold/40 hover:text-gold">
+          Submit a Claim
+        </Link>
       </div>
-      <ProfileCard emp={emp} legacy={legacy} />
-      <Tabs tabs={HUNTER_TABS} value={tab} onChange={(k) => setTab(k as TabKey)} />
-      <div className="mt-6 space-y-6">
-        {tab === "overview" && (
-          <>
-            <QuestBoard quests={emp.quests} />
-            <div className="grid gap-6 lg:grid-cols-2">
-              <CurrentGradeCard current={emp.currentGrade} />
-              <NextRankProgress current={emp.currentRank} progress={emp.rankProgress} />
-            </div>
-            <LegacyBanner legacy={legacy} />
-            <HunterAttributes attributes={emp.attributes} />
-            <ABCDPanel current={emp.currentGrade} history={emp.abcdHistory} />
-          </>
-        )}
-        {tab === "growth" && <GrowthTrees />}
-        {tab === "achievements" && <AchievementsLedger items={emp.achievements} />}
-        {tab === "legacy" && <LegacyHall legacy={legacy} emp={emp} />}
-        {tab === "career" && (
-          <>
-            <RankLadder current={emp.currentRank} />
-            <CareerTree nodes={emp.career} />
-          </>
-        )}
-        {tab === "partner" && <PartnerPath currentKey={emp.partnerStage} expanded />}
-        {tab === "reviews" && <ReviewsPanel reviews={emp.reviews} />}
+
+      <div className="mt-6">
+        <GrowthTrees />
       </div>
     </>
+  );
+}
+
+function MiniStat({ label, value, sub, color }: { label: string; value: string; sub: string; color: string }) {
+  return (
+    <div className="rounded-md border border-border bg-ink/50 p-3 text-center">
+      <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
+      <div className="mt-1 font-display text-lg leading-tight" style={{ color }}>{value}</div>
+      <div className="text-[11px] text-muted-foreground">{sub}</div>
+    </div>
   );
 }
 
