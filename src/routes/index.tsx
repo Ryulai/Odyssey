@@ -1,5 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { useRole, ROLE_META, can, type UserRole } from "@/lib/roles";
+
 import {
   SAMPLE_EMPLOYEE,
   SAMPLE_OPERATIONAL_EMPLOYEE,
