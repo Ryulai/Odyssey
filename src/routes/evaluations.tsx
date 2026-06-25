@@ -114,16 +114,16 @@ function EvaluationsPage() {
         )}
 
         <section className="mt-8 rounded-md border border-border bg-ink/30 p-5">
-          <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">Evaluation Records</h2>
+          <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">Voyage Records</h2>
           {isLoading ? <div className="py-4 text-xs text-muted-foreground">Loading…</div> : (
             <div className="mt-4 overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="text-left text-[10px] uppercase tracking-widest text-muted-foreground">
                   <tr className="border-b border-border">
-                    <th className="py-2 pr-3">Month</th><th className="py-2 pr-3">Staff</th>
-                    <th className="py-2 pr-3">Sales</th><th className="py-2 pr-3">Review</th>
-                    <th className="py-2 pr-3">Composite</th><th className="py-2 pr-3">Grade</th>
-                    <th className="py-2 pr-3">Notes</th>{canWrite && <th></th>}
+                    <th className="py-2 pr-3">Month</th><th className="py-2 pr-3">Crew</th>
+                    <th className="py-2 pr-3">Trade</th><th className="py-2 pr-3">Reputation</th>
+                    <th className="py-2 pr-3">Voyage Rating</th><th className="py-2 pr-3">Grade</th>
+                    <th className="py-2 pr-3">Captain Notes</th>{canWrite && <th></th>}
                   </tr>
                 </thead>
                 <tbody>
