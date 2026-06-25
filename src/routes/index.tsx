@@ -134,17 +134,22 @@ function LinkedHome({ d }: { d: any }) {
           </div>
 
           <div className="grid flex-1 grid-cols-3 gap-3 sm:gap-4">
-            {isShipbuilder
-              ? <MiniStat label="Status" value="Beyond Rank" sub="System builder" color="var(--color-gold)" />
-              : <MiniStat label="Rank" value={rankName.replace(" Hunter", "")} sub={rankSub} color={rankColor} />
-            }
-            <MiniStat label="This Month" value={`Grade ${latestGrade}`} sub={gradeMeta?.label ?? "no review yet"} color={gradeMeta?.color ?? "var(--color-muted-foreground)"} />
-            {isShipbuilder
-              ? <MiniStat label="Role" value="Shipbuilder" sub="Forges the fleet" color="var(--color-gold)" />
-              : isHunter
-                ? <MiniStat label="Legacy" value={`${totals.stars}★`} sub={`${totals.moons}🌙 · ${totals.suns}☀️`} color="var(--color-gold)" />
-                : <MiniStat label="Discipline" value={s.role} sub={(s.department ?? "").split("·")[0].trim() || "—"} color="var(--color-gold)" />
-            }
+            {isShipbuilder ? (
+              <>
+                <MiniStat label="Fleet Built" value="—" sub="Systems forged" color="var(--color-gold)" />
+                <MiniStat label="Voyagers Guided" value="—" sub="Crew elevated" color="var(--color-gold)" />
+                <MiniStat label="Legacy Created" value="Beyond Rank" sub="Shipbuilder" color="var(--color-gold)" />
+              </>
+            ) : (
+              <>
+                <MiniStat label="Rank" value={rankName.replace(" Hunter", "")} sub={rankSub} color={rankColor} />
+                <MiniStat label="This Month" value={`Grade ${latestGrade}`} sub={gradeMeta?.label ?? "no review yet"} color={gradeMeta?.color ?? "var(--color-muted-foreground)"} />
+                {isHunter
+                  ? <MiniStat label="Legacy" value={`${totals.stars}★`} sub={`${totals.moons}🌙 · ${totals.suns}☀️`} color="var(--color-gold)" />
+                  : <MiniStat label="Discipline" value={s.role} sub={(s.department ?? "").split("·")[0].trim() || "—"} color="var(--color-gold)" />
+                }
+              </>
+            )}
           </div>
         </div>
       </section>
