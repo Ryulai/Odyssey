@@ -64,7 +64,7 @@ function EvaluationsPage() {
 
         {canWrite ? (
           <section className="rounded-md border border-border bg-ink/30 p-5">
-            <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">Submit Evaluation</h2>
+            <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">Record Voyage Review</h2>
             <form onSubmit={(e) => { e.preventDefault(); if (staffId) submit.mutate(); }} className="mt-4 grid gap-3 sm:grid-cols-2">
               <label className="block">
                 <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">Staff</span>
