@@ -23,6 +23,26 @@ export const submitClaim = createServerFn({ method: "POST" })
   }) => d)
   .handler(async ({ context, data }) => {
     const files = (data.evidence_files ?? []).slice(0, 10);
+
+    // Duplicate-claim guard: no two non-rejected claims for the same achievement this month.
+    const monthBucket = new Date().toISOString().slice(0, 7);
+    const dup = await context.supabase
+      .from("achievement_claims")
+      .select("id, status")
+      .eq("staff_id", data.staff_id)
+      .eq("achievement_id", data.achievement_id)
+      .eq("month_bucket", monthBucket)
+      .neq("status", "rejected")
+      .maybeSingle();
+    if (dup.error) throw new Error(dup.error.message);
+    if (dup.data) {
+      throw new Error(
+        dup.data.status === "approved"
+          ? "Already approved this month — re-claim next cycle."
+          : "A claim for this achievement is already pending this month.",
+      );
+    }
+
     const { data: row, error } = await context.supabase.from("achievement_claims").insert({
       staff_id: data.staff_id,
       achievement_id: data.achievement_id,
@@ -33,7 +53,10 @@ export const submitClaim = createServerFn({ method: "POST" })
       submitted_by: context.userId,
       status: "pending",
     }).select().single();
-    if (error) throw new Error(error.message);
+    if (error) {
+      if ((error as any).code === "23505") throw new Error("Duplicate claim — already submitted this month.");
+      throw new Error(error.message);
+    }
     return row;
   });
 

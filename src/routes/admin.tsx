@@ -455,12 +455,16 @@ function RankRow({ rank, index, onSave, onMove }: { rank: any; index: number; on
         <Field label="Name"><input className={inputCls} value={d.name} onChange={e => setD({ ...d, name: e.target.value })} /></Field>
         <Field label="Subtitle"><input className={inputCls} value={d.subtitle} onChange={e => setD({ ...d, subtitle: e.target.value })} /></Field>
         <Field label="Description"><textarea rows={2} className={inputCls} value={d.description} onChange={e => setD({ ...d, description: e.target.value })} /></Field>
-        <Field label="Promotion Requirement"><textarea rows={2} className={inputCls} value={d.requirement} onChange={e => setD({ ...d, requirement: e.target.value })} /></Field>
+        <Field label="Promotion Requirement (notes)"><textarea rows={2} className={inputCls} value={d.requirement} onChange={e => setD({ ...d, requirement: e.target.value })} /></Field>
         <Field label="Status">
           <select className={inputCls} value={d.locked ? "locked" : "open"} onChange={e => setD({ ...d, locked: e.target.value === "locked" })}>
             <option value="open">Open</option><option value="locked">Locked</option>
           </select>
         </Field>
+        <Field label="Min Total Stars"><input type="number" min={0} className={inputCls} value={d.min_total_stars ?? 0} onChange={e => setD({ ...d, min_total_stars: Number(e.target.value) })} /></Field>
+        <Field label="Min A-Grades"><input type="number" min={0} className={inputCls} value={d.min_a_grades ?? 0} onChange={e => setD({ ...d, min_a_grades: Number(e.target.value) })} /></Field>
+        <Field label="Min B-Grades"><input type="number" min={0} className={inputCls} value={d.min_b_grades ?? 0} onChange={e => setD({ ...d, min_b_grades: Number(e.target.value) })} /></Field>
+        <Field label="Min Unique Achievements"><input type="number" min={0} className={inputCls} value={d.min_achievements ?? 0} onChange={e => setD({ ...d, min_achievements: Number(e.target.value) })} /></Field>
       </div>
       <div className="mt-2 flex justify-end"><Btn onClick={() => onSave(d)}>Save</Btn></div>
     </div>

@@ -25,6 +25,7 @@ export type Database = {
           evidence_text: string
           evidence_url: string | null
           id: string
+          month_bucket: string | null
           notes: string
           staff_id: string
           status: Database["public"]["Enums"]["claim_status"]
@@ -41,6 +42,7 @@ export type Database = {
           evidence_text?: string
           evidence_url?: string | null
           id?: string
+          month_bucket?: string | null
           notes?: string
           staff_id: string
           status?: Database["public"]["Enums"]["claim_status"]
@@ -57,6 +59,7 @@ export type Database = {
           evidence_text?: string
           evidence_url?: string | null
           id?: string
+          month_bucket?: string | null
           notes?: string
           staff_id?: string
           status?: Database["public"]["Enums"]["claim_status"]
@@ -346,6 +349,10 @@ export type Database = {
           description: string
           key: string
           locked: boolean
+          min_a_grades: number
+          min_achievements: number
+          min_b_grades: number
+          min_total_stars: number
           name: string
           position: number
           requirement: string
@@ -356,6 +363,10 @@ export type Database = {
           description?: string
           key: string
           locked?: boolean
+          min_a_grades?: number
+          min_achievements?: number
+          min_b_grades?: number
+          min_total_stars?: number
           name: string
           position: number
           requirement?: string
@@ -366,6 +377,10 @@ export type Database = {
           description?: string
           key?: string
           locked?: boolean
+          min_a_grades?: number
+          min_achievements?: number
+          min_b_grades?: number
+          min_total_stars?: number
           name?: string
           position?: number
           requirement?: string
@@ -377,6 +392,7 @@ export type Database = {
       staff: {
         Row: {
           created_at: string
+          current_rank_key: string | null
           department: string
           email: string | null
           id: string
@@ -389,6 +405,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          current_rank_key?: string | null
           department?: string
           email?: string | null
           id?: string
@@ -401,6 +418,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          current_rank_key?: string | null
           department?: string
           email?: string | null
           id?: string
@@ -412,6 +430,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "staff_current_rank_key_fkey"
+            columns: ["current_rank_key"]
+            isOneToOne: false
+            referencedRelation: "ranks"
+            referencedColumns: ["key"]
+          },
           {
             foreignKeyName: "staff_manager_id_fkey"
             columns: ["manager_id"]
@@ -451,6 +476,24 @@ export type Database = {
         Args: never
         Returns: Database["public"]["Enums"]["app_role"]
       }
+      evaluate_rank: {
+        Args: { _staff_id: string }
+        Returns: {
+          a_grades: number
+          b_grades: number
+          current_rank_key: string
+          current_rank_name: string
+          eligible: boolean
+          next_min_a_grades: number
+          next_min_achievements: number
+          next_min_b_grades: number
+          next_min_total_stars: number
+          next_rank_key: string
+          next_rank_name: string
+          total_stars: number
+          unique_achievements: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -458,6 +501,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      refresh_staff_rank: { Args: { _staff_id: string }; Returns: undefined }
     }
     Enums: {
       app_role: "director" | "manager" | "staff"

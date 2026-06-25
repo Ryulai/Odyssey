@@ -9,12 +9,24 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PromotionsRouteImport } from './routes/promotions'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as EvaluationsRouteImport } from './routes/evaluations'
 import { Route as ClaimsRouteImport } from './routes/claims'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 
+const PromotionsRoute = PromotionsRouteImport.update({
+  id: '/promotions',
+  path: '/promotions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EvaluationsRoute = EvaluationsRouteImport.update({
   id: '/evaluations',
   path: '/evaluations',
@@ -47,6 +59,8 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/claims': typeof ClaimsRoute
   '/evaluations': typeof EvaluationsRoute
+  '/profile': typeof ProfileRoute
+  '/promotions': typeof PromotionsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +68,8 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/claims': typeof ClaimsRoute
   '/evaluations': typeof EvaluationsRoute
+  '/profile': typeof ProfileRoute
+  '/promotions': typeof PromotionsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,13 +78,37 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/claims': typeof ClaimsRoute
   '/evaluations': typeof EvaluationsRoute
+  '/profile': typeof ProfileRoute
+  '/promotions': typeof PromotionsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/auth' | '/claims' | '/evaluations'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/auth'
+    | '/claims'
+    | '/evaluations'
+    | '/profile'
+    | '/promotions'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/auth' | '/claims' | '/evaluations'
-  id: '__root__' | '/' | '/admin' | '/auth' | '/claims' | '/evaluations'
+  to:
+    | '/'
+    | '/admin'
+    | '/auth'
+    | '/claims'
+    | '/evaluations'
+    | '/profile'
+    | '/promotions'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/auth'
+    | '/claims'
+    | '/evaluations'
+    | '/profile'
+    | '/promotions'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -77,10 +117,26 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ClaimsRoute: typeof ClaimsRoute
   EvaluationsRoute: typeof EvaluationsRoute
+  ProfileRoute: typeof ProfileRoute
+  PromotionsRoute: typeof PromotionsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/promotions': {
+      id: '/promotions'
+      path: '/promotions'
+      fullPath: '/promotions'
+      preLoaderRoute: typeof PromotionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/evaluations': {
       id: '/evaluations'
       path: '/evaluations'
@@ -125,6 +181,8 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ClaimsRoute: ClaimsRoute,
   EvaluationsRoute: EvaluationsRoute,
+  ProfileRoute: ProfileRoute,
+  PromotionsRoute: PromotionsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

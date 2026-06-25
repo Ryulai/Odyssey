@@ -114,6 +114,7 @@ export const updateRank = createServerFn({ method: "POST" })
   .inputValidator((d: {
     key: string; name: string; subtitle: string; description: string;
     requirement: string; locked: boolean; position: number;
+    min_total_stars?: number; min_a_grades?: number; min_b_grades?: number; min_achievements?: number;
   }) => d)
   .handler(async ({ context, data }) => {
     const { error } = await context.supabase.from("ranks").upsert(data);
