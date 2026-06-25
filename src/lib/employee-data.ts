@@ -116,6 +116,10 @@ export interface Employee {
   career: CareerTreeNode[];
   reviews: MonthlyReview[];
   abcdHistory: { month: string; grade: Grade }[];
+  quests: Quest[];
+  attributes: Attribute[];
+  collection: CollectionAchievement[];
+  rankProgress: RankProgress;
 }
 
 export const PARTNER_PATH: PartnerNode[] = [
