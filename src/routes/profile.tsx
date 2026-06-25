@@ -44,6 +44,26 @@ function ProfilePage() {
 
 function Skel() { return <div className="animate-pulse rounded-md border border-border bg-ink/30 p-12 text-center text-xs text-muted-foreground">Calculating…</div>; }
 
+function ProfileBody({ data }: { data: any }) {
+  const { role } = useRole();
+  const isShipbuilder = role === "director";
+  return (
+    <div className="space-y-6">
+      <CharacterSheet d={data} isShipbuilder={isShipbuilder} />
+      <div className={`grid gap-6 ${isShipbuilder ? "" : "lg:grid-cols-2"}`}>
+        <LegacyCard d={data} />
+        {!isShipbuilder && <PromotionCard d={data} />}
+      </div>
+      <ClaimSummary d={data} />
+      <div className="grid gap-6 lg:grid-cols-2">
+        <RecordsCard records={data.records} />
+        <GradesCard grades={data.grades} />
+      </div>
+    </div>
+  );
+}
+
+
 function CharacterSheet({ d }: { d: any }) {
   const s = d.staff;
   const ev = d.evaluation;
