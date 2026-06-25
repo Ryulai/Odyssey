@@ -389,6 +389,10 @@ function StaffForm({ row, managers, accounts, locations, isDirector, onSave, onC
           {locations.map((l: any) => <option key={l.id} value={l.id}>{l.name}{l.code ? ` · ${l.code}` : ""}</option>)}
         </select>
       </Field>
+      <Field label="Join Date"><input type="date" className={inputCls} value={d.join_date ?? ""} onChange={e => set("join_date", e.target.value)} /></Field>
+      <Field label="Career Tree Path"><input className={inputCls} value={d.career_path ?? ""} onChange={e => set("career_path", e.target.value)} placeholder="e.g. Master Ambassador" /></Field>
+      <Field label="Shipbuilder Tree Path"><input className={inputCls} value={d.shipbuilder_path ?? ""} onChange={e => set("shipbuilder_path", e.target.value)} placeholder="e.g. Venue Partner" /></Field>
+
 
       <Field label="Status">
         <select className={inputCls} value={d.status} onChange={e => set("status", e.target.value as any)}>
