@@ -84,7 +84,7 @@ export const getStaffDashboard = createServerFn({ method: "GET" })
       }
     }
     if (!staffId) {
-      return { staff: null, totals: null, evaluation: null, records: [], grades: [], legacy: null, claims: { pending: 0, approved: 0, rejected: 0 } };
+      return { staff: null, totals: null, evaluation: null, records: [], grades: [], legacy: null, holdings: [], claims: { pending: 0, approved: 0, rejected: 0 } };
     }
 
     const [staffRes, recordsRes, gradesRes, evalRes, legacyCfg, legacyTitles, claimsRes, holdingsRes] = await Promise.all([
