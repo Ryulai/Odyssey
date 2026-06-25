@@ -110,11 +110,11 @@ function AdminHeader() {
   return (
     <header className="mb-8 flex items-center justify-between">
       <div>
-        <div className="font-display text-lg font-semibold uppercase tracking-widest text-gold">Guild Admin</div>
-        <div className="text-xs text-muted-foreground">Data configuration for the Guild Ledger</div>
+        <div className="font-display text-lg font-semibold uppercase tracking-widest text-gold">Harbor Admin</div>
+        <div className="text-xs text-muted-foreground">Charts & manifests for The Odyssey Guide</div>
       </div>
       <Link to="/" className="rounded-md border border-border px-3 py-2 text-xs uppercase tracking-widest text-muted-foreground hover:border-gold/40 hover:text-gold">
-        ← Ledger
+        ← Voyage
       </Link>
     </header>
   );
