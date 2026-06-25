@@ -1401,3 +1401,394 @@ function OpJourney({ milestones }: { milestones: CareerMilestone[] }) {
   );
 }
 
+/* ============================ Growth Trees ============================ */
+
+type GrowthStage = {
+  name: string;
+  blurb: string;
+  requirements: string[];
+  rewards: string[];
+};
+
+type GrowthTree = {
+  id: string;
+  title: string;
+  question: string;
+  icon: string;
+  accent: string;       // css var
+  driver: string;       // what fuels progression
+  currentIndex: number; // index in stages
+  progressPct: number;  // 0..100 toward next stage
+  progressLabel: string;
+  stages: GrowthStage[];
+};
+
+const GROWTH_TREES: GrowthTree[] = [
+  {
+    id: "career",
+    title: "Career Tree",
+    question: "What can I do?",
+    icon: "⚔",
+    accent: "var(--color-rank-platinum)",
+    driver: "Driven by ABCD performance history",
+    currentIndex: 3,
+    progressPct: 62,
+    progressLabel: "8 / 12 A-grades toward Diamond Hunter",
+    stages: [
+      { name: "Bronze Hunter",   blurb: "Learning the craft under guidance.",
+        requirements: ["Complete onboarding voyage", "First solo close"],
+        rewards: ["Hunter sigil", "Bronze cloak"] },
+      { name: "Silver Hunter",   blurb: "Operates independently.",
+        requirements: ["6 months sustained C+ grades", "Own a pipeline cycle"],
+        rewards: ["Silver insignia", "Territory assignment"] },
+      { name: "Gold Hunter",     blurb: "Consistent professional output.",
+        requirements: ["12 B+ grades", "Lead a quarterly target"],
+        rewards: ["Gold standard cloak", "Mentor eligibility"] },
+      { name: "Platinum Hunter", blurb: "Influential field operator.",
+        requirements: ["Multi-quarter A-grade streak", "Run a campaign solo"],
+        rewards: ["Platinum sigil", "Voice in strategy rounds"] },
+      { name: "Diamond Hunter",  blurb: "Defines excellence in the craft.",
+        requirements: ["12 A-grades within 18 months", "Captain nomination"],
+        rewards: ["Diamond crest", "Department-level mandate"] },
+    ],
+  },
+  {
+    id: "partner",
+    title: "Partner Tree",
+    question: "What can I build?",
+    icon: "⚓",
+    accent: "var(--color-gold)",
+    driver: "Driven by ownership & cross-team initiative — not raw sales",
+    currentIndex: 1,
+    progressPct: 35,
+    progressLabel: "Guardian → Partner Candidate · 1 of 3 prerequisites met",
+    stages: [
+      { name: "Explorer",          blurb: "Curious about the business beyond the craft.",
+        requirements: ["Shadow a senior on one cross-team initiative"],
+        rewards: ["Access to strategy briefings"] },
+      { name: "Guardian",          blurb: "Mentors juniors, protects guild standards.",
+        requirements: ["Mentor 2 juniors to first rank-up", "Uphold standards in reviews"],
+        rewards: ["Guardian sash", "Review panel seat"] },
+      { name: "Partner Candidate", blurb: "Demonstrates cross-functional leadership.",
+        requirements: ["Black Diamond rank", "Lead a cross-team campaign", "Captain's nomination"],
+        rewards: ["Candidate ring", "Partner forum access"] },
+      { name: "Partner",           blurb: "Trusted captain of a business line.",
+        requirements: ["Own a sub-line for 2 seasons", "Sustained Guild Elder legacy"],
+        rewards: ["Partner crest", "Profit-share line"] },
+      { name: "Business Partner",  blurb: "Owns a P&L and grows new ventures.",
+        requirements: ["Launch and sustain a new venture", "Board-level review"],
+        rewards: ["Equity grant", "Venture autonomy"] },
+      { name: "Shareholder",       blurb: "Long-term steward of the guild.",
+        requirements: ["Decade of stewardship", "Founders' invitation"],
+        rewards: ["Shareholder seal", "Permanent guild council seat"] },
+    ],
+  },
+  {
+    id: "mentor",
+    title: "Mentor Tree",
+    question: "Who have I helped grow?",
+    icon: "📖",
+    accent: "var(--color-grade-a)",
+    driver: "Driven by people developed & mentorship outcomes",
+    currentIndex: 2,
+    progressPct: 48,
+    progressLabel: "Mentor → Master Mentor · 4 of 6 protégés ranked up",
+    stages: [
+      { name: "Helper",         blurb: "Lends a hand when asked.",
+        requirements: ["Onboard 1 new member"],
+        rewards: ["Helper ribbon"] },
+      { name: "Guide",          blurb: "Takes a junior through their first season.",
+        requirements: ["Guide 2 members through onboarding"],
+        rewards: ["Guide token", "Listed in new-hire packs"] },
+      { name: "Mentor",         blurb: "Pairs long-term with developing hunters.",
+        requirements: ["Mentor 3 members to a rank-up"],
+        rewards: ["Mentor pin", "Quarterly mentor stipend"] },
+      { name: "Master Mentor",  blurb: "Recognized teacher across departments.",
+        requirements: ["6 protégés rank-up", "Run a guild training session"],
+        rewards: ["Master Mentor sash", "Curriculum authoring rights"] },
+      { name: "Guild Mentor",   blurb: "Shapes the next generation of the guild.",
+        requirements: ["Sustained 2+ years of mentorship leadership"],
+        rewards: ["Guild Mentor crest", "Permanent academy seat"] },
+    ],
+  },
+  {
+    id: "leadership",
+    title: "Leadership Tree",
+    question: "Who follows me?",
+    icon: "🛡",
+    accent: "var(--color-rank-diamond)",
+    driver: "Driven by team, project, and event leadership",
+    currentIndex: 1,
+    progressPct: 55,
+    progressLabel: "Squad Leader → Captain · led 4 of 6 required projects",
+    stages: [
+      { name: "Team Member",      blurb: "Contributes inside a team.",
+        requirements: ["Active on a team for one season"],
+        rewards: ["Team badge"] },
+      { name: "Squad Leader",     blurb: "Leads a small squad on focused missions.",
+        requirements: ["Lead 2 missions or events"],
+        rewards: ["Squad sigil", "Squad budget access"] },
+      { name: "Captain",          blurb: "Owns a full team and its outcomes.",
+        requirements: ["Lead 6 projects", "Sustained team grade B+"],
+        rewards: ["Captain's crest", "Hiring vote"] },
+      { name: "Fleet Captain",    blurb: "Coordinates multiple teams toward a goal.",
+        requirements: ["Run a multi-team campaign for 2 seasons"],
+        rewards: ["Fleet standard", "Operational override"] },
+      { name: "Guild Commander",  blurb: "Sets direction across the guild floor.",
+        requirements: ["Captain nomination", "Proven multi-year influence"],
+        rewards: ["Commander's mantle", "Strategy council seat"] },
+    ],
+  },
+  {
+    id: "secondary",
+    title: "Secondary Class Tree",
+    question: "What else can I become?",
+    icon: "✦",
+    accent: "var(--color-rank-mythic)",
+    driver: "Unlocks at Career Tree milestones · multiple classes can stack",
+    currentIndex: 1,
+    progressPct: 40,
+    progressLabel: "1 secondary unlocked · Bard at 60% · Strategist locked",
+    stages: [
+      { name: "Hunter (Main)",     blurb: "Your primary class. Always active.",
+        requirements: ["—"],
+        rewards: ["Full Hunter kit"] },
+      { name: "Hunter + Sniper",   blurb: "Precision closer. Specializes in high-value, low-volume hunts.",
+        requirements: ["Gold Hunter", "5 enterprise closes"],
+        rewards: ["Sniper's mark", "Named-account access"] },
+      { name: "Hunter + Bard",     blurb: "Voice of the guild. Owns story and stage.",
+        requirements: ["Platinum Hunter", "Headline 3 guild events"],
+        rewards: ["Bard's lyre", "Marketing co-sign"] },
+      { name: "Hunter + Strategist", blurb: "Planner & analyst behind the field.",
+        requirements: ["Diamond Hunter", "Author a winning territory plan"],
+        rewards: ["Strategist's compass", "Planning seat"] },
+      { name: "Hunter + Host",     blurb: "Front-of-house ambassador for guests and partners.",
+        requirements: ["Platinum Hunter", "Host 6 partner evenings"],
+        rewards: ["Host's medallion"] },
+      { name: "Hunter + Event Planner", blurb: "Designs and runs guild gatherings end-to-end.",
+        requirements: ["Captain (Leadership)", "Run 2 flagship events"],
+        rewards: ["Planner's quill"] },
+    ],
+  },
+];
+
+function GrowthTrees() {
+  const [openId, setOpenId] = useState<string>(GROWTH_TREES[0].id);
+  return (
+    <section className="space-y-6">
+      <div className="card-ornate-gold p-6">
+        <SectionHeader
+          eyebrow="Core Progression"
+          title="Growth Trees"
+          hint="Your character development. Separate from Monthly Grade, Achievement Stars, and Legacy — this is who you are becoming."
+        />
+        <div className="mt-4 grid gap-2 text-[12px] text-muted-foreground sm:grid-cols-2 lg:grid-cols-4">
+          <FactPill label="Where am I now?" />
+          <FactPill label="What should I improve next?" />
+          <FactPill label="What path am I walking?" />
+          <FactPill label="What future is available?" />
+        </div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {GROWTH_TREES.map(t => (
+          <GrowthTreeSummary
+            key={t.id}
+            tree={t}
+            active={openId === t.id}
+            onOpen={() => setOpenId(t.id)}
+          />
+        ))}
+      </div>
+
+      {GROWTH_TREES.filter(t => t.id === openId).map(t => (
+        <GrowthTreeDetail key={t.id} tree={t} />
+      ))}
+    </section>
+  );
+}
+
+function FactPill({ label }: { label: string }) {
+  return (
+    <div className="rounded-md border border-border bg-ink/40 px-3 py-2">
+      <span className="text-gold">◆</span> <span className="text-foreground">{label}</span>
+    </div>
+  );
+}
+
+function GrowthTreeSummary({ tree, active, onOpen }: { tree: GrowthTree; active: boolean; onOpen: () => void }) {
+  const current = tree.stages[tree.currentIndex];
+  const next = tree.stages[tree.currentIndex + 1];
+  return (
+    <button
+      onClick={onOpen}
+      className={`card-ornate group relative overflow-hidden p-5 text-left transition-all ${
+        active ? "ring-1 ring-gold/60" : "hover:border-gold/40"
+      }`}
+      style={{ borderColor: active ? tree.accent : undefined }}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-xl" style={{ color: tree.accent }}>{tree.icon}</span>
+          <div className="font-display text-sm uppercase tracking-widest" style={{ color: tree.accent }}>
+            {tree.title}
+          </div>
+        </div>
+        <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
+          {tree.currentIndex + 1}/{tree.stages.length}
+        </span>
+      </div>
+      <p className="mt-1 text-[11px] italic text-muted-foreground">"{tree.question}"</p>
+
+      <div className="mt-4">
+        <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Current Stage</div>
+        <div className="font-display text-base text-foreground">{current.name}</div>
+      </div>
+
+      <div className="mt-3">
+        <div className="flex items-baseline justify-between text-[11px] text-muted-foreground">
+          <span>Next: {next ? next.name : "— pinnacle reached —"}</span>
+          <span>{next ? `${tree.progressPct}%` : "MAX"}</span>
+        </div>
+        <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-ink/70">
+          <div
+            className="h-full transition-all"
+            style={{ width: `${next ? tree.progressPct : 100}%`, background: tree.accent }}
+          />
+        </div>
+        <div className="mt-1 text-[10px] text-muted-foreground">{tree.progressLabel}</div>
+      </div>
+    </button>
+  );
+}
+
+function GrowthTreeDetail({ tree }: { tree: GrowthTree }) {
+  const next = tree.stages[tree.currentIndex + 1];
+  return (
+    <section className="card-ornate p-6" style={{ borderColor: tree.accent }}>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <div className="text-[10px] uppercase tracking-[0.25em]" style={{ color: tree.accent }}>
+            {tree.title} · "{tree.question}"
+          </div>
+          <h3 className="font-display text-xl text-foreground">The Path of {tree.title.replace(" Tree", "")}</h3>
+          <p className="mt-1 text-xs italic text-muted-foreground">{tree.driver}</p>
+        </div>
+        {next && (
+          <div className="rounded-md border border-border bg-ink/40 px-3 py-2 text-right">
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Ascending toward</div>
+            <div className="font-display text-sm" style={{ color: tree.accent }}>{next.name}</div>
+            <div className="mt-1 text-[10px] text-muted-foreground">{tree.progressLabel}</div>
+          </div>
+        )}
+      </div>
+
+      <ol className="mt-6 space-y-3">
+        {tree.stages.map((s, i) => {
+          const state =
+            i < tree.currentIndex ? "done" :
+            i === tree.currentIndex ? "current" :
+            i === tree.currentIndex + 1 ? "next" : "locked";
+          return (
+            <li
+              key={s.name}
+              className={`grid grid-cols-[auto_1fr] gap-4 rounded-md border p-4 ${
+                state === "current" ? "bg-ink/60" :
+                state === "next"    ? "bg-ink/40" :
+                state === "done"    ? "bg-ink/20 opacity-75" :
+                                      "bg-ink/10 opacity-55"
+              }`}
+              style={{
+                borderColor: state === "current" || state === "next" ? tree.accent : "var(--color-border)",
+              }}
+            >
+              <StageNode index={i} state={state} accent={tree.accent} />
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-baseline gap-2">
+                  <span className="font-display text-base" style={{
+                    color: state === "locked" ? "var(--color-muted-foreground)" : "var(--color-foreground)",
+                  }}>{s.name}</span>
+                  <StageBadge state={state} accent={tree.accent} />
+                </div>
+                <p className="mt-0.5 text-xs text-muted-foreground">{s.blurb}</p>
+
+                {state === "current" && (
+                  <div className="mt-3">
+                    <div className="flex items-baseline justify-between text-[10px] uppercase tracking-widest text-muted-foreground">
+                      <span>Progress to next stage</span>
+                      <span style={{ color: tree.accent }}>{tree.progressPct}%</span>
+                    </div>
+                    <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-ink/70">
+                      <div className="h-full" style={{ width: `${tree.progressPct}%`, background: tree.accent }} />
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <Requirements label={state === "done" ? "Earned by" : "Requirements"} items={s.requirements} accent={tree.accent} muted={state === "locked"} />
+                  <Requirements label={state === "locked" ? "Locked rewards" : "Rewards"} items={s.rewards} accent={tree.accent} muted={state === "locked"} reward />
+                </div>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </section>
+  );
+}
+
+function StageNode({ index, state, accent }: { index: number; state: "done" | "current" | "next" | "locked"; accent: string }) {
+  const sym = state === "done" ? "✓" : state === "locked" ? "🔒" : index + 1;
+  return (
+    <div
+      className="grid h-10 w-10 shrink-0 place-items-center rounded-full font-display text-sm"
+      style={{
+        background: state === "current"
+          ? `radial-gradient(circle at 30% 30%, ${accent}, oklch(0.2 0.03 250))`
+          : "var(--color-ink)",
+        color: state === "locked" ? "var(--color-muted-foreground)" :
+               state === "current" ? "oklch(0.15 0.03 250)" : accent,
+        boxShadow: state === "current" ? `0 0 0 2px ${accent}, 0 0 18px -4px ${accent}` :
+                   state === "next"    ? `0 0 0 1px ${accent}` : "none",
+      }}
+    >
+      {sym}
+    </div>
+  );
+}
+
+function StageBadge({ state, accent }: { state: "done" | "current" | "next" | "locked"; accent: string }) {
+  const map = {
+    done:    { label: "Earned",    color: "var(--color-muted-foreground)" },
+    current: { label: "You are here", color: accent },
+    next:    { label: "Next stage", color: accent },
+    locked:  { label: "Locked",    color: "var(--color-muted-foreground)" },
+  } as const;
+  const m = map[state];
+  return (
+    <span
+      className="rounded-full border px-2 py-[1px] text-[9px] uppercase tracking-widest"
+      style={{ color: m.color, borderColor: m.color }}
+    >
+      {m.label}
+    </span>
+  );
+}
+
+function Requirements({ label, items, accent, muted, reward }: { label: string; items: string[]; accent: string; muted?: boolean; reward?: boolean }) {
+  return (
+    <div className="rounded-md border border-border bg-ink/30 p-3">
+      <div className="text-[10px] uppercase tracking-widest" style={{ color: muted ? "var(--color-muted-foreground)" : accent }}>{label}</div>
+      <ul className="mt-1 space-y-0.5 text-[11px] text-muted-foreground">
+        {items.map((it, i) => (
+          <li key={i} className="flex gap-2">
+            <span style={{ color: muted ? "var(--color-muted-foreground)" : accent }}>{reward ? "✦" : "◇"}</span>
+            <span className={muted ? "" : "text-foreground/90"}>{it}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+
