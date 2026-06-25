@@ -200,7 +200,7 @@ function StaffModule() {
               <tr className="border-b border-border">
                 <th className="py-2 pr-3">Name</th><th className="py-2 pr-3">Role</th>
                 <th className="py-2 pr-3">Path</th><th className="py-2 pr-3">Department</th>
-                <th className="py-2 pr-3">Manager</th><th className="py-2 pr-3">Account</th><th className="py-2 pr-3">Status</th><th className="py-2 pr-3 text-right">Actions</th>
+                <th className="py-2 pr-3">Manager</th><th className="py-2 pr-3">Fleet</th><th className="py-2 pr-3">Account</th><th className="py-2 pr-3">Status</th><th className="py-2 pr-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -211,6 +211,7 @@ function StaffModule() {
                   <td className="py-2 pr-3 text-muted-foreground capitalize">{s.role_family}</td>
                   <td className="py-2 pr-3 text-muted-foreground">{s.department}</td>
                   <td className="py-2 pr-3 text-muted-foreground">{staff.find((x: any) => x.id === s.manager_id)?.name ?? "—"}</td>
+                  <td className="py-2 pr-3 text-muted-foreground">{locations.find((l: any) => l.id === s.location_id)?.name ?? "—"}</td>
                   <td className="py-2 pr-3 text-muted-foreground">{s.user_id ? "Linked" : emailMatchesAccount(s.email, accounts) ? "Match ready" : "—"}</td>
                   <td className="py-2 pr-3 text-muted-foreground capitalize">{s.status ?? "active"}</td>
                   <td className="py-2 pr-3 text-right">
@@ -224,7 +225,8 @@ function StaffModule() {
                   </td>
                 </tr>
               ))}
-              {!staff.length && (<tr><td colSpan={8} className="py-6 text-center text-xs text-muted-foreground">No staff yet.</td></tr>)}
+              {!staff.length && (<tr><td colSpan={9} className="py-6 text-center text-xs text-muted-foreground">No staff yet.</td></tr>)}
+
             </tbody>
           </table>
         </div>
