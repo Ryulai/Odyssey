@@ -74,11 +74,11 @@ function OnboardingCard() {
   const { user } = useAuth();
   return (
     <section className="rounded-md border border-gold/40 bg-ink/40 p-8 text-center">
-      <div className="font-display text-xs uppercase tracking-[0.25em] text-gold">Welcome to the Guild</div>
-      <h1 className="mt-2 font-display text-2xl text-foreground">Your account isn't linked to a staff record yet</h1>
+      <div className="font-display text-xs uppercase tracking-[0.25em] text-gold">Welcome Aboard</div>
+      <h1 className="mt-2 font-display text-2xl text-foreground">Your account hasn't been added to the ship's manifest yet</h1>
       <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground">
-        Signed in as <span className="text-foreground">{user?.email}</span>. A Director needs to create a staff record
-        with this exact email — once created, your profile, rank, stars and legacy will appear here automatically.
+        Signed in as <span className="text-foreground">{user?.email}</span>. A Director needs to add you to the crew manifest
+        with this exact email — once logged, your profile, rank, stars and legacy will chart themselves here automatically.
       </p>
       <div className="mt-5 flex flex-wrap justify-center gap-2">
         <Link to="/admin" className="rounded-md border border-gold bg-gold/10 px-3 py-2 font-display text-[10px] uppercase tracking-widest text-gold hover:bg-gold/20">
