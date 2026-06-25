@@ -63,11 +63,17 @@ export const listStaff = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const actorRole = await currentUserRole(context);
     requireManagerOrDirector(actorRole);
-    let query = context.supabase.from("staff").select("*").order("name");
+    let query;
     if (actorRole === "manager") {
       const actorStaffId = await currentStaffId(context);
       if (!actorStaffId) return [];
-      query = query.or(`manager_id.eq.${actorStaffId},id.eq.${actorStaffId}`);
+      query = context.supabase
+        .from("staff")
+        .select("*")
+        .or(`manager_id.eq.${actorStaffId},id.eq.${actorStaffId}`)
+        .order("name");
+    } else {
+      query = context.supabase.from("staff").select("*").order("name");
     }
     const { data, error } = await query;
     if (error) throw new Error(error.message);
