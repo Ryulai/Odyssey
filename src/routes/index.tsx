@@ -1519,7 +1519,7 @@ const GROWTH_TREES: GrowthTree[] = [
   },
   {
     id: "partner",
-    title: "Partner Tree",
+    title: "Shipbuilder Tree",
     question: "What can I build?",
     icon: "⚓",
     accent: "var(--color-gold)",
