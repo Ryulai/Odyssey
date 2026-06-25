@@ -364,6 +364,7 @@ function StaffForm({ row, managers, accounts, locations, isDirector, onSave, onC
         {row.id ? "Edit Staff" : "Create Staff"}
       </div>
       <Field label="Name"><input className={inputCls} value={d.name} onChange={e => set("name", e.target.value)} required /></Field>
+      <Field label="Employee ID"><input className={inputCls} value={d.employee_code ?? ""} onChange={e => set("employee_code", e.target.value)} placeholder="e.g. NAV-0042" /></Field>
       <Field label="Email"><input type="email" className={inputCls} value={d.email ?? ""} onChange={e => set("email", e.target.value)} /></Field>
       <Field label="Position"><input className={inputCls} value={d.role} onChange={e => { set("role", e.target.value); set("app_role", roleToAppRole(e.target.value)); }} placeholder="e.g. Senior Ambassador" /></Field>
       <Field label="Path">
