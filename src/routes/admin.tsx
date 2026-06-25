@@ -180,6 +180,7 @@ function StaffModule() {
   const { role } = useRole();
   const { data: staff = [], isLoading } = useQuery({ queryKey: ["staff"], queryFn: () => listStaff() });
   const { data: accounts = [] } = useQuery({ queryKey: ["user-accounts"], queryFn: () => listUserAccounts(), enabled: role === "director" });
+  const { data: locations = [] } = useQuery({ queryKey: ["locations"], queryFn: () => listLocations() });
   const save = useMutation({ mutationFn: (d: any) => upsertStaff({ data: d }), onSuccess: () => qc.invalidateQueries({ queryKey: ["staff"] }) });
   const link = useMutation({ mutationFn: (d: any) => linkStaffAccount({ data: d }), onSuccess: () => qc.invalidateQueries({ queryKey: ["staff"] }) });
   const del  = useMutation({ mutationFn: (id: string) => deleteStaff({ data: { id } }), onSuccess: () => qc.invalidateQueries({ queryKey: ["staff"] }) });
@@ -187,10 +188,11 @@ function StaffModule() {
 
   return (
     <Section title="Staff Management" action={
-      <Btn onClick={() => setEditing({ id: "", name: "", email: "", role: "", role_family: "hunter", department: "Sales", manager_id: null, status: "active", user_id: null, app_role: "staff" })}>
+      <Btn onClick={() => setEditing({ id: "", name: "", email: "", role: "", role_family: "hunter", department: "Sales", manager_id: null, status: "active", user_id: null, app_role: "staff", location_id: null })}>
         + New Staff
       </Btn>
     }>
+
       {isLoading ? <div className="py-6 text-center text-xs text-muted-foreground">Loading…</div> : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
