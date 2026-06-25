@@ -879,22 +879,24 @@ function Stat2({ label, value }: { label: string; value: string }) {
 
 function LegacyGlyphs({ suns, moons, stars, compact }: { suns: number; moons: number; stars: number; compact?: boolean }) {
   const size = compact ? "text-base" : "text-3xl";
-  const cap = (n: number, max = 5) => Math.min(n, max);
   return (
-    <span className={`flex items-center gap-1.5 ${size}`}>
+    <span className={`inline-flex items-center gap-3 ${size}`}>
       {suns > 0 && (
-        <span className="flex items-center gap-0.5" title={`${suns} suns`}>
-          {"☀".repeat(cap(suns))}{suns > 5 && <span className="text-xs text-muted-foreground">×{suns}</span>}
+        <span className="inline-flex items-baseline gap-1" title={`${suns} sun${suns > 1 ? "s" : ""}`}>
+          <span style={{ color: "oklch(0.86 0.16 78)" }}>☀</span>
+          <span className="font-display text-sm text-foreground">×{suns}</span>
         </span>
       )}
       {moons > 0 && (
-        <span className="flex items-center gap-0.5" title={`${moons} moons`}>
-          {"☾".repeat(cap(moons))}{moons > 5 && <span className="text-xs text-muted-foreground">×{moons}</span>}
+        <span className="inline-flex items-baseline gap-1" title={`${moons} moon${moons > 1 ? "s" : ""}`}>
+          <span style={{ color: "oklch(0.85 0.05 250)" }}>🌙</span>
+          <span className="font-display text-sm text-foreground">×{moons}</span>
         </span>
       )}
       {stars > 0 && (
-        <span className="flex items-center gap-0.5 text-gold" title={`${stars} stars`}>
-          {"★".repeat(cap(stars))}{stars > 5 && <span className="text-xs text-muted-foreground">×{stars}</span>}
+        <span className="inline-flex items-baseline gap-1 text-gold" title={`${stars} star${stars > 1 ? "s" : ""}`}>
+          <span>⭐</span>
+          <span className="font-display text-sm text-foreground">×{stars}</span>
         </span>
       )}
       {suns + moons + stars === 0 && <span className="text-xs text-muted-foreground">No legacy yet</span>}
