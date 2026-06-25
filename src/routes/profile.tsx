@@ -35,20 +35,8 @@ function ProfilePage() {
           </div>
         )}
 
-        {data?.staff && (
-          <div className="space-y-6">
-            <CharacterSheet d={data} />
-            <div className="grid gap-6 lg:grid-cols-2">
-              <LegacyCard d={data} />
-              <PromotionCard d={data} />
-            </div>
-            <ClaimSummary d={data} />
-            <div className="grid gap-6 lg:grid-cols-2">
-              <RecordsCard records={data.records} />
-              <GradesCard grades={data.grades} />
-            </div>
-          </div>
-        )}
+        {data?.staff && <ProfileBody data={data} />}
+
       </div>
     </div>
   );
