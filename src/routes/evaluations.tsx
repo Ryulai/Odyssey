@@ -79,15 +79,15 @@ function EvaluationsPage() {
                   value={month.slice(0,7)} onChange={e => setMonth(`${e.target.value}-01`)} required />
               </label>
               <label className="block">
-                <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">Sales Score (0–100)</span>
+                <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">Trade Performance (0–100)</span>
                 <input type="number" min={0} max={100} className={inputCls} value={sales} onChange={e => setSales(Number(e.target.value))} />
               </label>
               <label className="block">
-                <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">Review Score (0–100)</span>
+                <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">Crew Reputation (0–100)</span>
                 <input type="number" min={0} max={100} className={inputCls} value={review} onChange={e => setReview(Number(e.target.value))} />
               </label>
               <label className="block sm:col-span-2">
-                <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">Notes</span>
+                <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">Captain Notes</span>
                 <textarea rows={2} className={inputCls} value={notes} onChange={e => setNotes(e.target.value)} />
               </label>
               <div className="sm:col-span-2 flex items-center justify-between rounded-md border border-gold/30 bg-gold/5 px-3 py-2">
