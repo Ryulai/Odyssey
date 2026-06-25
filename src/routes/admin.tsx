@@ -171,7 +171,9 @@ type StaffRow = {
   id: string; name: string; email: string | null; role: string;
   role_family: "hunter" | "operational"; department: string; manager_id: string | null;
   status: "active" | "inactive"; user_id: string | null; app_role?: "director" | "manager" | "staff" | null;
+  location_id?: string | null;
 };
+
 
 function StaffModule() {
   const qc = useQueryClient();
