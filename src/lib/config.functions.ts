@@ -65,7 +65,7 @@ async function replaceUserRole(context: any, userId: string, role: AppRole) {
   }
   const { error: roleError } = await supabaseAdmin
     .from("user_roles")
-    .upsert({ user_id: userId, role });
+    .upsert({ user_id: userId, role }, { onConflict: "user_id,role" });
   if (roleError) throw new Error(roleError.message);
   const { error: delError } = await supabaseAdmin
     .from("user_roles")
