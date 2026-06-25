@@ -2,8 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import {
   SAMPLE_EMPLOYEE,
+  SAMPLE_OPERATIONAL_EMPLOYEE,
   GRADE_META,
   HUNTER_RANKS,
+  OPERATIONAL_RANKS,
   PARTNER_PATH,
   computeLegacy,
   totalStars,
@@ -15,69 +17,120 @@ import {
   type RepeatableAchievement,
   type RankProgress,
   type Employee,
+  type OperationalEmployee,
+  type OpRankKey,
+  type OpSkillNode,
+  type Certification,
+  type TrainingLevel,
+  type CareerMilestone,
 } from "@/lib/employee-data";
 
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Guild Ledger — Hunter Legacy System" },
-      { name: "description", content: "An RPG-styled hunter progression journal: ABCD monthly grade, permanent Hunter Rank, repeatable achievement stars, lifetime legacy, and the Partner tree." },
-      { property: "og:title", content: "Guild Ledger — Hunter Legacy System" },
-      { property: "og:description", content: "Monthly grades, permanent rank, repeatable stars, lifetime legacy, and the partner journey." },
+      { title: "Guild Ledger — Two Paths, One Guild" },
+      { name: "description", content: "Hunters earn achievements and legacy stars. Operational staff master ranks, skills, certifications, and training. Both paths, equally respected." },
+      { property: "og:title", content: "Guild Ledger — Two Paths, One Guild" },
+      { property: "og:description", content: "Hunter Achievement Economy and Operational Professional Development, side by side." },
     ],
   }),
   component: Dashboard,
 });
 
 type TabKey = "overview" | "achievements" | "legacy" | "career" | "partner" | "reviews";
+type Path = "hunter" | "operational";
 
 function Dashboard() {
-  const emp = SAMPLE_EMPLOYEE;
-  const [tab, setTab] = useState<TabKey>("overview");
-  const legacy = useMemo(() => computeLegacy(totalStars(emp)), [emp]);
-
+  const [path, setPath] = useState<Path>("hunter");
   return (
     <div className="min-h-screen text-foreground">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         <HunterHeader />
-        <ProfileCard emp={emp} legacy={legacy} />
-
-        <Tabs value={tab} onChange={setTab} />
-
-        <div className="mt-6 space-y-6">
-          {tab === "overview" && (
-            <>
-              <QuestBoard quests={emp.quests} />
-              <div className="grid gap-6 lg:grid-cols-2">
-                <CurrentGradeCard current={emp.currentGrade} />
-                <NextRankProgress current={emp.currentRank} progress={emp.rankProgress} />
-              </div>
-              <LegacyBanner legacy={legacy} />
-              <HunterAttributes attributes={emp.attributes} />
-              <ABCDPanel current={emp.currentGrade} history={emp.abcdHistory} />
-            </>
-          )}
-          {tab === "achievements" && <AchievementsLedger items={emp.achievements} />}
-          {tab === "legacy" && <LegacyHall legacy={legacy} emp={emp} />}
-          {tab === "career" && (
-            <>
-              <RankLadder current={emp.currentRank} />
-              <CareerTree nodes={emp.career} />
-            </>
-          )}
-          {tab === "partner" && <PartnerPath currentKey={emp.partnerStage} expanded />}
-          {tab === "reviews" && <ReviewsPanel reviews={emp.reviews} />}
-        </div>
-
-
+        <PathSwitcher path={path} onChange={setPath} />
+        {path === "hunter" ? <HunterDashboard /> : <OperationalDashboard />}
         <footer className="mt-12 border-t border-border pt-6 text-center text-xs text-muted-foreground">
-          The Guild Ledger · a hunter's adventure journal · all hunters depicted are fictional
+          The Guild Ledger · two paths, one guild · all members depicted are fictional
         </footer>
       </div>
     </div>
   );
 }
+
+function PathSwitcher({ path, onChange }: { path: Path; onChange: (p: Path) => void }) {
+  const options: { key: Path; label: string; tagline: string }[] = [
+    { key: "hunter",      label: "Hunter Path",       tagline: "Measured by achievements & influence" },
+    { key: "operational", label: "Operational Path",  tagline: "Measured by capability & mastery" },
+  ];
+  return (
+    <div className="mb-6 grid gap-2 sm:grid-cols-2">
+      {options.map(o => {
+        const active = path === o.key;
+        return (
+          <button
+            key={o.key}
+            onClick={() => onChange(o.key)}
+            className={`rounded-md border p-3 text-left transition-all ${
+              active ? "border-gold bg-gold/5" : "border-border bg-ink/30 hover:border-gold/40"
+            }`}
+          >
+            <div className={`font-display text-sm uppercase tracking-widest ${active ? "text-gold" : "text-muted-foreground"}`}>
+              {o.label}
+            </div>
+            <div className="text-[11px] italic text-muted-foreground">{o.tagline}</div>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+const HUNTER_TABS: { key: TabKey; label: string }[] = [
+  { key: "overview",     label: "Overview" },
+  { key: "achievements", label: "Achievements" },
+  { key: "legacy",       label: "Legacy" },
+  { key: "career",       label: "Rank & Career" },
+  { key: "partner",      label: "Partner Path" },
+  { key: "reviews",      label: "Reviews" },
+];
+
+function HunterDashboard() {
+  const emp = SAMPLE_EMPLOYEE;
+  const [tab, setTab] = useState<TabKey>("overview");
+  const legacy = useMemo(() => computeLegacy(totalStars(emp)), [emp]);
+
+  return (
+    <>
+      <ProfileCard emp={emp} legacy={legacy} />
+      <Tabs tabs={HUNTER_TABS} value={tab} onChange={(k) => setTab(k as TabKey)} />
+      <div className="mt-6 space-y-6">
+        {tab === "overview" && (
+          <>
+            <QuestBoard quests={emp.quests} />
+            <div className="grid gap-6 lg:grid-cols-2">
+              <CurrentGradeCard current={emp.currentGrade} />
+              <NextRankProgress current={emp.currentRank} progress={emp.rankProgress} />
+            </div>
+            <LegacyBanner legacy={legacy} />
+            <HunterAttributes attributes={emp.attributes} />
+            <ABCDPanel current={emp.currentGrade} history={emp.abcdHistory} />
+          </>
+        )}
+        {tab === "achievements" && <AchievementsLedger items={emp.achievements} />}
+        {tab === "legacy" && <LegacyHall legacy={legacy} emp={emp} />}
+        {tab === "career" && (
+          <>
+            <RankLadder current={emp.currentRank} />
+            <CareerTree nodes={emp.career} />
+          </>
+        )}
+        {tab === "partner" && <PartnerPath currentKey={emp.partnerStage} expanded />}
+        {tab === "reviews" && <ReviewsPanel reviews={emp.reviews} />}
+      </div>
+    </>
+  );
+}
+
 
 /* ----------------------------- Header ----------------------------- */
 
