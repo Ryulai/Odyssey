@@ -203,20 +203,38 @@ export type Database = {
       }
       grade_weights: {
         Row: {
+          achievements_w: number
+          attendance_w: number
+          discipline_w: number
           id: number
+          kpi_w: number
+          review_w: number
           review_weight: number
+          sales_w: number
           sales_weight: number
           updated_at: string
         }
         Insert: {
+          achievements_w?: number
+          attendance_w?: number
+          discipline_w?: number
           id?: number
+          kpi_w?: number
+          review_w?: number
           review_weight?: number
+          sales_w?: number
           sales_weight?: number
           updated_at?: string
         }
         Update: {
+          achievements_w?: number
+          attendance_w?: number
+          discipline_w?: number
           id?: number
+          kpi_w?: number
+          review_w?: number
           review_weight?: number
+          sales_w?: number
           sales_weight?: number
           updated_at?: string
         }
@@ -364,11 +382,15 @@ export type Database = {
       }
       monthly_evaluations: {
         Row: {
+          achievements_score: number
+          attendance_score: number
           composite_score: number
           created_at: string
+          discipline_score: number
           evaluator_id: string | null
           grade: string
           id: string
+          kpi_score: number
           month: string
           notes: string
           review_score: number
@@ -377,11 +399,15 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          achievements_score?: number
+          attendance_score?: number
           composite_score?: number
           created_at?: string
+          discipline_score?: number
           evaluator_id?: string | null
           grade: string
           id?: string
+          kpi_score?: number
           month: string
           notes?: string
           review_score?: number
@@ -390,11 +416,15 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          achievements_score?: number
+          attendance_score?: number
           composite_score?: number
           created_at?: string
+          discipline_score?: number
           evaluator_id?: string | null
           grade?: string
           id?: string
+          kpi_score?: number
           month?: string
           notes?: string
           review_score?: number
