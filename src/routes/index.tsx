@@ -55,7 +55,7 @@ function Dashboard() {
         <HunterHeader />
         {isLoading ? (
           <div className="rounded-md border border-border bg-ink/30 p-12 text-center text-xs uppercase tracking-widest text-muted-foreground">
-            Loading your ledger…
+            Charting your course…
           </div>
         ) : !data?.staff ? (
           <OnboardingCard />
@@ -63,7 +63,7 @@ function Dashboard() {
           <LinkedHome d={data} />
         )}
         <footer className="mt-12 border-t border-border pt-6 text-center text-xs text-muted-foreground">
-          The Guild Ledger · two paths, one guild
+          The Odyssey Guide · Chart Your Journey. Forge Your Legacy.
         </footer>
       </div>
     </div>
