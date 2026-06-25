@@ -180,3 +180,69 @@ export const listTeamPromotions = createServerFn({ method: "GET" })
     );
     return evals;
   });
+
+/** Manager Dashboard: direct reports for the signed-in manager (or director picks own staff). */
+export const getManagerDashboard = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const me = await context.supabase
+      .from("staff").select("id, name, role").eq("user_id", context.userId).maybeSingle();
+    if (me.error) throw new Error(me.error.message);
+    const myStaffId = me.data?.id ?? null;
+
+    const reportsRes = await context.supabase
+      .from("staff")
+      .select("id, name, role, role_family, current_rank_key, status, location_id, email")
+      .eq("manager_id", myStaffId ?? "00000000-0000-0000-0000-000000000000")
+      .order("name");
+    if (reportsRes.error) throw new Error(reportsRes.error.message);
+    const reports = reportsRes.data ?? [];
+    const reportIds = reports.map((r: any) => r.id);
+
+    const [claimsRes, gradesRes, locsRes, evalsArr] = await Promise.all([
+      reportIds.length
+        ? context.supabase.from("achievement_claims")
+            .select("id, staff_id, status, created_at, achievement:achievements(name, star_reward)")
+            .in("staff_id", reportIds).eq("status", "pending").order("created_at", { ascending: false })
+        : Promise.resolve({ data: [], error: null } as any),
+      reportIds.length
+        ? context.supabase.from("monthly_evaluations")
+            .select("staff_id, month, grade, composite_score")
+            .in("staff_id", reportIds).order("month", { ascending: false })
+        : Promise.resolve({ data: [], error: null } as any),
+      context.supabase.from("locations").select("id, name, code"),
+      Promise.all(reports.map(async (r: any) => {
+        const { data } = await context.supabase.rpc("evaluate_rank", { _staff_id: r.id }).maybeSingle();
+        return { staff_id: r.id, evaluation: data as RankEvaluation | null };
+      })),
+    ]);
+    for (const r of [claimsRes, gradesRes, locsRes] as any[]) if (r.error) throw new Error(r.error.message);
+
+    return {
+      me: me.data,
+      reports,
+      pendingClaims: claimsRes.data ?? [],
+      grades: gradesRes.data ?? [],
+      locations: locsRes.data ?? [],
+      evaluations: evalsArr,
+    };
+  });
+
+/** Shipbuilder (Director) Dashboard: entire fleet. */
+export const getFleetOverview = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const [locsRes, staffRes, gradesRes, claimsRes] = await Promise.all([
+      context.supabase.from("locations").select("*").order("name"),
+      context.supabase.from("staff").select("id, name, role, role_family, manager_id, location_id, current_rank_key, status, email"),
+      context.supabase.from("monthly_evaluations").select("staff_id, grade, month, composite_score").order("month", { ascending: false }),
+      context.supabase.from("achievement_claims").select("staff_id, status"),
+    ]);
+    for (const r of [locsRes, staffRes, gradesRes, claimsRes] as any[]) if (r.error) throw new Error(r.error.message);
+    return {
+      locations: locsRes.data ?? [],
+      staff: staffRes.data ?? [],
+      grades: gradesRes.data ?? [],
+      claims: claimsRes.data ?? [],
+    };
+  });

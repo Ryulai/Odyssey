@@ -131,7 +131,9 @@ export const upsertStaff = createServerFn({ method: "POST" })
     id?: string; name: string; email?: string | null; role: string;
     role_family: "hunter" | "operational"; department: string; manager_id?: string | null;
     status?: "active" | "inactive"; user_id?: string | null; app_role?: AppRole | null;
+    location_id?: string | null;
   }) => d)
+
   .handler(async ({ context, data }) => {
     const actorRole = await currentUserRole(context);
     requireManagerOrDirector(actorRole);
@@ -157,6 +159,8 @@ export const upsertStaff = createServerFn({ method: "POST" })
       department: data.department,
       manager_id: actorRole === "manager" ? actorStaffId : (data.manager_id || null),
       status: data.status ?? "active",
+      location_id: data.location_id ?? null,
+
     };
     if (isDirector) payload.user_id = linkedUserId ?? null;
     if (isDirector) payload.system_role = data.app_role ?? "staff";
@@ -333,6 +337,47 @@ export const deleteLegacyTitle = createServerFn({ method: "POST" })
   .inputValidator((d: { id: string }) => d)
   .handler(async ({ context, data }) => {
     const { error } = await context.supabase.from("legacy_titles").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+/* ============ Locations / Fleets ============ */
+export const listLocations = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase.from("locations").select("*").order("name");
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
+
+export const upsertLocation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: {
+    id?: string; name: string; code?: string | null; kind?: string;
+    manager_id?: string | null; notes?: string | null; status?: "active" | "inactive";
+  }) => d)
+  .handler(async ({ context, data }) => {
+    requireDirector(await currentUserRole(context));
+    const payload: any = {
+      name: data.name,
+      code: data.code ?? null,
+      kind: data.kind ?? "venue",
+      manager_id: data.manager_id ?? null,
+      notes: data.notes ?? null,
+      status: data.status ?? "active",
+    };
+    if (data.id) payload.id = data.id;
+    const { data: row, error } = await context.supabase.from("locations").upsert(payload).select().single();
+    if (error) throw new Error(error.message);
+    return row;
+  });
+
+export const deleteLocation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => d)
+  .handler(async ({ context, data }) => {
+    requireDirector(await currentUserRole(context));
+    const { error } = await context.supabase.from("locations").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });

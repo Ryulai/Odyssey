@@ -10,7 +10,9 @@ import {
   listAchievements, upsertAchievement, deleteAchievement,
   listRanks, updateRank, reorderRanks,
   getLegacy, updateLegacyConfig, upsertLegacyTitle, deleteLegacyTitle,
+  listLocations, upsertLocation, deleteLocation,
 } from "@/lib/config.functions";
+
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -22,15 +24,17 @@ export const Route = createFileRoute("/admin")({
   component: () => <AuthGate><AdminPage /></AuthGate>,
 });
 
-type AdminTab = "staff" | "grades" | "achievements" | "ranks" | "legacy";
+type AdminTab = "staff" | "locations" | "grades" | "achievements" | "ranks" | "legacy";
 
 const TABS: { key: AdminTab; label: string; hint: string; cap: Capability }[] = [
-  { key: "staff",        label: "Staff",        hint: "Create, edit, assign department & manager", cap: "admin.staff" },
+  { key: "staff",        label: "Staff",        hint: "Create, edit, assign department, manager & location", cap: "admin.staff" },
+  { key: "locations",    label: "Fleets",       hint: "Manage locations / venues and their captain",         cap: "admin.staff" },
   { key: "grades",       label: "Grades",       hint: "Define A/B/C/D rules and weights",          cap: "admin.grades" },
   { key: "achievements", label: "Achievements", hint: "Define achievements & star rewards",        cap: "admin.achievements" },
   { key: "ranks",        label: "Ranks",        hint: "Configure Hunter ranks & promotion rules",  cap: "admin.ranks" },
   { key: "legacy",       label: "Legacy",       hint: "Conversion ratios & legacy titles",         cap: "admin.legacy" },
 ];
+
 
 function AdminPage() {
   const { role } = useRole();
@@ -97,10 +101,12 @@ function AdminPage() {
         {active && <div className="mb-4 text-xs italic text-muted-foreground">{active.hint}</div>}
 
         {tab === "staff"        && <StaffModule />}
+        {tab === "locations"    && <LocationsModule />}
         {tab === "grades"       && can(role, "admin.grades")       && <GradesModule />}
         {tab === "achievements" && <AchievementsModule />}
         {tab === "ranks"        && can(role, "admin.ranks")        && <RanksModule />}
         {tab === "legacy"       && can(role, "admin.legacy")       && <LegacyModule />}
+
       </div>
     </div>
   );
@@ -165,13 +171,16 @@ type StaffRow = {
   id: string; name: string; email: string | null; role: string;
   role_family: "hunter" | "operational"; department: string; manager_id: string | null;
   status: "active" | "inactive"; user_id: string | null; app_role?: "director" | "manager" | "staff" | null;
+  location_id?: string | null;
 };
+
 
 function StaffModule() {
   const qc = useQueryClient();
   const { role } = useRole();
   const { data: staff = [], isLoading } = useQuery({ queryKey: ["staff"], queryFn: () => listStaff() });
   const { data: accounts = [] } = useQuery({ queryKey: ["user-accounts"], queryFn: () => listUserAccounts(), enabled: role === "director" });
+  const { data: locations = [] } = useQuery({ queryKey: ["locations"], queryFn: () => listLocations() });
   const save = useMutation({ mutationFn: (d: any) => upsertStaff({ data: d }), onSuccess: () => qc.invalidateQueries({ queryKey: ["staff"] }) });
   const link = useMutation({ mutationFn: (d: any) => linkStaffAccount({ data: d }), onSuccess: () => qc.invalidateQueries({ queryKey: ["staff"] }) });
   const del  = useMutation({ mutationFn: (id: string) => deleteStaff({ data: { id } }), onSuccess: () => qc.invalidateQueries({ queryKey: ["staff"] }) });
@@ -179,10 +188,11 @@ function StaffModule() {
 
   return (
     <Section title="Staff Management" action={
-      <Btn onClick={() => setEditing({ id: "", name: "", email: "", role: "", role_family: "hunter", department: "Sales", manager_id: null, status: "active", user_id: null, app_role: "staff" })}>
+      <Btn onClick={() => setEditing({ id: "", name: "", email: "", role: "", role_family: "hunter", department: "Sales", manager_id: null, status: "active", user_id: null, app_role: "staff", location_id: null })}>
         + New Staff
       </Btn>
     }>
+
       {isLoading ? <div className="py-6 text-center text-xs text-muted-foreground">Loading…</div> : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -190,7 +200,7 @@ function StaffModule() {
               <tr className="border-b border-border">
                 <th className="py-2 pr-3">Name</th><th className="py-2 pr-3">Role</th>
                 <th className="py-2 pr-3">Path</th><th className="py-2 pr-3">Department</th>
-                <th className="py-2 pr-3">Manager</th><th className="py-2 pr-3">Account</th><th className="py-2 pr-3">Status</th><th className="py-2 pr-3 text-right">Actions</th>
+                <th className="py-2 pr-3">Manager</th><th className="py-2 pr-3">Fleet</th><th className="py-2 pr-3">Account</th><th className="py-2 pr-3">Status</th><th className="py-2 pr-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -201,6 +211,7 @@ function StaffModule() {
                   <td className="py-2 pr-3 text-muted-foreground capitalize">{s.role_family}</td>
                   <td className="py-2 pr-3 text-muted-foreground">{s.department}</td>
                   <td className="py-2 pr-3 text-muted-foreground">{staff.find((x: any) => x.id === s.manager_id)?.name ?? "—"}</td>
+                  <td className="py-2 pr-3 text-muted-foreground">{locations.find((l: any) => l.id === s.location_id)?.name ?? "—"}</td>
                   <td className="py-2 pr-3 text-muted-foreground">{s.user_id ? "Linked" : emailMatchesAccount(s.email, accounts) ? "Match ready" : "—"}</td>
                   <td className="py-2 pr-3 text-muted-foreground capitalize">{s.status ?? "active"}</td>
                   <td className="py-2 pr-3 text-right">
@@ -214,7 +225,8 @@ function StaffModule() {
                   </td>
                 </tr>
               ))}
-              {!staff.length && (<tr><td colSpan={8} className="py-6 text-center text-xs text-muted-foreground">No staff yet.</td></tr>)}
+              {!staff.length && (<tr><td colSpan={9} className="py-6 text-center text-xs text-muted-foreground">No staff yet.</td></tr>)}
+
             </tbody>
           </table>
         </div>
@@ -224,6 +236,7 @@ function StaffModule() {
           row={editing}
           managers={staff.filter((s: any) => s.id !== editing.id)}
           accounts={accounts}
+          locations={locations}
           isDirector={role === "director"}
           onCancel={() => setEditing(null)}
           onSave={(d) => save.mutate(d, { onSuccess: () => setEditing(null) })}
@@ -233,6 +246,7 @@ function StaffModule() {
     </Section>
   );
 }
+
 
 function emailMatchesAccount(email: string | null | undefined, accounts: any[]) {
   const normalized = email?.trim().toLowerCase();
@@ -247,9 +261,10 @@ function roleToAppRole(role: string): "director" | "manager" | "staff" {
   return "staff";
 }
 
-function StaffForm({ row, managers, accounts, isDirector, onSave, onCancel, busy }: {
-  row: StaffRow; managers: any[]; accounts: any[]; isDirector: boolean; onSave: (r: any) => void; onCancel: () => void; busy: boolean;
+function StaffForm({ row, managers, accounts, locations, isDirector, onSave, onCancel, busy }: {
+  row: StaffRow; managers: any[]; accounts: any[]; locations: any[]; isDirector: boolean; onSave: (r: any) => void; onCancel: () => void; busy: boolean;
 }) {
+
   const [d, setD] = useState<StaffRow>({ ...row, status: row.status ?? "active", user_id: row.user_id ?? null, app_role: row.app_role ?? roleToAppRole(row.role) });
   const set = <K extends keyof StaffRow>(k: K, v: StaffRow[K]) => setD(x => ({ ...x, [k]: v }));
   const matched = emailMatchesAccount(d.email, accounts);
@@ -276,12 +291,19 @@ function StaffForm({ row, managers, accounts, isDirector, onSave, onCancel, busy
           {DEPARTMENTS.map(x => <option key={x} value={x}>{x}</option>)}
         </select>
       </Field>
-      {isDirector && <Field label="Manager">
+      {isDirector && <Field label="Manager (Captain)">
         <select className={inputCls} value={d.manager_id ?? ""} onChange={e => set("manager_id", e.target.value || null)}>
           <option value="">— None —</option>
           {managers.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
         </select>
       </Field>}
+      <Field label="Assigned Fleet / Location">
+        <select className={inputCls} value={d.location_id ?? ""} onChange={e => set("location_id", e.target.value || null)}>
+          <option value="">— Unassigned —</option>
+          {locations.map((l: any) => <option key={l.id} value={l.id}>{l.name}{l.code ? ` · ${l.code}` : ""}</option>)}
+        </select>
+      </Field>
+
       <Field label="Status">
         <select className={inputCls} value={d.status} onChange={e => set("status", e.target.value as any)}>
           <option value="active">Active</option><option value="inactive">Inactive</option>
@@ -565,5 +587,98 @@ function LegacyTitleRow({ title, onSave, onDelete }: { title: any; onSave: (d: a
       <Btn onClick={() => onSave({ id: d.id, name: d.name, min_stars: d.min_stars, flavor: d.flavor, position: d.position })}>Save</Btn>
       <Btn variant="danger" onClick={onDelete}>Remove</Btn>
     </div>
+  );
+}
+
+/* ============ Locations / Fleets ============ */
+function LocationsModule() {
+  const qc = useQueryClient();
+  const { data: locations = [], isLoading } = useQuery({ queryKey: ["locations"], queryFn: () => listLocations() });
+  const { data: staff = [] } = useQuery({ queryKey: ["staff"], queryFn: () => listStaff() });
+  const save = useMutation({ mutationFn: (d: any) => upsertLocation({ data: d }), onSuccess: () => qc.invalidateQueries({ queryKey: ["locations"] }) });
+  const del = useMutation({ mutationFn: (id: string) => deleteLocation({ data: { id } }), onSuccess: () => qc.invalidateQueries({ queryKey: ["locations"] }) });
+  const [editing, setEditing] = useState<any | null>(null);
+
+  return (
+    <Section title="Fleet Locations" action={
+      <Btn onClick={() => setEditing({ id: "", name: "", code: "", kind: "venue", manager_id: null, notes: "", status: "active" })}>+ New Fleet</Btn>
+    }>
+      {isLoading ? <div className="py-6 text-center text-xs text-muted-foreground">Loading…</div> : (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {locations.map((loc: any) => {
+            const captain = staff.find((s: any) => s.id === loc.manager_id);
+            const crew = staff.filter((s: any) => s.location_id === loc.id);
+            return (
+              <div key={loc.id} className="rounded-md border border-gold/30 bg-ink/40 p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <div className="font-display text-lg text-gold">{loc.name}</div>
+                    <div className="text-[11px] uppercase tracking-widest text-muted-foreground">
+                      {loc.kind ?? "venue"}{loc.code ? ` · ${loc.code}` : ""}
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Btn variant="ghost" onClick={() => setEditing(loc)}>Edit</Btn>
+                    <Btn variant="danger" onClick={() => del.mutate(loc.id)}>Delete</Btn>
+                  </div>
+                </div>
+                <div className="mt-3 text-sm">
+                  <div><span className="text-muted-foreground">Captain:</span> {captain?.name ?? "— Unassigned —"}</div>
+                  <div className="mt-1"><span className="text-muted-foreground">Crew ({crew.length}):</span> {crew.map((c: any) => c.name).join(", ") || "—"}</div>
+                </div>
+              </div>
+            );
+          })}
+          {!locations.length && <div className="sm:col-span-2 py-6 text-center text-xs text-muted-foreground">No fleets yet.</div>}
+        </div>
+      )}
+      {editing && (
+        <LocationForm row={editing} managers={staff}
+          onCancel={() => setEditing(null)}
+          onSave={(d) => save.mutate(d, { onSuccess: () => setEditing(null) })}
+          busy={save.isPending} />
+      )}
+    </Section>
+  );
+}
+
+function LocationForm({ row, managers, onSave, onCancel, busy }: {
+  row: any; managers: any[]; onSave: (r: any) => void; onCancel: () => void; busy: boolean;
+}) {
+  const [d, setD] = useState(row);
+  return (
+    <form onSubmit={(e) => { e.preventDefault(); const p = { ...d }; if (!p.id) delete p.id; onSave(p); }}
+      className="mt-5 grid gap-3 rounded-md border border-gold/30 bg-ink/50 p-4 sm:grid-cols-2">
+      <div className="sm:col-span-2 font-display text-xs uppercase tracking-widest text-gold">
+        {row.id ? "Edit Fleet" : "Create Fleet"}
+      </div>
+      <Field label="Name"><input className={inputCls} value={d.name} onChange={e => setD({ ...d, name: e.target.value })} required /></Field>
+      <Field label="Code"><input className={inputCls} value={d.code ?? ""} onChange={e => setD({ ...d, code: e.target.value })} placeholder="e.g. TING" /></Field>
+      <Field label="Kind">
+        <select className={inputCls} value={d.kind ?? "venue"} onChange={e => setD({ ...d, kind: e.target.value })}>
+          <option value="venue">Venue</option>
+          <option value="livehouse">Livehouse</option>
+          <option value="ktv">KTV</option>
+          <option value="reserve">Reserve</option>
+          <option value="hq">HQ</option>
+        </select>
+      </Field>
+      <Field label="Captain (Manager)">
+        <select className={inputCls} value={d.manager_id ?? ""} onChange={e => setD({ ...d, manager_id: e.target.value || null })}>
+          <option value="">— None —</option>
+          {managers.map((m: any) => <option key={m.id} value={m.id}>{m.name} · {m.role}</option>)}
+        </select>
+      </Field>
+      <Field label="Status">
+        <select className={inputCls} value={d.status ?? "active"} onChange={e => setD({ ...d, status: e.target.value })}>
+          <option value="active">Active</option><option value="inactive">Inactive</option>
+        </select>
+      </Field>
+      <Field label="Notes"><input className={inputCls} value={d.notes ?? ""} onChange={e => setD({ ...d, notes: e.target.value })} /></Field>
+      <div className="sm:col-span-2 mt-2 flex justify-end gap-2">
+        <Btn variant="ghost" onClick={onCancel}>Cancel</Btn>
+        <Btn type="submit" disabled={busy}>{busy ? "Saving…" : "Save"}</Btn>
+      </div>
+    </form>
   );
 }
