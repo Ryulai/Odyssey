@@ -271,6 +271,8 @@ export const SAMPLE_EMPLOYEE: Employee = {
   guildTitle: "Field Hunter, Northwind Division",
   joinedOn: "2022-03-14",
   avatar: "AV",
+  roleFamily: "hunter",
+  role: "Senior Ambassador",
   currentGrade: "A",
   currentRank: "platinum",
   partnerStage: "guardian",
