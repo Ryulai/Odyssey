@@ -180,6 +180,8 @@ export const upsertStaff = createServerFn({ method: "POST" })
     role_family: "hunter" | "operational"; department: string; manager_id?: string | null;
     status?: "active" | "inactive"; user_id?: string | null; app_role?: AppRole | null;
     location_id?: string | null;
+    employee_code?: string | null; join_date?: string | null;
+    career_path?: string | null; shipbuilder_path?: string | null;
   }) => d)
 
   .handler(async ({ context, data }) => {
@@ -208,7 +210,10 @@ export const upsertStaff = createServerFn({ method: "POST" })
       manager_id: actorRole === "manager" ? actorStaffId : (data.manager_id || null),
       status: data.status ?? "active",
       location_id: data.location_id ?? null,
-
+      employee_code: data.employee_code?.trim() || null,
+      join_date: data.join_date || null,
+      career_path: data.career_path?.trim() || null,
+      shipbuilder_path: data.shipbuilder_path?.trim() || null,
     };
     if (isDirector) payload.user_id = linkedUserId ?? null;
     if (isDirector) payload.system_role = data.app_role ?? "staff";
