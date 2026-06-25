@@ -12,6 +12,9 @@ import {
   getLegacy, updateLegacyConfig, upsertLegacyTitle, deleteLegacyTitle,
   listLocations, upsertLocation, deleteLocation,
 } from "@/lib/config.functions";
+import {
+  listLegacyHoldings, upsertLegacyHolding, deleteLegacyHolding,
+} from "@/lib/legacy.functions";
 
 
 export const Route = createFileRoute("/admin")({
