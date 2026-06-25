@@ -96,7 +96,7 @@ function AuthPage() {
               disabled={busy}
               className="w-full rounded-md border border-gold bg-gold/10 px-4 py-2 font-display text-xs uppercase tracking-widest text-gold hover:bg-gold/20 disabled:opacity-50"
             >
-              {busy ? "…" : mode === "signup" ? "Enlist" : "Sign in"}
+              {busy ? "…" : mode === "signup" ? "Set Sail" : "Sign in"}
             </button>
           </form>
 
