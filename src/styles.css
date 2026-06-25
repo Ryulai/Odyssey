@@ -62,7 +62,7 @@
 :root {
   --radius: 0.625rem;
 
-  /* Deep ocean / guild hall theme */
+  /* Deep ocean / harbor hall theme */
   --background: oklch(0.18 0.03 250);
   --foreground: oklch(0.95 0.02 85);
 

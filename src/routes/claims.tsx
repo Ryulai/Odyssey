@@ -29,7 +29,7 @@ function ClaimsPage() {
         <header className="mb-8 flex items-center justify-between">
           <div>
             <div className="font-display text-lg font-semibold uppercase tracking-widest text-gold">Achievement Claims</div>
-            <div className="text-xs text-muted-foreground">Submit claims, attach evidence, await guild approval.</div>
+            <div className="text-xs text-muted-foreground">Submit claims, attach evidence, await harbor approval.</div>
           </div>
           <Link to="/" className="rounded-md border border-border px-3 py-2 text-xs uppercase tracking-widest text-muted-foreground hover:border-gold/40 hover:text-gold">← Ledger</Link>
         </header>
