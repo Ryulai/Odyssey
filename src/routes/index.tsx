@@ -87,6 +87,7 @@ function PathSwitcher({ path, onChange }: { path: Path; onChange: (p: Path) => v
 
 const HUNTER_TABS: { key: TabKey; label: string }[] = [
   { key: "overview",     label: "Overview" },
+  { key: "growth",       label: "Growth Trees" },
   { key: "achievements", label: "Achievements" },
   { key: "legacy",       label: "Legacy" },
   { key: "career",       label: "Rank & Career" },
