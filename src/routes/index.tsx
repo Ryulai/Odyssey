@@ -613,3 +613,252 @@ function SectionHeader({ eyebrow, title, hint }: { eyebrow: string; title: strin
     </div>
   );
 }
+
+/* ----------------------------- Quest Board ----------------------------- */
+
+function QuestBoard({ quests }: { quests: Quest[] }) {
+  return (
+    <section className="card-ornate p-6">
+      <SectionHeader
+        eyebrow="The Quest Board"
+        title="Active Monthly Quests"
+        hint="Complete these contracts before the moon turns to claim your rewards."
+      />
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        {quests.map(q => <QuestCard key={q.id} quest={q} />)}
+      </div>
+    </section>
+  );
+}
+
+function QuestCard({ quest }: { quest: Quest }) {
+  const pct = Math.min(100, Math.round((quest.current / quest.target) * 100));
+  const complete = pct >= 100;
+  const color = complete ? "var(--color-grade-a)" : "var(--color-gold)";
+  const fmt = (n: number) => n >= 1000 ? `${(n / 1000).toFixed(n % 1000 === 0 ? 0 : 1)}k` : String(n);
+  return (
+    <div className="rounded-md border border-border bg-ink/40 p-4 transition-all hover:border-gold/40">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-start gap-3">
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-md border border-gold/30 bg-ink text-lg">
+            {quest.icon}
+          </div>
+          <div className="min-w-0">
+            <div className="font-display text-sm">{quest.name}</div>
+            <div className="text-[11px] italic text-muted-foreground">{quest.flavor}</div>
+          </div>
+        </div>
+        {complete && (
+          <span className="rounded-full px-2 py-0.5 text-[10px] uppercase tracking-widest" style={{ color: "var(--color-grade-a)", background: "color-mix(in oklch, var(--color-grade-a) 15%, transparent)" }}>
+            Cleared
+          </span>
+        )}
+      </div>
+
+      <div className="mt-3 flex items-baseline justify-between text-xs">
+        <span className="font-display" style={{ color }}>
+          {fmt(quest.current)} <span className="text-muted-foreground">/ {fmt(quest.target)} {quest.unit}</span>
+        </span>
+        <span className="text-muted-foreground">{pct}%</span>
+      </div>
+      <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full border border-border bg-ink">
+        <div
+          className="h-full rounded-full transition-all"
+          style={{
+            width: `${pct}%`,
+            background: `linear-gradient(90deg, color-mix(in oklch, ${color} 60%, transparent), ${color})`,
+            boxShadow: `0 0 12px -2px ${color}`,
+          }}
+        />
+      </div>
+      <div className="mt-2 text-[11px] text-muted-foreground">
+        <span className="text-gold">Reward:</span> {quest.reward}
+      </div>
+    </div>
+  );
+}
+
+/* ----------------------------- Next Rank Progress ----------------------------- */
+
+function NextRankProgress({ current, progress }: { current: RankKey; progress: RankProgress }) {
+  const curRank = HUNTER_RANKS.find(r => r.key === current)!;
+  const nextRank = HUNTER_RANKS.find(r => r.key === progress.nextRank)!;
+  const pct = Math.min(100, Math.round((progress.current / progress.needed) * 100));
+
+  return (
+    <section className="card-ornate p-6">
+      <SectionHeader eyebrow="Ascension Trial" title="Next Rank Progress" />
+
+      <div className="mt-5 flex items-center justify-between gap-4">
+        <RankSigil rank={curRank} size={56} />
+        <div className="flex-1 text-center">
+          <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Trial of</div>
+          <div className="font-display text-base text-gold">{nextRank.name}</div>
+          <div className="text-[11px] italic text-muted-foreground">{nextRank.subtitle}</div>
+        </div>
+        <RankSigil rank={nextRank} size={56} dim />
+      </div>
+
+      <div className="mt-5">
+        <div className="flex items-baseline justify-between text-xs">
+          <span className="font-display text-sm" style={{ color: nextRank.color }}>
+            {progress.current} <span className="text-muted-foreground">/ {progress.needed} {progress.metric}</span>
+          </span>
+          <span className="text-muted-foreground">{pct}%</span>
+        </div>
+        <div className="mt-1.5 h-3 w-full overflow-hidden rounded-full border border-border bg-ink">
+          <div
+            className="h-full rounded-full transition-all"
+            style={{
+              width: `${pct}%`,
+              background: `linear-gradient(90deg, ${curRank.color}, ${nextRank.color})`,
+              boxShadow: `0 0 16px -2px ${nextRank.color}`,
+            }}
+          />
+        </div>
+      </div>
+
+      <ul className="mt-5 space-y-1.5 text-xs text-muted-foreground">
+        {progress.notes.map((n, i) => (
+          <li key={i} className="flex gap-2">
+            <span className="text-gold">◆</span>
+            <span>{n}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function RankSigil({ rank, size, dim }: { rank: typeof HUNTER_RANKS[number]; size: number; dim?: boolean }) {
+  return (
+    <div className="text-center">
+      <div
+        className="mx-auto grid place-items-center rounded-full border-2"
+        style={{
+          width: size,
+          height: size,
+          borderColor: rank.color,
+          background: `radial-gradient(circle at 30% 30%, ${rank.color}, oklch(0.18 0.03 250))`,
+          boxShadow: dim ? "none" : `0 0 20px -4px ${rank.color}`,
+          opacity: dim ? 0.55 : 1,
+          filter: dim ? "grayscale(0.3)" : undefined,
+        }}
+      >
+        <span className="font-display text-base" style={{ color: "oklch(0.15 0.03 250)" }}>
+          {rank.name.charAt(0)}
+        </span>
+      </div>
+      <div className="mt-1 text-[10px] uppercase tracking-widest" style={{ color: rank.color, opacity: dim ? 0.7 : 1 }}>
+        {rank.name.replace(" Hunter", "").replace("Black ", "")}
+      </div>
+    </div>
+  );
+}
+
+/* ----------------------------- Hunter Attributes ----------------------------- */
+
+function HunterAttributes({ attributes }: { attributes: Attribute[] }) {
+  return (
+    <section className="card-ornate p-6">
+      <SectionHeader
+        eyebrow="Character Attributes"
+        title="Hunter Influence"
+        hint="The five powers that shape a hunter's reach."
+      />
+      <ul className="mt-5 space-y-3">
+        {attributes.map(a => (
+          <li key={a.key} className="flex items-center gap-3 rounded-md border border-border bg-ink/40 p-3">
+            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-md border border-gold/30 bg-ink text-lg">
+              {a.icon}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="font-display text-sm">{a.label}</span>
+                <StarRow n={a.stars} />
+              </div>
+              <div className="text-[11px] italic text-muted-foreground">{a.flavor}</div>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function StarRow({ n }: { n: number }) {
+  return (
+    <span aria-label={`${n} of 5`} className="text-base leading-none tracking-tight text-gold">
+      {"★".repeat(n)}<span className="opacity-25">{"★".repeat(5 - n)}</span>
+    </span>
+  );
+}
+
+/* ----------------------------- Achievement Collection ----------------------------- */
+
+const RARITY_META: Record<CollectionAchievement["rarity"], { color: string; ring: string }> = {
+  Common:    { color: "oklch(0.78 0.02 250)", ring: "oklch(0.78 0.02 250 / 0.4)" },
+  Rare:      { color: "oklch(0.72 0.16 230)", ring: "oklch(0.72 0.16 230 / 0.5)" },
+  Epic:      { color: "oklch(0.7 0.2 300)",   ring: "oklch(0.7 0.2 300 / 0.5)" },
+  Legendary: { color: "oklch(0.82 0.16 78)",  ring: "oklch(0.82 0.16 78 / 0.6)" },
+};
+
+function AchievementCollection({ items }: { items: CollectionAchievement[] }) {
+  const unlocked = items.filter(i => i.unlocked).length;
+  return (
+    <section className="card-ornate p-6">
+      <SectionHeader
+        eyebrow="Trophy Hall"
+        title="Achievement Collection"
+        hint={`${unlocked} of ${items.length} relics claimed. The rest await their hunter.`}
+      />
+      <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        {items.map(a => <BadgeCard key={a.id} a={a} />)}
+      </div>
+    </section>
+  );
+}
+
+function BadgeCard({ a }: { a: CollectionAchievement }) {
+  const meta = RARITY_META[a.rarity];
+  const locked = !a.unlocked;
+  return (
+    <div
+      className="relative flex flex-col items-center gap-2 rounded-md border p-3 text-center transition-all"
+      style={{
+        borderColor: locked ? "var(--color-border)" : meta.ring,
+        background: locked
+          ? "oklch(0.18 0.02 250 / 0.6)"
+          : `linear-gradient(180deg, color-mix(in oklch, ${meta.color} 10%, transparent), transparent)`,
+        boxShadow: locked ? undefined : `0 0 18px -8px ${meta.color}`,
+      }}
+    >
+      <div
+        className="grid h-14 w-14 place-items-center rounded-full border-2 text-2xl"
+        style={{
+          borderColor: locked ? "var(--color-border)" : meta.color,
+          background: locked
+            ? "oklch(0.22 0.02 250)"
+            : `radial-gradient(circle at 30% 30%, color-mix(in oklch, ${meta.color} 60%, transparent), oklch(0.2 0.03 250))`,
+          color: locked ? "oklch(0.5 0.02 250)" : undefined,
+          filter: locked ? "grayscale(1) brightness(0.7)" : undefined,
+        }}
+      >
+        {locked ? (
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" />
+          </svg>
+        ) : a.icon}
+      </div>
+      <div className={`font-display text-xs leading-tight ${locked ? "text-muted-foreground" : ""}`}>
+        {a.name}
+      </div>
+      <div className="text-[10px] uppercase tracking-widest" style={{ color: locked ? "var(--color-muted-foreground)" : meta.color }}>
+        {locked ? "Sealed" : a.rarity}
+      </div>
+      <div className="text-[10px] leading-snug text-muted-foreground">
+        {locked ? (a.hint ?? a.description) : a.description}
+      </div>
+    </div>
+  );
+}
