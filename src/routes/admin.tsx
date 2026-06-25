@@ -368,15 +368,17 @@ function StaffForm({ row, managers, accounts, locations, isDirector, onSave, onC
       <div className="sm:col-span-2 font-display text-xs uppercase tracking-widest text-gold">
         {row.id ? "Edit Staff" : "Create Staff"}
       </div>
+
+      {/* Identity */}
+      <div className="sm:col-span-2 -mb-1 mt-2 border-b border-border/60 pb-1 text-[10px] font-display uppercase tracking-[0.25em] text-muted-foreground">Identity</div>
       <Field label="Name"><input className={inputCls} value={d.name} onChange={e => set("name", e.target.value)} required /></Field>
       <Field label="Employee ID"><input className={inputCls} value={d.employee_code ?? ""} onChange={e => set("employee_code", e.target.value)} placeholder="e.g. NAV-0042" /></Field>
       <Field label="Email"><input type="email" className={inputCls} value={d.email ?? ""} onChange={e => set("email", e.target.value)} /></Field>
-      <Field label="Position"><input className={inputCls} value={d.role} onChange={e => { set("role", e.target.value); set("app_role", roleToAppRole(e.target.value)); }} placeholder="e.g. Senior Ambassador" /></Field>
-      <Field label="Path">
-        <select className={inputCls} value={d.role_family} onChange={e => set("role_family", e.target.value as any)}>
-          <option value="hunter">Hunter</option><option value="operational">Operational</option>
-        </select>
-      </Field>
+      <Field label="Join Date"><input type="date" className={inputCls} value={d.join_date ?? ""} onChange={e => set("join_date", e.target.value)} /></Field>
+
+      {/* Work Identity */}
+      <div className="sm:col-span-2 -mb-1 mt-3 border-b border-border/60 pb-1 text-[10px] font-display uppercase tracking-[0.25em] text-muted-foreground">Work Identity — where they report today</div>
+      <Field label="Position"><input className={inputCls} value={d.role} onChange={e => { set("role", e.target.value); set("app_role", roleToAppRole(e.target.value)); }} placeholder="e.g. Finance Manager" /></Field>
       <Field label="Department">
         <select className={inputCls} value={d.department} onChange={e => set("department", e.target.value)}>
           {DEPARTMENTS.map(x => <option key={x} value={x}>{x}</option>)}
@@ -394,9 +396,18 @@ function StaffForm({ row, managers, accounts, locations, isDirector, onSave, onC
           {locations.map((l: any) => <option key={l.id} value={l.id}>{l.name}{l.code ? ` · ${l.code}` : ""}</option>)}
         </select>
       </Field>
-      <Field label="Join Date"><input type="date" className={inputCls} value={d.join_date ?? ""} onChange={e => set("join_date", e.target.value)} /></Field>
+
+      {/* RPG Identity */}
+      <div className="sm:col-span-2 -mb-1 mt-3 border-b border-border/60 pb-1 text-[10px] font-display uppercase tracking-[0.25em] text-muted-foreground">RPG Identity — character class & progression</div>
+      <Field label="Class / Path">
+        <select className={inputCls} value={d.role_family} onChange={e => set("role_family", e.target.value as any)}>
+          <option value="hunter">Hunter (progression)</option><option value="operational">Operational (skills)</option>
+        </select>
+      </Field>
       <Field label="Career Tree Path"><input className={inputCls} value={d.career_path ?? ""} onChange={e => set("career_path", e.target.value)} placeholder="e.g. Master Ambassador" /></Field>
       <Field label="Shipbuilder Tree Path"><input className={inputCls} value={d.shipbuilder_path ?? ""} onChange={e => set("shipbuilder_path", e.target.value)} placeholder="e.g. Venue Partner" /></Field>
+
+      <div className="sm:col-span-2 -mb-1 mt-3 border-b border-border/60 pb-1 text-[10px] font-display uppercase tracking-[0.25em] text-muted-foreground">Account</div>
 
 
       <Field label="Status">
