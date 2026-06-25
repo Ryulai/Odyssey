@@ -99,7 +99,7 @@ function SubmitClaim({ userId }: { userId: string | null }) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["claims"] });
-      setMsg("Claim submitted. Awaiting review.");
+      setMsg("Voyage recorded. Awaiting harbor review.");
       setEvidence(""); setNotes(""); setFiles([]); setAchievementId("");
     },
     onError: (e: any) => setMsg(e.message ?? "Failed"),
@@ -107,7 +107,7 @@ function SubmitClaim({ userId }: { userId: string | null }) {
 
   return (
     <section className="rounded-md border border-border bg-ink/30 p-5">
-      <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">Submit a Claim</h2>
+      <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">Record a Voyage</h2>
       <form onSubmit={(e) => { e.preventDefault(); if (!achievementId || !effectiveStaffId) return; setBusy(true); submit.mutate(undefined, { onSettled: () => setBusy(false) }); }}
         className="mt-4 space-y-3">
         <label className="block">
