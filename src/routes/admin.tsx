@@ -236,6 +236,7 @@ function StaffModule() {
           row={editing}
           managers={staff.filter((s: any) => s.id !== editing.id)}
           accounts={accounts}
+          locations={locations}
           isDirector={role === "director"}
           onCancel={() => setEditing(null)}
           onSave={(d) => save.mutate(d, { onSuccess: () => setEditing(null) })}
@@ -245,6 +246,7 @@ function StaffModule() {
     </Section>
   );
 }
+
 
 function emailMatchesAccount(email: string | null | undefined, accounts: any[]) {
   const normalized = email?.trim().toLowerCase();
