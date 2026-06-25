@@ -46,6 +46,23 @@ async function resolveProfileByEmailOrId(context: any, userId?: string | null, e
 
 async function replaceUserRole(context: any, userId: string, role: AppRole) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  if (role !== "director") {
+    const { data: currentRoles, error: currentError } = await supabaseAdmin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId);
+    if (currentError) throw new Error(currentError.message);
+    const isCurrentlyDirector = (currentRoles ?? []).some((r: any) => r.role === "director");
+    if (isCurrentlyDirector) {
+      const { count, error: countError } = await supabaseAdmin
+        .from("user_roles")
+        .select("user_id", { count: "exact", head: true })
+        .eq("role", "director")
+        .neq("user_id", userId);
+      if (countError) throw new Error(countError.message);
+      if ((count ?? 0) === 0) throw new Error("Cannot remove the final Director. Assign another Director first.");
+    }
+  }
   const { error: delError } = await supabaseAdmin
     .from("user_roles")
     .delete()
