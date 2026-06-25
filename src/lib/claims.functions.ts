@@ -18,15 +18,17 @@ export const submitClaim = createServerFn({ method: "POST" })
     staff_id: string;
     achievement_id: string;
     evidence_text: string;
-    evidence_url?: string | null;
+    evidence_files?: string[];
     notes: string;
   }) => d)
   .handler(async ({ context, data }) => {
+    const files = (data.evidence_files ?? []).slice(0, 10);
     const { data: row, error } = await context.supabase.from("achievement_claims").insert({
       staff_id: data.staff_id,
       achievement_id: data.achievement_id,
       evidence_text: data.evidence_text,
-      evidence_url: data.evidence_url ?? null,
+      evidence_files: files,
+      evidence_url: files[0] ?? null,
       notes: data.notes,
       submitted_by: context.userId,
       status: "pending",

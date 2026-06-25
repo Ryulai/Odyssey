@@ -21,6 +21,7 @@ export type Database = {
           decided_at: string | null
           decided_by: string | null
           decision_notes: string | null
+          evidence_files: string[]
           evidence_text: string
           evidence_url: string | null
           id: string
@@ -36,6 +37,7 @@ export type Database = {
           decided_at?: string | null
           decided_by?: string | null
           decision_notes?: string | null
+          evidence_files?: string[]
           evidence_text?: string
           evidence_url?: string | null
           id?: string
@@ -51,6 +53,7 @@ export type Database = {
           decided_at?: string | null
           decided_by?: string | null
           decision_notes?: string | null
+          evidence_files?: string[]
           evidence_text?: string
           evidence_url?: string | null
           id?: string
