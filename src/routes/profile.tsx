@@ -133,19 +133,23 @@ function CharacterSheet({ d, isShipbuilder = false }: { d: any; isShipbuilder?: 
         </div>
       </div>
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-4">
-        <Stat label="Total Stars" value={d.totals?.stars ?? 0} icon="⭐" />
-        <Stat label="Moons" value={d.totals?.moons ?? 0} icon="🌙" />
-        <Stat label="Suns" value={d.totals?.suns ?? 0} icon="☀️" />
-        <div className="rounded-md border border-border bg-ink/40 p-3 text-center">
-          <div className="text-2xl">⚓</div>
-          <div className="font-display text-xl text-gold">{latestGrade}</div>
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Current Grade</div>
-        </div>
-      </div>
-      <div className="mt-3 rounded-md border border-border bg-ink/30 px-3 py-2 text-xs text-muted-foreground">
-        Achievements: <span className="text-gold">{ev?.unique_achievements ?? 0}</span> unique records · Status: <span className="capitalize text-foreground">{s.status ?? "active"}</span>
-      </div>
+      {!isShipbuilder && (
+        <>
+          <div className="mt-5 grid gap-3 sm:grid-cols-4">
+            <Stat label="Total Stars" value={d.totals?.stars ?? 0} icon="⭐" />
+            <Stat label="Moons" value={d.totals?.moons ?? 0} icon="🌙" />
+            <Stat label="Suns" value={d.totals?.suns ?? 0} icon="☀️" />
+            <div className="rounded-md border border-border bg-ink/40 p-3 text-center">
+              <div className="text-2xl">⚓</div>
+              <div className="font-display text-xl text-gold">{latestGrade}</div>
+              <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Current Grade</div>
+            </div>
+          </div>
+          <div className="mt-3 rounded-md border border-border bg-ink/30 px-3 py-2 text-xs text-muted-foreground">
+            Achievements: <span className="text-gold">{ev?.unique_achievements ?? 0}</span> unique records · Status: <span className="capitalize text-foreground">{s.status ?? "active"}</span>
+          </div>
+        </>
+      )}
     </section>
   );
 }
