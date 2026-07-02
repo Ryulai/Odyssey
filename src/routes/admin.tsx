@@ -422,20 +422,20 @@ function StaffForm({ row, managers, accounts, locations, isDirector, onSave, onC
       <div className="sm:col-span-2 -mb-1 mt-3 border-b border-border/60 pb-1 text-[10px] font-display uppercase tracking-[0.25em] text-muted-foreground">RPG Identity — character class & progression</div>
       <Field label="Primary Class">
         <select className={inputCls} value={d.primary_class ?? "ranger"} onChange={e => {
-          const cls = e.target.value as any;
+          const cls = e.target.value as PrimaryClass;
           set("primary_class", cls);
           // Reset role to first valid option for the newly chosen class.
-          set("primary_role", CLASS_ROLES[cls as PrimaryClass]?.[0] ?? null);
+          set("primary_role", CLASS_ROLES[cls]?.[0]?.key ?? null);
         }}>
-          {PRIMARY_CLASSES.map(c => <option key={c} value={c}>{titleCase(c)}</option>)}
+          {PRIMARY_CLASSES.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
         </select>
       </Field>
       <Field label="Primary Role">
         <select className={inputCls} value={d.primary_role ?? ""} onChange={e => set("primary_role", e.target.value || null)} required>
           <option value="">— Select role —</option>
           {(CLASS_ROLES[(d.primary_class ?? "ranger") as PrimaryClass] ?? []).map(r => (
-            <option key={r} value={r}>
-              {titleCase(r)}{TEMPORARY_ROLES.has(r) ? " (Temporary)" : ""}
+            <option key={r.key} value={r.key}>
+              {r.label}{TEMPORARY_ROLES.has(r.key) ? " (Temporary)" : ""}
             </option>
           ))}
         </select>
