@@ -266,35 +266,63 @@ function PromotionProgress({ d }: { d: any }) {
 
   const completed = reqs.filter((r) => r.done).length;
   const total = reqs.length;
+  const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+  const currentRankKey = ev.current_rank_key ?? s.current_rank_key ?? null;
+  const currentRankName = ev.current_rank_name ?? "Unranked";
+  const currentRankGlyph = rankGlyph(currentRankKey);
 
   return (
     <section className="card-ornate-gold p-8 sm:p-10">
       <div className="text-center">
         <div className="text-[10px] uppercase tracking-[0.3em] text-gold">Ascension</div>
         <h2 className="mt-2 font-display text-2xl text-foreground sm:text-3xl">Journey to {nextRank}</h2>
-        <p className="mt-1 text-sm text-muted-foreground">Requirements</p>
       </div>
 
-      <div className="mt-10 space-y-3">
-        {reqs.map((req) => (
+      {/* Journey Progress */}
+      <div className="mt-8">
+        <div className="flex items-center justify-between">
+          <span className="font-display text-sm text-foreground">{currentRankGlyph} {currentRankName}</span>
+          <span className="font-display text-sm text-gold">{nextRank}</span>
+        </div>
+        <div className="relative mt-3 h-2 w-full overflow-visible rounded-full bg-ink/60">
           <div
-            key={req.label}
-            className={`flex items-center gap-4 rounded-md border px-5 py-4 ${
-              req.done ? "border-border/40" : "border-gold/25 bg-ink/40"
-            }`}
+            className="absolute left-0 top-0 h-full rounded-full bg-gradient-to-r from-gold/60 to-gold"
+            style={{ width: `${pct}%` }}
+          />
+          <div
+            className="absolute top-1/2 flex h-5 w-5 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-gold bg-background shadow-[0_0_12px_-2px_var(--color-gold)]"
+            style={{ left: `${pct}%` }}
           >
-            <span
-              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md border font-display text-sm ${
-                req.done ? "border-gold/40 text-gold" : "border-border text-muted-foreground"
+            <span className="text-[10px]">⚓</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Requirements */}
+      <div className="mt-8">
+        <p className="text-center text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Requirements</p>
+        <div className="mt-4 space-y-3">
+          {reqs.map((req) => (
+            <div
+              key={req.label}
+              className={`flex items-center gap-4 rounded-md border px-5 py-4 ${
+                req.done ? "border-border/40" : "border-gold/25 bg-ink/40"
               }`}
             >
-              {req.done ? "✓" : "□"}
-            </span>
-            <span className={`text-sm ${req.done ? "text-foreground/50" : "text-foreground"}`}>
-              {req.label}
-            </span>
-          </div>
-        ))}
+              <span
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md border font-display text-sm ${
+                  req.done ? "border-gold/40 text-gold" : "border-border text-muted-foreground"
+                }`}
+              >
+                {req.done ? "✓" : "□"}
+              </span>
+              <span className={`text-sm ${req.done ? "text-foreground/50" : "text-foreground"}`}>
+                {req.label}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="mt-10 flex items-center justify-center gap-3">
