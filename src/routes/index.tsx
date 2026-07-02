@@ -369,20 +369,22 @@ function PromotionProgress({ d }: { d: any }) {
   const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
 
   const currentRankKey = ev.current_rank_key ?? s.current_rank_key ?? null;
-  const currentRankName = ev.current_rank_name ?? "Unranked";
+  const currentRankName = rankLabel(currentRankKey) || ev.current_rank_name || "Unranked";
+  const nextRankKey = ev.next_rank_key ?? null;
+  const nextRankName = rankLabel(nextRankKey) || ev.next_rank_name || nextRank;
   const currentRankGlyph = rankGlyph(currentRankKey);
 
   return (
     <section className="card-ornate-gold p-8 sm:p-10">
       <div className="text-center">
         <div className="text-[10px] uppercase tracking-[0.3em] text-gold">Ascension</div>
-        <h2 className="mt-2 font-display text-2xl text-foreground sm:text-3xl">Promotion Journey — {nextRank}</h2>
+        <h2 className="mt-2 font-display text-2xl text-foreground sm:text-3xl">Promotion Journey — {nextRankName}</h2>
       </div>
 
       <div className="mt-8">
         <div className="flex items-center justify-between">
           <span className="font-display text-sm text-foreground">{currentRankGlyph} {currentRankName}</span>
-          <span className="font-display text-sm text-gold">{nextRank}</span>
+          <span className="font-display text-sm text-gold">{nextRankName}</span>
         </div>
         <div className="relative mt-3 h-2 w-full overflow-visible rounded-full bg-ink/60">
           <div
