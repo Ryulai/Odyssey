@@ -169,16 +169,16 @@ function Btn({ children, onClick, variant = "primary", type = "button", disabled
   );
 }
 
-const DEPARTMENTS = ["Management", "Sales", "Operations", "Marketing", "Service", "Leadership"];
+const BUSINESS_UNITS = ["Management", "Sales", "Operations", "Marketing", "Service", "Leadership"];
 
 /* ============ Staff ============ */
 
 type StaffRow = {
   id: string; name: string; email: string | null; role: string;
-  role_family: "hunter" | "operational"; department: string; manager_id: string | null;
+  role_family: "hunter" | "operational"; business_unit: string; manager_id: string | null;
   status: string; user_id: string | null; app_role?: "director" | "manager" | "staff" | null;
   location_id?: string | null;
-  employee_code?: string | null; join_date?: string | null;
+  employee_code?: string | null; guild_id?: string | null; join_date?: string | null;
   phone?: string | null; branch?: string | null;
   career_path?: string | null; shipbuilder_path?: string | null;
   // Sprint 1 — RPG hierarchy
@@ -206,9 +206,9 @@ function StaffModule() {
   const [transferring, setTransferring] = useState<StaffRow | null>(null);
 
   const blank: StaffRow = {
-    id: "", name: "", email: "", role: "", role_family: "hunter", department: "Sales",
+    id: "", name: "", email: "", role: "", role_family: "hunter", business_unit: "Sales",
     manager_id: null, status: "active", user_id: null, app_role: "staff", location_id: null,
-    employee_code: "", join_date: "", phone: "", branch: "", career_path: "", shipbuilder_path: "",
+    employee_code: "", join_date: new Date().toISOString().slice(0, 10), phone: "", branch: "", career_path: "", shipbuilder_path: "",
     primary_class: "ranger", primary_role: "hunter",
     secondary_class: null, secondary_role: null, secondary_unlocked: false,
     rank_key: "bronze",
@@ -222,6 +222,7 @@ function StaffModule() {
             <thead className="text-left text-[10px] uppercase tracking-widest text-muted-foreground">
               <tr className="border-b border-border">
                 <th className="py-2 pr-3">Name</th>
+                <th className="py-2 pr-3">Guild ID</th>
                 <th className="py-2 pr-3">Emp ID</th>
                 <th className="py-2 pr-3">Role</th>
                 <th className="py-2 pr-3">Class · Role</th>
@@ -243,6 +244,7 @@ function StaffModule() {
                     <div className="font-medium">{s.name}</div>
                     <div className="text-[10px] text-muted-foreground">{s.email ?? "—"}</div>
                   </td>
+                  <td className="py-2 pr-3 font-mono text-[11px] text-gold">{s.guild_id ?? "—"}</td>
                   <td className="py-2 pr-3 text-muted-foreground">{s.employee_code ?? "—"}</td>
                   <td className="py-2 pr-3 text-muted-foreground">{s.role}</td>
                   <td className="py-2 pr-3 text-muted-foreground">
@@ -296,7 +298,7 @@ function StaffModule() {
                   </td>
                 </tr>
               ))}
-              {!staff.length && (<tr><td colSpan={13} className="py-6 text-center text-xs text-muted-foreground">No staff yet. Click "Add Staff" to log your first crew member.</td></tr>)}
+              {!staff.length && (<tr><td colSpan={14} className="py-6 text-center text-xs text-muted-foreground">No staff yet. Click "Add Staff" to log your first crew member.</td></tr>)}
             </tbody>
           </table>
         </div>
@@ -391,18 +393,19 @@ function StaffForm({ row, managers, accounts, locations, isDirector, onSave, onC
       {/* Identity */}
       <div className="sm:col-span-2 -mb-1 mt-2 border-b border-border/60 pb-1 text-[10px] font-display uppercase tracking-[0.25em] text-muted-foreground">Identity</div>
       <Field label="Name"><input className={inputCls} value={d.name} onChange={e => set("name", e.target.value)} required /></Field>
-      <Field label="Employee ID"><input className={inputCls} value={d.employee_code ?? ""} onChange={e => set("employee_code", e.target.value)} placeholder="e.g. NAV-0042" /></Field>
+      <Field label="Guild ID"><input className={inputCls + " font-mono text-gold"} value={d.guild_id ?? "(auto-assigned on save)"} readOnly disabled /></Field>
+      <Field label="Employee ID (external / HR)"><input className={inputCls} value={d.employee_code ?? ""} onChange={e => set("employee_code", e.target.value)} placeholder="Optional — external HR reference" /></Field>
       <Field label="Email"><input type="email" className={inputCls} value={d.email ?? ""} onChange={e => set("email", e.target.value)} /></Field>
       <Field label="Phone"><input className={inputCls} value={d.phone ?? ""} onChange={e => set("phone", e.target.value)} placeholder="e.g. +60 12 345 6789" /></Field>
       <Field label="Branch"><input className={inputCls} value={d.branch ?? ""} onChange={e => set("branch", e.target.value)} placeholder="e.g. KL · Ting Livehouse" /></Field>
-      <Field label="Join Date"><input type="date" className={inputCls} value={d.join_date ?? ""} onChange={e => set("join_date", e.target.value)} /></Field>
+      <Field label="Join Date"><input type="date" required className={inputCls} value={d.join_date ?? ""} onChange={e => set("join_date", e.target.value)} /></Field>
 
       {/* Work Identity */}
       <div className="sm:col-span-2 -mb-1 mt-3 border-b border-border/60 pb-1 text-[10px] font-display uppercase tracking-[0.25em] text-muted-foreground">Work Identity — where they report today</div>
       <Field label="Position"><input className={inputCls} value={d.role} onChange={e => { set("role", e.target.value); set("app_role", roleToAppRole(e.target.value)); }} placeholder="e.g. Finance Manager" /></Field>
-      <Field label="Department">
-        <select className={inputCls} value={d.department} onChange={e => set("department", e.target.value)}>
-          {DEPARTMENTS.map(x => <option key={x} value={x}>{x}</option>)}
+      <Field label="Business Unit">
+        <select className={inputCls} value={d.business_unit} onChange={e => set("business_unit", e.target.value)}>
+          {BUSINESS_UNITS.map(x => <option key={x} value={x}>{x}</option>)}
         </select>
       </Field>
       {isDirector && <Field label="Manager (Captain)">
