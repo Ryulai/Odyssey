@@ -104,6 +104,18 @@ export function statusLabel(key: string | null | undefined): string {
   return (k ? (STATUS_LABEL.get(k as StaffStatus) ?? titleCase(k.replace(/_/g, " "))) : "");
 }
 
+const RANK_META = new Map(RANKS.map(r => [r.key, r]));
+export function rankMeta(key: string | null | undefined) {
+  const k = normalizeKey(key);
+  return (k ? RANK_META.get(k as (typeof RANKS)[number]["key"]) : undefined);
+}
+export function rankIdentity(key: string | null | undefined): string {
+  return rankMeta(key)?.identity ?? "";
+}
+export function rankGlyph(key: string | null | undefined): string {
+  return rankMeta(key)?.glyph ?? "";
+}
+
 export function titleCase(v: string | null | undefined): string {
   if (!v) return "";
   return v.replace(/\b\w/g, (c) => c.toUpperCase());
