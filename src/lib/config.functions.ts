@@ -177,11 +177,16 @@ export const upsertStaff = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: {
     id?: string; name: string; email?: string | null; role: string;
-    role_family: "hunter" | "operational"; department: string; manager_id?: string | null;
+    role_family?: "hunter" | "operational"; department: string; manager_id?: string | null;
     status?: "active" | "inactive"; user_id?: string | null; app_role?: AppRole | null;
     location_id?: string | null;
     employee_code?: string | null; join_date?: string | null;
+    phone?: string | null; branch?: string | null;
     career_path?: string | null; shipbuilder_path?: string | null;
+    // Sprint 1 — RPG hierarchy
+    primary_class?: string | null; primary_role?: string | null;
+    secondary_class?: string | null; secondary_role?: string | null;
+    rank_key?: string | null;
   }) => d)
 
   .handler(async ({ context, data }) => {
@@ -200,26 +205,59 @@ export const upsertStaff = createServerFn({ method: "POST" })
       if (!existing || existing.manager_id !== actorStaffId) throw new Error("Forbidden — managers may only update their own team.");
     }
     const linkedUserId = isDirector ? await resolveProfileByEmailOrId(context, data.user_id, data.email) : undefined;
+
+    const primaryClass = data.primary_class?.trim().toLowerCase() || null;
+    const primaryRole  = data.primary_role?.trim().toLowerCase() || null;
+
+    // Legacy `role_family` still exists on the staff table; derive it from primary_class
+    // so downstream progression logic keeps working. Ranger/Warrior/Mage → hunter (progression path),
+    // Guardian → operational. Explicit override still wins if passed.
+    const derivedFamily: "hunter" | "operational" =
+      data.role_family ??
+      (primaryClass === "guardian" ? "operational" : "hunter");
+
     const payload: any = {
       id: data.id,
       name: data.name,
       email: data.email?.trim().toLowerCase() || null,
       role: data.role,
-      role_family: data.role_family,
+      role_family: derivedFamily,
       department: data.department,
       manager_id: actorRole === "manager" ? actorStaffId : (data.manager_id || null),
       status: data.status ?? "active",
       location_id: data.location_id ?? null,
       employee_code: data.employee_code?.trim() || null,
       join_date: data.join_date || null,
+      phone: data.phone?.trim() || null,
+      branch: data.branch?.trim() || null,
       career_path: data.career_path?.trim() || null,
       shipbuilder_path: data.shipbuilder_path?.trim() || null,
+      current_rank_key: (data.rank_key?.trim() || "bronze"),
     };
     if (isDirector) payload.user_id = linkedUserId ?? null;
     if (isDirector) payload.system_role = data.app_role ?? "staff";
     const { data: row, error } = await context.supabase
       .from("staff").upsert(payload).select().single();
     if (error) throw new Error(error.message);
+
+    // Mirror RPG identity (primary + secondary). Secondary is stored but locked.
+    if (row?.id && (primaryClass || primaryRole || data.secondary_class || data.secondary_role)) {
+      const rpgPayload: any = {
+        staff_id: row.id,
+        primary_class: primaryClass,
+        primary_role:  primaryRole,
+        secondary_class: data.secondary_class?.trim().toLowerCase() || null,
+        secondary_role:  data.secondary_role?.trim().toLowerCase() || null,
+        secondary_unlocked: false,
+        // Legacy column kept in sync for older UI that reads `class`.
+        class: primaryClass,
+      };
+      const { error: rpgErr } = await context.supabase
+        .from("rpg_identity")
+        .upsert(rpgPayload, { onConflict: "staff_id" });
+      if (rpgErr) throw new Error(rpgErr.message);
+    }
+
     if (linkedUserId && data.app_role && actorRole === "director") {
       await replaceUserRole(context, linkedUserId, data.app_role);
     }
