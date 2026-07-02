@@ -99,7 +99,7 @@ export const ensureBootstrapDirector = createServerFn({ method: "POST" })
       email,
       role: "Director",
       role_family: "hunter",
-      department: "Management",
+      business_unit: "Management",
       status: "active",
       system_role: "director" as const,
       updated_at: new Date().toISOString(),
