@@ -133,7 +133,7 @@ function CharacterSheet({ d, isShipbuilder = false }: { d: any; isShipbuilder?: 
           )}
           <div className="font-display text-2xl text-gold">{s.name}</div>
           <div className="text-xs uppercase tracking-widest text-muted-foreground capitalize">
-            {s.role} · {s.department}
+            {s.role} · {s.business_unit}
             {isShipbuilder
               ? <> · System Builder</>
               : (s.rpg?.primary_class || s.rpg?.primary_role) && (

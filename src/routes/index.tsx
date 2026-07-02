@@ -153,7 +153,7 @@ function LinkedHome({ d }: { d: any }) {
                 <MiniStat label="This Month" value={`Grade ${latestGrade}`} sub={gradeMeta?.label ?? "no review yet"} color={gradeMeta?.color ?? "var(--color-muted-foreground)"} />
                 {isHunter
                   ? <MiniStat label="Legacy" value={`${totals.stars}★`} sub={`${totals.moons}🌙 · ${totals.suns}☀️`} color="var(--color-gold)" />
-                  : <MiniStat label="Discipline" value={s.role} sub={(s.department ?? "").split("·")[0].trim() || "—"} color="var(--color-gold)" />
+                  : <MiniStat label="Discipline" value={s.role} sub={(s.business_unit ?? "").split("·")[0].trim() || "—"} color="var(--color-gold)" />
                 }
               </>
             )}
@@ -1271,14 +1271,14 @@ function OpProfileCard({ emp }: { emp: OperationalEmployee }) {
           <div>
             <div className="text-[10px] uppercase tracking-[0.25em] text-gold">Operational Path</div>
             <h1 className="font-display text-2xl text-foreground sm:text-3xl">{emp.name}</h1>
-            <p className="text-sm text-muted-foreground">{rank.name} {emp.role} · {emp.department}</p>
+            <p className="text-sm text-muted-foreground">{rank.name} {emp.role} · {emp.business_unit}</p>
             <p className="mt-1 text-xs italic text-muted-foreground">Measured by capability & mastery — {years} year{years > 1 ? "s" : ""} of service</p>
           </div>
         </div>
         <div className="grid flex-1 grid-cols-3 gap-3 sm:gap-4">
           <Stat label="Rank" value={rank.name} sub={rank.subtitle} color={rank.color} />
           <Stat label="This Month" value={`Grade ${emp.currentGrade}`} sub={grade.label} color={grade.color} />
-          <Stat label="Discipline" value={emp.role} sub={emp.department.split("·")[0].trim()} color="var(--color-gold)" />
+          <Stat label="Discipline" value={emp.role} sub={emp.business_unit.split("·")[0].trim()} color="var(--color-gold)" />
         </div>
       </div>
     </section>
