@@ -154,19 +154,29 @@ function LinkedHome({ d }: { d: any }) {
 
               {/* 4. Fleet */}
               {s.location?.name && (
-                <div className="mt-0.5 text-xs text-muted-foreground">{s.location.name}</div>
+                <div className="mt-2">
+                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Fleet</div>
+                  <div className="text-sm text-foreground">{s.location.name}</div>
+                </div>
               )}
 
               {/* 5. Manager */}
               {!isShipbuilder ? (
-                <div className="mt-1 text-xs text-muted-foreground">
-                  Manager: <span className="text-foreground">{s.manager?.name ?? "Unassigned"}</span>
+                <div className="mt-2">
+                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Manager</div>
+                  <div className="text-sm text-foreground">{s.manager?.name ?? "Unassigned"}</div>
                 </div>
               ) : (
-                <div className="mt-1 text-xs italic text-gold/80">Beyond rank · Director</div>
+                <div className="mt-2">
+                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Role</div>
+                  <div className="text-sm text-gold/80">Director · Beyond Rank</div>
+                </div>
               )}
-              <div className="mt-1 font-mono text-[10px] tracking-wider text-muted-foreground/40">
-                ID {s.guild_id ?? "—"}
+
+              {/* Guild ID */}
+              <div className="mt-3">
+                <div className="text-[9px] uppercase tracking-widest text-muted-foreground/50">Guild ID</div>
+                <div className="font-mono text-[10px] tracking-wider text-muted-foreground/40">{s.guild_id ?? "—"}</div>
               </div>
             </div>
           </div>
