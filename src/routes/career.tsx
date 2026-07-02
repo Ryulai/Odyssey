@@ -5,67 +5,77 @@ export const Route = createFileRoute("/career")({
   head: () => ({
     meta: [
       { title: "Main Career — The Odyssey Guide" },
-      { name: "description", content: "Your long-term career journey: identity, promotion timeline, and the requirements before your next rank." },
+      { name: "description", content: "The home of your primary profession — powered by the Performance and Ranking systems." },
     ],
   }),
   component: () => <AuthGate><CareerPage /></AuthGate>,
 });
 
 // ─── Placeholder data ──────────────────────────────────────────────
-const IDENTITY = {
+const HEADER = {
   name: "Ryu Lai",
   profession: "Sales Ambassador",
-  className: "Ranger",
-  role: "Hunter",
+  className: "Ranger · Hunter",
   rank: "Bronze Hunter",
   businessUnit: "Sales",
-  fleet: "Ting Livehouse",
-  manager: "Elder Ryu",
-  joinDate: "2024-08-01",
-  careerStage: "Early Voyage",
   tagline: "I Can Do It.",
 };
 
-const JOURNEY: { key: string; name: string; glyph: string; note: string }[] = [
-  { key: "apprentice",   name: "Apprentice",     glyph: "⚓", note: "First voyage" },
-  { key: "bronze",       name: "Bronze Hunter",  glyph: "🥉", note: "Proven crew" },
-  { key: "silver",       name: "Silver Hunter",  glyph: "🥈", note: "Trusted hand" },
-  { key: "gold",         name: "Gold Hunter",    glyph: "🥇", note: "Fleet asset" },
-  { key: "black",        name: "Black Hunter",   glyph: "🖤", note: "Master hunter" },
-  { key: "diamond",      name: "Diamond Hunter", glyph: "💎", note: "Legendary" },
-  { key: "director",     name: "Director",       glyph: "👑", note: "Beyond rank" },
-];
+const PERFORMANCE = {
+  grade: "B" as "A" | "B" | "C" | "D",
+  gradeLabel: "Consistent",
+  score: 82,
+  month: "November 2026",
+  summary: "Steady voyage this month. Sales and attendance held strong; teamwork trending upward. One SOP note pending Captain review.",
+};
 
+const RANKING = {
+  current: "Bronze Hunter",
+  next: "Silver Hunter",
+  journeyPct: 62,
+  requirements: [
+    { label: "Tenure at rank",       current: "4 mo",  target: "6 mo",  done: false },
+    { label: "Monthly Reviews",      current: "3 / 6", target: "6",     done: false },
+    { label: "Grade B streak",       current: "3 mo",  target: "3 mo",  done: true },
+    { label: "Grade A achieved",     current: "1 mo",  target: "1 mo",  done: true },
+    { label: "Achievements approved", current: "8 / 12", target: "12",  done: false },
+    { label: "Captain endorsement",  current: "Pending", target: "1",   done: false },
+  ],
+};
+
+const JOURNEY = [
+  { key: "apprentice", name: "Apprentice",     glyph: "⚓" },
+  { key: "bronze",     name: "Bronze Hunter",  glyph: "🥉" },
+  { key: "silver",     name: "Silver Hunter",  glyph: "🥈" },
+  { key: "gold",       name: "Gold Hunter",    glyph: "🥇" },
+  { key: "black",      name: "Black Hunter",   glyph: "🖤" },
+  { key: "legend",     name: "Legend",         glyph: "☀" },
+];
 const CURRENT_KEY = "bronze";
-const NEXT_KEY = "silver";
 
-const REQUIREMENTS: { label: string; current: string; target: string; done: boolean; hint?: string }[] = [
-  { label: "Tenure at current rank",     current: "4 months",     target: "6 months",     done: false, hint: "2 months remaining" },
-  { label: "Monthly Reviews completed",  current: "3 / 6",        target: "6 reviews",    done: false, hint: "3 more voyage reviews" },
-  { label: "Grade B or higher",          current: "3 months",     target: "3 months",     done: true },
-  { label: "Grade A achieved",           current: "1 month",      target: "1 month",      done: true },
-  { label: "Achievements approved",      current: "8 / 12",       target: "12 records",   done: false, hint: "4 more Harbor Records" },
-  { label: "Guild Standing",             current: "Clear",        target: "No violations", done: true },
-  { label: "Captain endorsement",        current: "Pending",      target: "1 endorsement", done: false, hint: "Requested from Elder Ryu" },
-];
+const STATS = {
+  yearsServed: "2y 3m",
+  totalPromotions: 2,
+  currentLegacy: "3 ★ · 0 ☾ · 0 ☀",
+  careerStarted: "Aug 2024",
+};
 
-const completed = REQUIREMENTS.filter(r => r.done).length;
-const total = REQUIREMENTS.length;
+const gradeReqDone = RANKING.requirements.filter(r => r.done).length;
+const gradeReqTotal = RANKING.requirements.length;
 const currentIdx = JOURNEY.findIndex(j => j.key === CURRENT_KEY);
-const nextRank = JOURNEY.find(j => j.key === NEXT_KEY);
 
 function CareerPage() {
   return (
     <div className="min-h-screen text-foreground">
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Header */}
+        {/* Top nav */}
         <header className="mb-8 flex items-center justify-between">
           <div>
             <div className="font-display text-lg font-semibold uppercase tracking-widest text-gold">
               Main Career
             </div>
             <div className="text-xs text-muted-foreground">
-              Where am I in my professional journey?
+              Your primary profession — Performance & Ranking
             </div>
           </div>
           <Link
@@ -76,51 +86,169 @@ function CareerPage() {
           </Link>
         </header>
 
-        {/* SECTION 1 — Career Identity */}
+        {/* 1 · CAREER HEADER */}
         <section className="relative overflow-hidden rounded-2xl border border-gold/25 bg-ink/40 p-8">
-          <div className="pointer-events-none absolute inset-0 opacity-[0.05]" style={{
-            background: "radial-gradient(circle at 20% 10%, #F5D07A, transparent 60%)",
-          }} />
+          <div
+            className="pointer-events-none absolute inset-0 opacity-[0.05]"
+            style={{ background: "radial-gradient(circle at 20% 10%, #F5D07A, transparent 60%)" }}
+          />
           <div className="relative">
             <div className="text-[10px] uppercase tracking-[0.4em] text-muted-foreground">
-              Character Sheet
+              Career Profile
             </div>
             <div className="mt-3 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <div className="font-display text-3xl text-foreground">{IDENTITY.name}</div>
-                <div className="mt-1 text-sm italic text-gold/80">"{IDENTITY.tagline}"</div>
+                <div className="font-display text-3xl text-foreground">{HEADER.name}</div>
+                <div className="mt-1 text-sm italic text-gold/80">"{HEADER.tagline}"</div>
               </div>
               <div className="rounded-md border border-gold/30 bg-gold/5 px-3 py-1.5 text-[10px] uppercase tracking-widest text-gold">
-                Stage · {IDENTITY.careerStage}
+                {HEADER.rank}
               </div>
             </div>
 
             <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <IdentityField label="Profession" value={IDENTITY.profession} />
-              <IdentityField label="Class" value={`${IDENTITY.className} · ${IDENTITY.role}`} />
-              <IdentityField label="Rank"    value={IDENTITY.rank} accent />
-              <IdentityField label="Business Unit" value={IDENTITY.businessUnit} />
-              <IdentityField label="Fleet"   value={IDENTITY.fleet} />
-              <IdentityField label="Manager" value={IDENTITY.manager} />
-              <IdentityField label="Join Date" value={new Date(IDENTITY.joinDate).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })} />
-              <IdentityField label="Voyage Length" value={monthsSince(IDENTITY.joinDate)} />
+              <HeaderField label="Profession"    value={HEADER.profession} />
+              <HeaderField label="Class"         value={HEADER.className} />
+              <HeaderField label="Rank"          value={HEADER.rank} accent />
+              <HeaderField label="Business Unit" value={HEADER.businessUnit} />
             </div>
           </div>
         </section>
 
-        {/* SECTION 2 — Career Journey */}
+        {/* 2 · PERFORMANCE SYSTEM  +  3 · RANKING SYSTEM (side by side, distinct feel) */}
+        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+          {/* Performance — "today" — warmer, active */}
+          <section className="relative overflow-hidden rounded-xl border border-gold/30 bg-gradient-to-br from-gold/[0.06] via-transparent to-transparent p-6 sm:p-7">
+            <div className="flex items-baseline justify-between">
+              <div>
+                <div className="font-display text-[11px] uppercase tracking-[0.3em] text-gold">
+                  Performance System
+                </div>
+                <div className="mt-0.5 text-[10px] uppercase tracking-widest text-muted-foreground">
+                  This Month · {PERFORMANCE.month}
+                </div>
+              </div>
+              <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                Short-term
+              </div>
+            </div>
+
+            <div className="mt-5 flex items-center gap-5">
+              <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl border-2 border-gold/50 bg-ink/60 shadow-[0_0_24px_rgba(245,208,122,0.25)]">
+                <span className="font-display text-5xl text-gold">{PERFORMANCE.grade}</span>
+              </div>
+              <div className="flex-1">
+                <div className="font-display text-lg text-foreground">{PERFORMANCE.gradeLabel}</div>
+                <div className="mt-1 text-xs text-muted-foreground">Monthly Score</div>
+                <div className="mt-1 flex items-baseline gap-1">
+                  <span className="font-display text-3xl text-gold">{PERFORMANCE.score}</span>
+                  <span className="text-xs text-muted-foreground">/ 100</span>
+                </div>
+                <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-ink/60">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-gold/70 to-gold"
+                    style={{ width: `${PERFORMANCE.score}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <p className="mt-5 rounded-md border border-border/60 bg-ink/40 p-3 text-xs italic text-muted-foreground">
+              {PERFORMANCE.summary}
+            </p>
+
+            <Link
+              to="/performance"
+              className="mt-5 inline-flex w-full items-center justify-center rounded-md border border-gold/40 bg-gold/10 px-4 py-2.5 text-[11px] uppercase tracking-widest text-gold transition hover:bg-gold/15"
+            >
+              View Monthly Performance →
+            </Link>
+          </section>
+
+          {/* Ranking — "long game" — cooler, structural */}
+          <section className="relative overflow-hidden rounded-xl border border-border bg-ink/40 p-6 sm:p-7">
+            <div className="flex items-baseline justify-between">
+              <div>
+                <div className="font-display text-[11px] uppercase tracking-[0.3em] text-foreground/70">
+                  Ranking System
+                </div>
+                <div className="mt-0.5 text-[10px] uppercase tracking-widest text-muted-foreground">
+                  Long-term Mastery
+                </div>
+              </div>
+              <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                Career
+              </div>
+            </div>
+
+            <div className="mt-5 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+              <div className="rounded-lg border border-gold/40 bg-gold/[0.04] p-3 text-center">
+                <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Current</div>
+                <div className="mt-1 font-display text-sm text-gold">{RANKING.current}</div>
+              </div>
+              <div className="text-muted-foreground/60">→</div>
+              <div className="rounded-lg border border-dashed border-border/70 bg-ink/30 p-3 text-center">
+                <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Next</div>
+                <div className="mt-1 font-display text-sm text-foreground/80">{RANKING.next}</div>
+              </div>
+            </div>
+
+            <div className="mt-5">
+              <div className="flex items-center justify-between text-[10px] uppercase tracking-widest text-muted-foreground">
+                <span>Journey Progress</span>
+                <span className="text-gold">{RANKING.journeyPct}%</span>
+              </div>
+              <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-ink/60">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-gold/50 to-gold"
+                  style={{ width: `${RANKING.journeyPct}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="mt-5">
+              <div className="mb-2 flex items-center justify-between text-[10px] uppercase tracking-widest text-muted-foreground">
+                <span>Promotion Requirements</span>
+                <span className="text-gold">{gradeReqDone} / {gradeReqTotal}</span>
+              </div>
+              <ul className="space-y-1.5">
+                {RANKING.requirements.map((r) => (
+                  <li
+                    key={r.label}
+                    className={`flex items-center justify-between rounded-md border px-3 py-2 text-xs ${
+                      r.done ? "border-gold/25 bg-gold/[0.03]" : "border-border/70 bg-ink/30"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className={`flex h-4 w-4 items-center justify-center rounded-full border text-[10px] ${
+                        r.done ? "border-gold bg-gold/15 text-gold" : "border-border text-muted-foreground"
+                      }`}>
+                        {r.done ? "✓" : "○"}
+                      </span>
+                      <span className={r.done ? "text-gold" : "text-foreground"}>{r.label}</span>
+                    </span>
+                    <span className="text-[11px] text-muted-foreground">
+                      {r.current} <span className="text-muted-foreground/50">/ {r.target}</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </section>
+        </div>
+
+        {/* 4 · CAREER JOURNEY */}
         <section className="mt-6 rounded-xl border border-border bg-ink/30 p-6 sm:p-8">
           <div className="mb-6 flex items-baseline justify-between">
             <div className="font-display text-xs uppercase tracking-[0.3em] text-gold">
               Career Journey
             </div>
             <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
-              Promotion Timeline
+              Rank Timeline
             </div>
           </div>
 
           <ol className="relative space-y-4">
-            {/* Vertical rail */}
             <div className="absolute left-6 top-2 bottom-2 w-px bg-gradient-to-b from-gold/40 via-border to-border/40" />
             {JOURNEY.map((j, i) => {
               const isCurrent = i === currentIdx;
@@ -153,13 +281,8 @@ function CareerPage() {
                         : "border-border bg-ink/30"
                     }`}
                   >
-                    <div>
-                      <div className={`font-display text-lg ${isCurrent ? "text-gold" : isLocked ? "text-muted-foreground/70" : "text-foreground"}`}>
-                        {j.name}
-                      </div>
-                      <div className="text-[11px] uppercase tracking-widest text-muted-foreground">
-                        {j.note}
-                      </div>
+                    <div className={`font-display text-lg ${isCurrent ? "text-gold" : isLocked ? "text-muted-foreground/70" : "text-foreground"}`}>
+                      {j.name}
                     </div>
                     <div className="text-[10px] uppercase tracking-widest">
                       {isCurrent && <span className="rounded bg-gold/15 px-2 py-1 text-gold">● You are here</span>}
@@ -174,108 +297,47 @@ function CareerPage() {
           </ol>
         </section>
 
-        {/* SECTION 3 — Promotion Requirements */}
+        {/* 5 · CAREER STATISTICS */}
         <section className="mt-6 rounded-xl border border-border bg-ink/30 p-6 sm:p-8">
-          <div className="mb-4 flex items-baseline justify-between">
+          <div className="mb-6 flex items-baseline justify-between">
             <div className="font-display text-xs uppercase tracking-[0.3em] text-gold">
-              Promotion Requirements
+              Career Statistics
             </div>
             <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
-              Journey to {nextRank?.name}
+              Lifetime
             </div>
           </div>
 
-          {/* Progress banner */}
-          <div className="rounded-lg border border-gold/30 bg-gradient-to-r from-gold/5 via-transparent to-gold/5 p-5">
-            <div className="flex items-center justify-between text-[10px] uppercase tracking-widest text-muted-foreground">
-              <span>{IDENTITY.rank}</span>
-              <span className="text-gold">
-                {completed} / {total} Requirements
-              </span>
-              <span>{nextRank?.name}</span>
-            </div>
-            <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-ink/60">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-gold/70 to-gold"
-                style={{ width: `${(completed / total) * 100}%` }}
-              />
-            </div>
-          </div>
-
-          {/* Requirements list */}
-          <ul className="mt-6 space-y-3">
-            {REQUIREMENTS.map((r) => (
-              <li
-                key={r.label}
-                className={`rounded-lg border p-4 ${
-                  r.done ? "border-gold/25 bg-gold/[0.03]" : "border-border bg-ink/40"
-                }`}
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-start gap-3">
-                    <div
-                      className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-xs ${
-                        r.done ? "border-gold bg-gold/15 text-gold" : "border-border text-muted-foreground"
-                      }`}
-                    >
-                      {r.done ? "✓" : "○"}
-                    </div>
-                    <div>
-                      <div className={`font-display text-sm uppercase tracking-widest ${r.done ? "text-gold" : "text-foreground"}`}>
-                        {r.label}
-                      </div>
-                      {r.hint && !r.done && (
-                        <div className="mt-1 text-[11px] italic text-muted-foreground">
-                          {r.hint}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="text-right text-xs">
-                    <div className={r.done ? "text-gold" : "text-foreground"}>{r.current}</div>
-                    <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                      of {r.target}
-                    </div>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-
-          <div className="mt-6 rounded-md border border-border/60 bg-ink/40 px-4 py-3 text-center text-[11px] uppercase tracking-widest text-muted-foreground">
-            All requirements must be met before Captain review for promotion to{" "}
-            <span className="text-gold">{nextRank?.name}</span>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <StatCard label="Years Served"     value={STATS.yearsServed} />
+            <StatCard label="Total Promotions" value={String(STATS.totalPromotions)} />
+            <StatCard label="Current Legacy"   value={STATS.currentLegacy} />
+            <StatCard label="Career Started"   value={STATS.careerStarted} />
           </div>
         </section>
 
         <div className="mt-8 text-center text-[10px] uppercase tracking-widest text-muted-foreground">
-          Placeholder data · will bind to live progression records
+          Placeholder data · will bind to live records
         </div>
       </div>
     </div>
   );
 }
 
-function IdentityField({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+function HeaderField({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
     <div className="rounded-lg border border-border/60 bg-ink/40 p-3">
-      <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
-        {label}
-      </div>
-      <div className={`mt-1 font-display text-sm ${accent ? "text-gold" : "text-foreground"}`}>
-        {value}
-      </div>
+      <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">{label}</div>
+      <div className={`mt-1 font-display text-sm ${accent ? "text-gold" : "text-foreground"}`}>{value}</div>
     </div>
   );
 }
 
-function monthsSince(iso: string) {
-  const start = new Date(iso);
-  const now = new Date();
-  const months = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
-  const years = Math.floor(months / 12);
-  const rem = months % 12;
-  if (years === 0) return `${months} month${months === 1 ? "" : "s"}`;
-  if (rem === 0) return `${years} year${years === 1 ? "" : "s"}`;
-  return `${years}y ${rem}m`;
+function StatCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-gold/20 bg-ink/40 p-4 text-center">
+      <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">{label}</div>
+      <div className="mt-2 font-display text-xl text-gold">{value}</div>
+    </div>
+  );
 }
