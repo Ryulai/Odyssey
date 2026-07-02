@@ -120,6 +120,7 @@ export const getStaffDashboard = createServerFn({ method: "GET" })
 
     let rank = null as any;
     let manager = null as any;
+    let rpg = null as any;
     if (staffRes.data?.current_rank_key) {
       const rankRes = await context.supabase.from("ranks").select("*").eq("key", staffRes.data.current_rank_key).maybeSingle();
       if (rankRes.error) throw new Error(rankRes.error.message);
@@ -129,6 +130,11 @@ export const getStaffDashboard = createServerFn({ method: "GET" })
       const managerRes = await context.supabase.from("staff").select("id, name, role, email").eq("id", staffRes.data.manager_id).maybeSingle();
       if (managerRes.error) throw new Error(managerRes.error.message);
       manager = managerRes.data ?? null;
+    }
+    {
+      const rpgRes = await context.supabase.from("rpg_identity").select("*").eq("staff_id", staffId).maybeSingle();
+      if (rpgRes.error) throw new Error(rpgRes.error.message);
+      rpg = rpgRes.data ?? null;
     }
 
     const evaluation = (evalRes.data ?? null) as RankEvaluation | null;
