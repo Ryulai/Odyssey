@@ -164,6 +164,9 @@ function LinkedHome({ d }: { d: any }) {
               ) : (
                 <div className="mt-1 text-xs italic text-gold/80">Beyond rank · Director</div>
               )}
+              <div className="mt-1 font-mono text-[10px] tracking-wider text-muted-foreground/40">
+                ID {s.guild_id ?? "—"}
+              </div>
             </div>
           </div>
 
