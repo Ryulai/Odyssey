@@ -7,7 +7,7 @@ export type UserRole = "director" | "manager" | "staff";
 export const ROLE_META: Record<UserRole, { label: string; tagline: string; color: string }> = {
   director: { label: "Director", tagline: "Full access · approves promotions · edits all configuration", color: "var(--color-gold, gold)" },
   manager:  { label: "Manager",  tagline: "Manages own team · approves achievements · recommends promotions", color: "var(--color-rank-platinum, #9ecbff)" },
-  staff:    { label: "Staff",    tagline: "Views own profile · own growth trees · submits achievement requests", color: "var(--color-rank-silver, #c0c4ce)" },
+  staff:    { label: "Staff",    tagline: "Views own profile · tracks own career systems · submits achievement requests", color: "var(--color-rank-silver, #c0c4ce)" },
 };
 
 export const PERMISSIONS = {
@@ -25,7 +25,7 @@ export const PERMISSIONS = {
   staff: [
     "View profile",
     "Submit achievement claims",
-    "View growth tree",
+    "View own career progression",
   ],
 } as const;
 
