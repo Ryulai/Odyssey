@@ -158,7 +158,7 @@ export const getStaffDashboard = createServerFn({ method: "GET" })
     };
 
     return {
-      staff: staffRes.data ? { ...staffRes.data, rank, manager } : null,
+      staff: staffRes.data ? { ...staffRes.data, rank, manager, rpg } : null,
       totals: {
         stars: totalStars,
         moons: moonsTotal,
