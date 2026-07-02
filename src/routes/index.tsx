@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useRole, ROLE_META, can, useAuth } from "@/lib/roles";
 import { AuthGate } from "@/components/auth-gate";
 import { getStaffDashboard } from "@/lib/workflow.functions";
-import { classLabel, roleLabel } from "@/lib/rpg";
+import { classLabel, roleLabel, rankIdentity, rankGlyph } from "@/lib/rpg";
 
 import {
   SAMPLE_EMPLOYEE,
@@ -99,6 +99,9 @@ function LinkedHome({ d }: { d: any }) {
   const latestGrade = d.grades?.[0]?.grade ?? "—";
   const rankName = s.rank?.name ?? d.evaluation?.current_rank_name ?? "Unranked";
   const rankSub  = s.rank?.subtitle ?? "";
+  const rankKey  = s.current_rank_key ?? s.rpg?.rank_key ?? s.rank?.key ?? null;
+  const rankIdent = rankIdentity(rankKey);
+  const rankGly   = rankGlyph(rankKey);
   const rankColor = isShipbuilder ? "var(--color-gold)" : (s.rank?.color ?? "var(--color-gold)");
   const gradeMeta = GRADE_META[latestGrade as Grade] ?? null;
   const initials = (s.name ?? "")
@@ -149,7 +152,7 @@ function LinkedHome({ d }: { d: any }) {
               </>
             ) : (
               <>
-                <MiniStat label="Rank" value={rankName.replace(" Hunter", "")} sub={rankSub} color={rankColor} />
+                <MiniStat label="Rank" value={`${rankGly} ${rankName.replace(" Hunter", "")}`.trim()} sub={rankIdent || rankSub} color={rankColor} />
                 <MiniStat label="This Month" value={`Grade ${latestGrade}`} sub={gradeMeta?.label ?? "no review yet"} color={gradeMeta?.color ?? "var(--color-muted-foreground)"} />
                 {isHunter
                   ? <MiniStat label="Legacy" value={`${totals.stars}★`} sub={`${totals.moons}🌙 · ${totals.suns}☀️`} color="var(--color-gold)" />
