@@ -419,13 +419,55 @@ function StaffForm({ row, managers, accounts, locations, isDirector, onSave, onC
 
       {/* RPG Identity */}
       <div className="sm:col-span-2 -mb-1 mt-3 border-b border-border/60 pb-1 text-[10px] font-display uppercase tracking-[0.25em] text-muted-foreground">RPG Identity — character class & progression</div>
-      <Field label="Class / Path">
-        <select className={inputCls} value={d.role_family} onChange={e => set("role_family", e.target.value as any)}>
-          <option value="hunter">Hunter (progression)</option><option value="operational">Operational (skills)</option>
+      <Field label="Primary Class">
+        <select className={inputCls} value={d.primary_class ?? "ranger"} onChange={e => {
+          const cls = e.target.value as any;
+          set("primary_class", cls);
+          // Reset role to first valid option for the newly chosen class.
+          set("primary_role", CLASS_ROLES[cls as PrimaryClass]?.[0] ?? null);
+        }}>
+          {PRIMARY_CLASSES.map(c => <option key={c} value={c}>{titleCase(c)}</option>)}
+        </select>
+      </Field>
+      <Field label="Primary Role">
+        <select className={inputCls} value={d.primary_role ?? ""} onChange={e => set("primary_role", e.target.value || null)} required>
+          <option value="">— Select role —</option>
+          {(CLASS_ROLES[(d.primary_class ?? "ranger") as PrimaryClass] ?? []).map(r => (
+            <option key={r} value={r}>
+              {titleCase(r)}{TEMPORARY_ROLES.has(r) ? " (Temporary)" : ""}
+            </option>
+          ))}
+        </select>
+      </Field>
+      <Field label="Rank">
+        <select className={inputCls} value={d.rank_key ?? "bronze"} onChange={e => set("rank_key", e.target.value)}>
+          {RANKS.map(r => (
+            <option key={r.key} value={r.key} disabled={!r.unlocked}>
+              {r.label}{r.unlocked ? "" : " — locked"}
+            </option>
+          ))}
         </select>
       </Field>
       <Field label="Career Tree Path"><input className={inputCls} value={d.career_path ?? ""} onChange={e => set("career_path", e.target.value)} placeholder="e.g. Master Ambassador" /></Field>
       <Field label="Shipbuilder Tree Path"><input className={inputCls} value={d.shipbuilder_path ?? ""} onChange={e => set("shipbuilder_path", e.target.value)} placeholder="e.g. Venue Partner" /></Field>
+
+      {/* Secondary Career — stored but LOCKED until Gold rank in the future */}
+      <div className="sm:col-span-2 -mb-1 mt-3 border-b border-border/60 pb-1 text-[10px] font-display uppercase tracking-[0.25em] text-muted-foreground">
+        Secondary Career — 🔒 locked (unlocks at Gold rank)
+      </div>
+      <Field label="Secondary Class">
+        <select className={inputCls} value={d.secondary_class ?? ""} disabled title="Locked until Gold rank">
+          <option value="">— locked —</option>
+        </select>
+      </Field>
+      <Field label="Secondary Role">
+        <select className={inputCls} value={d.secondary_role ?? ""} disabled title="Locked until Gold rank">
+          <option value="">— locked —</option>
+        </select>
+      </Field>
+      <div className="sm:col-span-2 rounded border border-border/60 bg-ink/40 px-3 py-2 text-[11px] italic text-muted-foreground">
+        Secondary career is reserved for a future sprint. The fields exist in the database but are not editable or displayed on the dashboard until the crew member reaches Gold rank.
+      </div>
 
       <div className="sm:col-span-2 -mb-1 mt-3 border-b border-border/60 pb-1 text-[10px] font-display uppercase tracking-[0.25em] text-muted-foreground">Account</div>
 
