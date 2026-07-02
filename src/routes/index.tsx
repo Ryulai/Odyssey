@@ -176,7 +176,11 @@ function LinkedHome({ d }: { d: any }) {
               </>
             ) : (
               <>
-                <MiniStat label="Guild ID" value={s.guild_id ?? "—"} sub="Permanent Record" color="var(--color-gold)" />
+                <div className="flex flex-col justify-center rounded-md border border-border/60 bg-ink/30 px-3 py-2 text-center">
+                  <div className="text-[9px] uppercase tracking-widest text-muted-foreground/70">Guild ID</div>
+                  <div className="mt-0.5 font-mono text-xs text-muted-foreground">{s.guild_id ?? "—"}</div>
+                  <div className="text-[9px] text-muted-foreground/50">Permanent Record</div>
+                </div>
                 <MiniStat label="This Month" value={`Grade ${latestGrade}`} sub={gradeMeta?.label ?? "no review yet"} color={gradeMeta?.color ?? "var(--color-muted-foreground)"} />
                 {isHunter
                   ? <MiniStat label="Legacy" value={`${totals.stars}★`} sub={`${totals.moons}🌙 · ${totals.suns}☀️`} color="var(--color-gold)" />
