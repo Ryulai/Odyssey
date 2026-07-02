@@ -295,7 +295,7 @@ function StaffModule() {
                   </td>
                 </tr>
               ))}
-              {!staff.length && (<tr><td colSpan={12} className="py-6 text-center text-xs text-muted-foreground">No staff yet. Click "Add Staff" to log your first crew member.</td></tr>)}
+              {!staff.length && (<tr><td colSpan={13} className="py-6 text-center text-xs text-muted-foreground">No staff yet. Click "Add Staff" to log your first crew member.</td></tr>)}
             </tbody>
           </table>
         </div>
