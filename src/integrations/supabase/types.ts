@@ -589,6 +589,8 @@ export type Database = {
           manager_id: string | null
           name: string
           phone: string | null
+          promotion_date: string | null
+          promotion_history: Json
           role: string
           role_family: string
           shipbuilder_path: string | null
@@ -611,6 +613,8 @@ export type Database = {
           manager_id?: string | null
           name: string
           phone?: string | null
+          promotion_date?: string | null
+          promotion_history?: Json
           role?: string
           role_family?: string
           shipbuilder_path?: string | null
@@ -633,6 +637,8 @@ export type Database = {
           manager_id?: string | null
           name?: string
           phone?: string | null
+          promotion_date?: string | null
+          promotion_history?: Json
           role?: string
           role_family?: string
           shipbuilder_path?: string | null
