@@ -178,7 +178,13 @@ type StaffRow = {
   status: "active" | "inactive"; user_id: string | null; app_role?: "director" | "manager" | "staff" | null;
   location_id?: string | null;
   employee_code?: string | null; join_date?: string | null;
+  phone?: string | null; branch?: string | null;
   career_path?: string | null; shipbuilder_path?: string | null;
+  // Sprint 1 — RPG hierarchy
+  primary_class?: string | null; primary_role?: string | null;
+  secondary_class?: string | null; secondary_role?: string | null;
+  secondary_unlocked?: boolean;
+  rank_key?: string | null;
   total_stars?: number; latest_grade?: string | null;
   promotion_ready?: boolean; promotion_next_rank_name?: string | null;
 };
