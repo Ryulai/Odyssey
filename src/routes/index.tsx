@@ -197,6 +197,11 @@ function LinkedHome({ d }: { d: any }) {
           Record a Voyage
         </Link>
       </div>
+      {!isShipbuilder && (
+        <div className="mt-6">
+          <PromotionProgress d={d} />
+        </div>
+      )}
 
       <div className="mt-6">
         <GrowthTrees />
