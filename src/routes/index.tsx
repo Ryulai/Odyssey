@@ -64,6 +64,27 @@ function OnboardingCard() {
   );
 }
 
+const RANK_PALETTE: Record<string, { color: string; glow: string }> = {
+  apprentice: { color: "#B8BFC7", glow: "#B8BFC760" },
+  bronze:     { color: "#B87333", glow: "#B8733380" },
+  silver:     { color: "#C7CBD1", glow: "#C7CBD180" },
+  gold:       { color: "#D4A84B", glow: "#D4A84B90" },
+  platinum:   { color: "#E5E4E2", glow: "#E5E4E280" },
+  diamond:    { color: "#B9F2FF", glow: "#B9F2FF80" },
+  black:      { color: "#1A1A1A", glow: "#D4A84B90" },
+  mystical:   { color: "#C9A227", glow: "#C9A22790" },
+  legend:     { color: "#FFF8E7", glow: "#F5D77FAA" },
+};
+
+function paletteFor(rankKey: string | null): { color: string; glow: string } {
+  if (!rankKey) return { color: "#D4A84B", glow: "#D4A84B80" };
+  const key = rankKey.toLowerCase();
+  for (const [k, v] of Object.entries(RANK_PALETTE)) {
+    if (key.includes(k)) return v;
+  }
+  return { color: "#D4A84B", glow: "#D4A84B80" };
+}
+
 function LinkedHome({ d }: { d: any }) {
   const { role } = useRole();
   const s = d.staff;
@@ -73,8 +94,9 @@ function LinkedHome({ d }: { d: any }) {
   const rankKey  = s.current_rank_key ?? s.rpg?.rank_key ?? s.rank?.key ?? null;
   const rankName = rankLabel(rankKey) || s.rank?.name || d.evaluation?.current_rank_name || "Unranked";
   const rankIdent = rankIdentity(rankKey);
-  const rankGly   = rankGlyph(rankKey);
-  const rankColor = isShipbuilder ? "var(--color-gold)" : (s.rank?.color ?? "var(--color-gold)");
+  const palette = paletteFor(rankKey);
+  const rankColor = isShipbuilder ? "#D4A84B" : palette.color;
+  const rankGlow  = isShipbuilder ? "#D4A84B90" : palette.glow;
   const gradeMeta = GRADE_META[latestGrade as Grade] ?? null;
   const initials = (s.name ?? "")
     .split(/\s+/).filter(Boolean).slice(0, 2).map((w: string) => w[0]?.toUpperCase()).join("") || "—";
@@ -85,102 +107,99 @@ function LinkedHome({ d }: { d: any }) {
   const className   = classLabel(classKey);
   const roleName    = roleLabel(roleKey);
   const faction     = factionFor(classKey);
-  // Page title combines Rank + Role (e.g. "Bronze Hunter"). Falls back to rank name only.
-  const heroTitle = isShipbuilder
-    ? "⚓ Beyond Rank"
-    : `${rankGly ? rankGly + " " : ""}${rankName}${roleName ? " " + roleName : ""}`;
+  const profession  = s.profession || s.job_title || roleName || "—";
 
-  // Secondary class unlocks at Gold; use current rank ordering from RPG data if available.
   const goldOrHigher = /gold|platinum|diamond|black|mystical|legend|beyond/i.test(rankName);
   const secondaryUnlocked = goldOrHigher && Boolean(s.rpg?.secondary_class);
 
   return (
     <>
-      {/* 1 · PROFILE — Character Sheet Hero */}
-      <section className="card-ornate-gold relative overflow-hidden p-6 sm:p-10">
-        {/* Portrait — top center, oversized, reserved for future emblem overlays */}
+      {/* 1 · CHARACTER SHEET HERO — the focal point */}
+      <section className="card-ornate-gold relative overflow-hidden px-6 py-10 sm:px-10 sm:py-12">
+        {/* Portrait — clean, no floating icons */}
         <div className="flex flex-col items-center">
-          <div className="relative">
-            {/* Guild emblem slot — top-left */}
-            <div className="absolute -left-2 -top-2 grid h-9 w-9 place-items-center rounded-full border border-gold/40 bg-ink/80 text-[13px] text-gold/70 backdrop-blur-sm" title="Guild Emblem">
-              {faction?.glyph ?? "⚑"}
-            </div>
-            {/* Character badge slot — top-right (rank glyph) */}
-            <div className="absolute -right-2 -top-2 grid h-9 w-9 place-items-center rounded-full border border-gold/40 bg-ink/80 text-[13px] text-gold/80 backdrop-blur-sm" title="Character Badge">
-              {rankGly || "★"}
-            </div>
-            {/* Portrait */}
-            <div
-              className="grid h-32 w-32 place-items-center rounded-full font-display text-4xl font-bold sm:h-40 sm:w-40 sm:text-5xl"
-              style={{
-                background: `radial-gradient(circle at 30% 30%, ${rankColor}, oklch(0.2 0.03 250))`,
-                color: "oklch(0.15 0.03 250)",
-                boxShadow: `0 0 0 3px ${rankColor}, 0 0 0 6px oklch(0.15 0.03 250), 0 0 0 7px ${rankColor}66, 0 0 48px -8px ${rankColor}`,
-              }}
-            >
-              {isShipbuilder ? "⚓" : initials}
-            </div>
-            {/* Achievement emblem slot — bottom-center */}
-            <div className="absolute -bottom-2 left-1/2 grid h-9 w-9 -translate-x-1/2 place-items-center rounded-full border border-gold/40 bg-ink/80 text-[13px] text-gold/80 backdrop-blur-sm" title="Achievement Emblem">
-              {totals.suns > 0 ? "☀️" : totals.moons > 0 ? "🌙" : "★"}
-            </div>
-            {/* Company logo slot — bottom-right */}
-            <div className="absolute -bottom-2 -right-3 grid h-9 w-9 place-items-center rounded-full border border-gold/40 bg-ink/80 text-[11px] uppercase tracking-widest text-gold/70 backdrop-blur-sm" title="Company Logo">
-              ⚓
-            </div>
+          <div
+            className="grid h-40 w-40 place-items-center rounded-full font-display text-5xl font-bold sm:h-48 sm:w-48 sm:text-6xl"
+            style={{
+              background: `radial-gradient(circle at 30% 30%, ${rankColor}, oklch(0.2 0.03 250))`,
+              color: "oklch(0.15 0.03 250)",
+              boxShadow: `0 0 0 3px ${rankColor}, 0 0 0 6px oklch(0.15 0.03 250), 0 0 0 7px ${rankColor}55, 0 0 60px -10px ${rankGlow}`,
+            }}
+          >
+            {isShipbuilder ? "⚓" : initials}
           </div>
 
-          {/* Legacy title / name / hero title */}
-          <div className="mt-6 text-center">
-            <div className="text-[10px] uppercase tracking-[0.3em] text-gold">{legacyTitle}</div>
-            <div className="mt-1 font-display text-base text-foreground/80">{s.name}</div>
-            <div className="mt-2 font-display text-3xl leading-tight text-foreground sm:text-4xl">
-              {heroTitle}
-            </div>
-            {!isShipbuilder && rankIdent && (
-              <div className="mt-1 text-sm italic text-muted-foreground">"{rankIdent}"</div>
-            )}
-            {isShipbuilder && (
-              <div className="mt-1 text-sm italic text-gold/80">Charts the course. Builds the ship.</div>
-            )}
-            {faction && !isShipbuilder && (
-              <div className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-gold/30 bg-gold/5 px-2.5 py-0.5 text-[10px] uppercase tracking-widest text-gold/90">
-                <span>{faction.glyph}</span>
-                <span>{faction.label}</span>
-              </div>
-            )}
+          {/* Character title (legacy) */}
+          <div className="mt-6 font-display text-[11px] uppercase tracking-[0.4em] text-gold/90">
+            {legacyTitle}
           </div>
+
+          {/* Player Name — visually strongest */}
+          <h1 className="mt-2 font-display text-4xl uppercase leading-none tracking-wide text-foreground sm:text-5xl">
+            {s.name}
+          </h1>
+
+          {/* Profession — elegant */}
+          {!isShipbuilder && (
+            <div className="mt-3 font-serif text-lg italic text-foreground/85 sm:text-xl">
+              {profession}
+            </div>
+          )}
+
+          {/* Rank — prestigious typography, colored, no emoji */}
+          <div
+            className="mt-4 font-display text-2xl uppercase tracking-[0.35em] sm:text-3xl"
+            style={{ color: rankColor, textShadow: `0 0 24px ${rankGlow}` }}
+          >
+            {isShipbuilder ? "Beyond Rank" : rankName}
+          </div>
+
+          {/* Guild badge — subtle */}
+          {faction && !isShipbuilder && (
+            <div className="mt-4 text-[10px] uppercase tracking-[0.35em] text-muted-foreground">
+              {faction.label}
+            </div>
+          )}
+
+          {/* Tagline */}
+          {!isShipbuilder && rankIdent && (
+            <div className="mt-3 font-serif text-sm italic text-muted-foreground">"{rankIdent}"</div>
+          )}
+          {isShipbuilder && (
+            <div className="mt-3 font-serif text-sm italic text-gold/80">Charts the course. Builds the ship.</div>
+          )}
         </div>
 
         {/* Divider */}
-        <div className="my-7 h-px w-full bg-gradient-to-r from-transparent via-gold/25 to-transparent" />
+        <div className="mx-auto my-8 h-px w-2/3 bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
 
-        {/* Two-column identity: Character (RPG) · Assignment (Work) */}
-        <div className="grid gap-6 sm:grid-cols-2">
-          <div>
-            <div className="mb-3 text-center font-display text-[10px] uppercase tracking-[0.3em] text-gold/80">Character</div>
-            <div className="space-y-2 rounded-md border border-gold/15 bg-ink/40 p-4">
-              <IdField label="Class"      value={className || "—"} />
-              <IdField label="Rank"       value={rankName} accent />
-              <IdField label="Profession" value={s.profession || s.job_title || roleName || "—"} />
+        {/* Combined Character + Assignment — single card, two columns */}
+        <div className="rounded-md border border-gold/20 bg-ink/50 p-5 sm:p-6">
+          <div className="grid gap-6 sm:grid-cols-2 sm:gap-10">
+            <div>
+              <div className="mb-4 font-display text-[11px] uppercase tracking-[0.35em] text-gold">Character</div>
+              <div className="space-y-3">
+                <IdRow label="Class"      value={className || "—"} />
+                <IdRow label="Rank"       value={rankName} valueColor={rankColor} />
+                <IdRow label="Profession" value={profession} />
+              </div>
             </div>
-          </div>
-          <div>
-            <div className="mb-3 text-center font-display text-[10px] uppercase tracking-[0.3em] text-gold/80">Assignment</div>
-            <div className="space-y-2 rounded-md border border-gold/15 bg-ink/40 p-4">
-              <IdField label="Business Unit" value={s.business_unit || "—"} />
-              <IdField label="Fleet"         value={s.location?.name || "—"} />
-              {!isShipbuilder ? (
-                <IdField label="Manager" value={s.manager?.name ?? "Unassigned"} />
-              ) : (
-                <IdField label="Role" value="Director · Beyond Rank" accent />
-              )}
+            <div className="sm:border-l sm:border-gold/15 sm:pl-10">
+              <div className="mb-4 font-display text-[11px] uppercase tracking-[0.35em] text-gold">Assignment</div>
+              <div className="space-y-3">
+                <IdRow label="Business Unit" value={s.business_unit || "—"} />
+                <IdRow label="Fleet"         value={s.location?.name || "—"} />
+                <IdRow
+                  label="Manager"
+                  value={isShipbuilder ? "Director · Beyond Rank" : (s.manager?.name ?? "Unassigned")}
+                />
+              </div>
             </div>
           </div>
         </div>
 
         {/* Summary stats — Monthly Performance + Legacy */}
-        <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4">
+        <div className="mt-5 grid grid-cols-2 gap-3 sm:gap-4">
           <MiniStat
             label="Monthly Performance"
             value={latestGrade !== "—" ? `Grade ${latestGrade}` : "—"}
@@ -190,7 +209,7 @@ function LinkedHome({ d }: { d: any }) {
           <MiniStat
             label="Legacy"
             value={`${totals.stars}★`}
-            sub={`${totals.moons}🌙 · ${totals.suns}☀️`}
+            sub={`${totals.moons} Moons · ${totals.suns} Suns`}
             color="var(--color-gold)"
           />
         </div>
@@ -233,6 +252,7 @@ function LinkedHome({ d }: { d: any }) {
           linkLabel="View Legacy →"
         />
       </div>
+
 
       {/* 4 · CLASS — summary → /career */}
       <div className="mt-6">
@@ -302,15 +322,30 @@ function IdField({ label, value, accent }: { label: string; value: string; accen
   );
 }
 
-function MiniStat({ label, value, sub, color }: { label: string; value: string; sub: string; color: string }) {
+function IdRow({ label, value, valueColor }: { label: string; value: string; valueColor?: string }) {
   return (
-    <div className="rounded-md border border-border bg-ink/50 p-3 text-center">
-      <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
-      <div className="mt-1 font-display text-lg leading-tight" style={{ color }}>{value}</div>
-      <div className="text-[11px] text-muted-foreground">{sub}</div>
+    <div className="flex items-baseline justify-between gap-4">
+      <div className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground">{label}</div>
+      <div
+        className="font-display text-base text-foreground sm:text-lg"
+        style={valueColor ? { color: valueColor } : undefined}
+      >
+        {value}
+      </div>
     </div>
   );
 }
+
+function MiniStat({ label, value, sub, color }: { label: string; value: string; sub: string; color: string }) {
+  return (
+    <div className="rounded-md border border-border bg-ink/50 p-4 text-center">
+      <div className="text-[11px] uppercase tracking-widest text-muted-foreground">{label}</div>
+      <div className="mt-1.5 font-display text-xl leading-tight sm:text-2xl" style={{ color }}>{value}</div>
+      <div className="text-xs text-muted-foreground">{sub}</div>
+    </div>
+  );
+}
+
 
 function SummaryCard({
   eyebrow, title, value, valueColor, sub, linkTo, linkLabel, wide,
