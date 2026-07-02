@@ -124,8 +124,8 @@ function LinkedHome({ d }: { d: any }) {
               <h1 className="font-display text-2xl text-foreground sm:text-3xl">{s.name}</h1>
               <p className="text-sm text-muted-foreground capitalize">
                 {s.role || "—"}
-                {s.rpg?.primary_class && <> · <span className="text-foreground">{s.rpg.primary_class}</span></>}
-                {s.rpg?.primary_role && <> · <span className="text-gold">{s.rpg.primary_role}</span></>}
+                {s.rpg?.primary_class && <> · <span className="text-foreground">{classLabel(s.rpg.primary_class)}</span></>}
+                {s.rpg?.primary_role && <> · <span className="text-gold">{roleLabel(s.rpg.primary_role)}</span></>}
                 {" · "}
                 <span className="text-foreground normal-case">{isShipbuilder ? "System Builder" : (rankName.replace(" Hunter", "") || "Bronze")}</span>
               </p>
