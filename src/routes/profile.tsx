@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AuthGate } from "@/components/auth-gate";
 import { getStaffDashboard } from "@/lib/workflow.functions";
 import { GRADE_META } from "@/lib/employee-data";
+import { classLabel, roleLabel } from "@/lib/rpg";
 
 
 
@@ -136,7 +137,7 @@ function CharacterSheet({ d, isShipbuilder = false }: { d: any; isShipbuilder?: 
             {isShipbuilder
               ? <> · System Builder</>
               : (s.rpg?.primary_class || s.rpg?.primary_role) && (
-                  <> · <span className="text-foreground">{s.rpg?.primary_class ?? ""}</span>{s.rpg?.primary_role && <> · <span className="text-gold">{s.rpg.primary_role}</span></>}</>
+                  <> · <span className="text-foreground">{classLabel(s.rpg?.primary_class)}</span>{s.rpg?.primary_role && <> · <span className="text-gold">{roleLabel(s.rpg.primary_role)}</span></>}</>
                 )}
             {!isShipbuilder && <> · <span className="text-foreground normal-case">{s.rank?.name ?? "Bronze"}</span></>}
           </div>

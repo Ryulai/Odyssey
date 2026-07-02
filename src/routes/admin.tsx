@@ -15,7 +15,7 @@ import {
 import {
   listLegacyHoldings, upsertLegacyHolding, deleteLegacyHolding,
 } from "@/lib/legacy.functions";
-import { PRIMARY_CLASSES, CLASS_ROLES, TEMPORARY_ROLES, RANKS, titleCase, type PrimaryClass } from "@/lib/rpg";
+import { PRIMARY_CLASSES, CLASS_ROLES, TEMPORARY_ROLES, RANKS, STAFF_STATUSES, classLabel, roleLabel, rankLabel, statusLabel, type PrimaryClass } from "@/lib/rpg";
 
 
 export const Route = createFileRoute("/admin")({
@@ -176,7 +176,7 @@ const DEPARTMENTS = ["Management", "Sales", "Operations", "Marketing", "Service"
 type StaffRow = {
   id: string; name: string; email: string | null; role: string;
   role_family: "hunter" | "operational"; department: string; manager_id: string | null;
-  status: "active" | "inactive"; user_id: string | null; app_role?: "director" | "manager" | "staff" | null;
+  status: string; user_id: string | null; app_role?: "director" | "manager" | "staff" | null;
   location_id?: string | null;
   employee_code?: string | null; join_date?: string | null;
   phone?: string | null; branch?: string | null;
@@ -245,11 +245,11 @@ function StaffModule() {
                   </td>
                   <td className="py-2 pr-3 text-muted-foreground">{s.employee_code ?? "—"}</td>
                   <td className="py-2 pr-3 text-muted-foreground">{s.role}</td>
-                  <td className="py-2 pr-3 text-muted-foreground capitalize">
+                  <td className="py-2 pr-3 text-muted-foreground">
                     {s.primary_class ? (
                       <div>
-                        <span className="text-foreground">{s.primary_class}</span>
-                        {s.primary_role && <span className="text-muted-foreground"> · {s.primary_role}</span>}
+                        <span className="text-foreground">{classLabel(s.primary_class)}</span>
+                        {s.primary_role && <span className="text-muted-foreground"> · {roleLabel(s.primary_role)}</span>}
                       </div>
                     ) : (
                       <span className="text-muted-foreground/70">— unassigned —</span>
@@ -262,7 +262,7 @@ function StaffModule() {
                       </div>
                     )}
                   </td>
-                  <td className="py-2 pr-3 text-muted-foreground capitalize">{s.current_rank_key ?? s.rank_key ?? "bronze"}</td>
+                  <td className="py-2 pr-3 text-muted-foreground">{rankLabel(s.current_rank_key ?? s.rank_key ?? "bronze")}</td>
                   <td className="py-2 pr-3 text-muted-foreground">{locations.find((l: any) => l.id === s.location_id)?.name ?? <span className="text-amber-300/80">— Unassigned —</span>}</td>
                   <td className="py-2 pr-3 text-muted-foreground">{staff.find((x: any) => x.id === s.manager_id)?.name ?? "—"}</td>
                   <td className="py-2 pr-3 text-muted-foreground">{s.join_date ?? "—"}</td>
@@ -277,7 +277,7 @@ function StaffModule() {
                           ? <span className="text-muted-foreground">Building</span>
                           : <span className="text-muted-foreground">Max</span>}
                   </td>
-                  <td className="py-2 pr-3 text-muted-foreground capitalize">{s.status ?? "active"}</td>
+                  <td className="py-2 pr-3 text-muted-foreground">{statusLabel(s.status ?? "active")}</td>
                   <td className="py-2 pr-3 text-right">
                     <div className="inline-flex flex-wrap justify-end gap-2">
                       <Btn variant="ghost" onClick={() => setEditing(s)}>Edit</Btn>
@@ -422,20 +422,20 @@ function StaffForm({ row, managers, accounts, locations, isDirector, onSave, onC
       <div className="sm:col-span-2 -mb-1 mt-3 border-b border-border/60 pb-1 text-[10px] font-display uppercase tracking-[0.25em] text-muted-foreground">RPG Identity — character class & progression</div>
       <Field label="Primary Class">
         <select className={inputCls} value={d.primary_class ?? "ranger"} onChange={e => {
-          const cls = e.target.value as any;
+          const cls = e.target.value as PrimaryClass;
           set("primary_class", cls);
           // Reset role to first valid option for the newly chosen class.
-          set("primary_role", CLASS_ROLES[cls as PrimaryClass]?.[0] ?? null);
+          set("primary_role", CLASS_ROLES[cls]?.[0]?.key ?? null);
         }}>
-          {PRIMARY_CLASSES.map(c => <option key={c} value={c}>{titleCase(c)}</option>)}
+          {PRIMARY_CLASSES.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
         </select>
       </Field>
       <Field label="Primary Role">
         <select className={inputCls} value={d.primary_role ?? ""} onChange={e => set("primary_role", e.target.value || null)} required>
           <option value="">— Select role —</option>
           {(CLASS_ROLES[(d.primary_class ?? "ranger") as PrimaryClass] ?? []).map(r => (
-            <option key={r} value={r}>
-              {titleCase(r)}{TEMPORARY_ROLES.has(r) ? " (Temporary)" : ""}
+            <option key={r.key} value={r.key}>
+              {r.label}{TEMPORARY_ROLES.has(r.key) ? " (Temporary)" : ""}
             </option>
           ))}
         </select>
@@ -475,7 +475,7 @@ function StaffForm({ row, managers, accounts, locations, isDirector, onSave, onC
 
       <Field label="Status">
         <select className={inputCls} value={d.status} onChange={e => set("status", e.target.value as any)}>
-          <option value="active">Active</option><option value="inactive">Inactive</option>
+          {STAFF_STATUSES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
         </select>
       </Field>
       {isDirector && <Field label="Linked User Account">

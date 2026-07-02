@@ -192,7 +192,7 @@ export const upsertStaff = createServerFn({ method: "POST" })
   .inputValidator((d: {
     id?: string; name: string; email?: string | null; role: string;
     role_family?: "hunter" | "operational"; department: string; manager_id?: string | null;
-    status?: "active" | "inactive"; user_id?: string | null; app_role?: AppRole | null;
+    status?: string; user_id?: string | null; app_role?: AppRole | null;
     location_id?: string | null;
     employee_code?: string | null; join_date?: string | null;
     phone?: string | null; branch?: string | null;
@@ -201,6 +201,8 @@ export const upsertStaff = createServerFn({ method: "POST" })
     primary_class?: string | null; primary_role?: string | null;
     secondary_class?: string | null; secondary_role?: string | null;
     rank_key?: string | null;
+    // Sprint 1.1 — promotion tracking
+    promotion_date?: string | null;
   }) => d)
 
   .handler(async ({ context, data }) => {
@@ -220,8 +222,13 @@ export const upsertStaff = createServerFn({ method: "POST" })
     }
     const linkedUserId = isDirector ? await resolveProfileByEmailOrId(context, data.user_id, data.email) : undefined;
 
-    const primaryClass = data.primary_class?.trim().toLowerCase() || null;
-    const primaryRole  = data.primary_role?.trim().toLowerCase() || null;
+    // Normalize RPG values to KEYS (lower_snake_case) — never store display names.
+    const normKey = (v: string | null | undefined) =>
+      v ? v.trim().toLowerCase().replace(/\s+/g, "_") : null;
+    const primaryClass = normKey(data.primary_class);
+    const primaryRole  = normKey(data.primary_role);
+    const secondaryClass = normKey(data.secondary_class);
+    const secondaryRole  = normKey(data.secondary_role);
 
     // Legacy `role_family` still exists on the staff table; derive it from primary_class
     // so downstream progression logic keeps working. Ranger/Warrior/Mage → hunter (progression path),
@@ -229,6 +236,27 @@ export const upsertStaff = createServerFn({ method: "POST" })
     const derivedFamily: "hunter" | "operational" =
       data.role_family ??
       (primaryClass === "guardian" ? "operational" : "hunter");
+
+    const newRankKey = (data.rank_key?.trim() || "bronze");
+
+    // Detect rank change for promotion history.
+    let priorRank: string | null = null;
+    let priorHistory: any[] = [];
+    if (data.id) {
+      const { data: prior } = await context.supabase
+        .from("staff")
+        .select("current_rank_key, promotion_history")
+        .eq("id", data.id)
+        .maybeSingle();
+      priorRank = prior?.current_rank_key ?? null;
+      priorHistory = Array.isArray(prior?.promotion_history) ? prior!.promotion_history : [];
+    }
+    const rankChanged = data.id ? (priorRank !== newRankKey) : true;
+    const today = new Date().toISOString().slice(0, 10);
+    const promotionDate = data.promotion_date ?? (rankChanged ? today : undefined);
+    const promotionHistory = rankChanged
+      ? [...priorHistory, { rank_key: newRankKey, from_rank_key: priorRank, date: promotionDate ?? today }]
+      : undefined;
 
     const payload: any = {
       id: data.id,
@@ -246,8 +274,10 @@ export const upsertStaff = createServerFn({ method: "POST" })
       branch: data.branch?.trim() || null,
       career_path: data.career_path?.trim() || null,
       shipbuilder_path: data.shipbuilder_path?.trim() || null,
-      current_rank_key: (data.rank_key?.trim() || "bronze"),
+      current_rank_key: newRankKey,
     };
+    if (promotionDate !== undefined) payload.promotion_date = promotionDate;
+    if (promotionHistory !== undefined) payload.promotion_history = promotionHistory;
     if (isDirector) payload.user_id = linkedUserId ?? null;
     if (isDirector) payload.system_role = data.app_role ?? "staff";
     const { data: row, error } = await context.supabase
@@ -255,13 +285,13 @@ export const upsertStaff = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
 
     // Mirror RPG identity (primary + secondary). Secondary is stored but locked.
-    if (row?.id && (primaryClass || primaryRole || data.secondary_class || data.secondary_role)) {
+    if (row?.id && (primaryClass || primaryRole || secondaryClass || secondaryRole)) {
       const rpgPayload: any = {
         staff_id: row.id,
         primary_class: primaryClass,
         primary_role:  primaryRole,
-        secondary_class: data.secondary_class?.trim().toLowerCase() || null,
-        secondary_role:  data.secondary_role?.trim().toLowerCase() || null,
+        secondary_class: secondaryClass,
+        secondary_role:  secondaryRole,
         secondary_unlocked: false,
         // Legacy column kept in sync for older UI that reads `class`.
         class: primaryClass,
@@ -306,7 +336,7 @@ export const deleteStaff = createServerFn({ method: "POST" })
 
 export const transferStaff = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { id: string; manager_id?: string | null; location_id?: string | null; status?: "active" | "inactive" }) => d)
+  .inputValidator((d: { id: string; manager_id?: string | null; location_id?: string | null; status?: string }) => d)
   .handler(async ({ context, data }) => {
     requireDirector(await currentUserRole(context));
     const patch: any = {};
