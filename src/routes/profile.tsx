@@ -201,6 +201,14 @@ function CharacterSheet({ d, isShipbuilder = false }: { d: any; isShipbuilder?: 
     </section>
   );
 }
+function PField({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+  return (
+    <div>
+      <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
+      <div className={`text-sm ${accent ? "text-gold" : "text-foreground"}`}>{value}</div>
+    </div>
+  );
+}
 
 function Stat({ label, value, icon }: { label: string; value: number; icon: string }) {
   return (
