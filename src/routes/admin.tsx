@@ -392,6 +392,8 @@ function StaffForm({ row, managers, accounts, locations, isDirector, onSave, onC
       <Field label="Name"><input className={inputCls} value={d.name} onChange={e => set("name", e.target.value)} required /></Field>
       <Field label="Employee ID"><input className={inputCls} value={d.employee_code ?? ""} onChange={e => set("employee_code", e.target.value)} placeholder="e.g. NAV-0042" /></Field>
       <Field label="Email"><input type="email" className={inputCls} value={d.email ?? ""} onChange={e => set("email", e.target.value)} /></Field>
+      <Field label="Phone"><input className={inputCls} value={d.phone ?? ""} onChange={e => set("phone", e.target.value)} placeholder="e.g. +60 12 345 6789" /></Field>
+      <Field label="Branch"><input className={inputCls} value={d.branch ?? ""} onChange={e => set("branch", e.target.value)} placeholder="e.g. KL · Ting Livehouse" /></Field>
       <Field label="Join Date"><input type="date" className={inputCls} value={d.join_date ?? ""} onChange={e => set("join_date", e.target.value)} /></Field>
 
       {/* Work Identity */}
