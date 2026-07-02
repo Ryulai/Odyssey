@@ -88,7 +88,7 @@ export const getStaffDashboard = createServerFn({ method: "GET" })
     }
 
     const [staffRes, recordsRes, gradesRes, evalRes, legacyCfg, legacyTitles, claimsRes, holdingsRes] = await Promise.all([
-      context.supabase.from("staff").select("*").eq("id", staffId).maybeSingle(),
+      context.supabase.from("staff").select("*, location:locations(id, name, code)").eq("id", staffId).maybeSingle(),
       context.supabase
         .from("achievement_records")
         .select("*, achievement:achievements(name, star_reward, type)")

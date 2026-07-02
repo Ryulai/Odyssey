@@ -123,22 +123,46 @@ function LinkedHome({ d }: { d: any }) {
             >
               {isShipbuilder ? "⚓" : initials}
             </div>
-            <div>
+            <div className="flex-1">
               <div className="text-[10px] uppercase tracking-[0.25em] text-gold">{legacyTitle}</div>
-              <h1 className="font-display text-2xl text-foreground sm:text-3xl">{s.name}</h1>
-              <p className="text-sm text-muted-foreground capitalize">
-                {s.role || "—"}
-                {s.rpg?.primary_class && <> · <span className="text-foreground">{classLabel(s.rpg.primary_class)}</span></>}
-                {s.rpg?.primary_role && <> · <span className="text-gold">{roleLabel(s.rpg.primary_role)}</span></>}
-                {" · "}
-                <span className="text-foreground normal-case">{isShipbuilder ? "System Builder" : (rankName.replace(" Hunter", "") || "Bronze")}</span>
-              </p>
+              <div className="font-display text-lg text-foreground/80">{s.name}</div>
+
+              {/* 1. Rank — largest */}
+              <div className="mt-1 font-display text-3xl leading-tight text-foreground">
+                {isShipbuilder ? "⚓ Beyond Rank" : `${rankGly} ${rankName}`}
+              </div>
+              {!isShipbuilder && rankIdent && (
+                <div className="text-sm italic text-muted-foreground">"{rankIdent}"</div>
+              )}
+              {isShipbuilder && (
+                <div className="text-sm italic text-gold/80">Charts the course. Builds the ship.</div>
+              )}
+
+              {/* 2. Primary Class & Role */}
+              {(s.rpg?.primary_class || s.rpg?.primary_role) && (
+                <div className="mt-2 text-sm text-foreground">
+                  {classLabel(s.rpg.primary_class)}
+                  {s.rpg?.primary_role && <> · <span className="text-gold">{roleLabel(s.rpg.primary_role)}</span></>}
+                </div>
+              )}
+
+              {/* 3. Business Unit */}
+              <div className="mt-1 text-xs uppercase tracking-widest text-muted-foreground">
+                {s.business_unit || "—"}
+              </div>
+
+              {/* 4. Fleet */}
+              {s.location?.name && (
+                <div className="mt-0.5 text-xs text-muted-foreground">{s.location.name}</div>
+              )}
+
+              {/* 5. Manager */}
               {!isShipbuilder ? (
-                <p className="mt-1 text-xs text-muted-foreground">
+                <div className="mt-1 text-xs text-muted-foreground">
                   Manager: <span className="text-foreground">{s.manager?.name ?? "Unassigned"}</span>
-                </p>
+                </div>
               ) : (
-                <p className="mt-1 text-xs italic text-gold/80">Charts the course. Builds the ship. Beyond rank.</p>
+                <div className="mt-1 text-xs italic text-gold/80">Beyond rank · Director</div>
               )}
             </div>
           </div>
@@ -152,7 +176,7 @@ function LinkedHome({ d }: { d: any }) {
               </>
             ) : (
               <>
-                <MiniStat label="Rank" value={`${rankGly} ${rankName.replace(" Hunter", "")}`.trim()} sub={rankIdent || rankSub} color={rankColor} />
+                <MiniStat label="Guild ID" value={s.guild_id ?? "—"} sub="Permanent Record" color="var(--color-gold)" />
                 <MiniStat label="This Month" value={`Grade ${latestGrade}`} sub={gradeMeta?.label ?? "no review yet"} color={gradeMeta?.color ?? "var(--color-muted-foreground)"} />
                 {isHunter
                   ? <MiniStat label="Legacy" value={`${totals.stars}★`} sub={`${totals.moons}🌙 · ${totals.suns}☀️`} color="var(--color-gold)" />
