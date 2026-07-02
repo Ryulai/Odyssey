@@ -176,7 +176,7 @@ const DEPARTMENTS = ["Management", "Sales", "Operations", "Marketing", "Service"
 type StaffRow = {
   id: string; name: string; email: string | null; role: string;
   role_family: "hunter" | "operational"; department: string; manager_id: string | null;
-  status: "active" | "inactive"; user_id: string | null; app_role?: "director" | "manager" | "staff" | null;
+  status: string; user_id: string | null; app_role?: "director" | "manager" | "staff" | null;
   location_id?: string | null;
   employee_code?: string | null; join_date?: string | null;
   phone?: string | null; branch?: string | null;
