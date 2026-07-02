@@ -48,13 +48,13 @@ export const TEMPORARY_ROLES = new Set<string>([
 ]);
 
 export const RANKS = [
-  { key: "bronze",    label: "Bronze",    unlocked: true  },
-  { key: "silver",    label: "Silver",    unlocked: false },
-  { key: "gold",      label: "Gold",      unlocked: false },
-  { key: "platinum",  label: "Platinum",  unlocked: false },
-  { key: "diamond",   label: "Diamond",   unlocked: false },
-  { key: "mystical",  label: "Mystical",  unlocked: false },
-  { key: "legend",    label: "Legend",    unlocked: false },
+  { key: "bronze",    label: "Bronze",    glyph: "🥉", identity: "I Can Do It.",                     unlocked: true  },
+  { key: "silver",    label: "Silver",    glyph: "🥈", identity: "You Can Trust Me.",                unlocked: false },
+  { key: "gold",      label: "Gold",      glyph: "🥇", identity: "I Can Help Others Grow.",          unlocked: false },
+  { key: "platinum",  label: "Platinum",  glyph: "◆",  identity: "I Set The Standard.",              unlocked: false },
+  { key: "diamond",   label: "Diamond",   glyph: "💎", identity: "I Shape The Craft.",               unlocked: false },
+  { key: "mystical",  label: "Mystical",  glyph: "✦",  identity: "I Guide The Fleet.",               unlocked: false },
+  { key: "legend",    label: "Legend",    glyph: "☀",  identity: "My Story Guides The Next Voyage.", unlocked: false },
 ] as const;
 
 // Lifecycle states for a crew member. Stored as free text in the DB; the UI
