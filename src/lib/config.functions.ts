@@ -138,8 +138,17 @@ export const listStaff = createServerFn({ method: "GET" })
       }
     }
 
+    // Load RPG identity for all listed staff (class / role / secondary).
+    const { data: rpgRows, error: rpgErr } = ids.length
+      ? await context.supabase.from("rpg_identity").select("*").in("staff_id", ids)
+      : { data: [], error: null } as any;
+    if (rpgErr) throw new Error(rpgErr.message);
+    const rpgMap = new Map<string, any>();
+    for (const r of (rpgRows ?? []) as any[]) rpgMap.set(r.staff_id, r);
+
     return rows.map((s: any) => {
       const ev: any = evalMap.get(s.id) ?? null;
+      const rpg = rpgMap.get(s.id) ?? null;
       return {
         ...s,
         app_role: s.user_id ? (roleLookup.get(s.user_id) ?? s.system_role ?? null) : (s.system_role ?? null),
@@ -147,6 +156,11 @@ export const listStaff = createServerFn({ method: "GET" })
         latest_grade: gradeMap.get(s.id) ?? null,
         promotion_ready: !!ev?.eligible,
         promotion_next_rank_name: ev?.next_rank_name ?? null,
+        primary_class:      rpg?.primary_class ?? null,
+        primary_role:       rpg?.primary_role  ?? null,
+        secondary_class:    rpg?.secondary_class ?? null,
+        secondary_role:     rpg?.secondary_role  ?? null,
+        secondary_unlocked: rpg?.secondary_unlocked ?? false,
       };
     });
   });
