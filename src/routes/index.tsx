@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useRole, ROLE_META, can, useAuth } from "@/lib/roles";
 import { AuthGate } from "@/components/auth-gate";
 import { getStaffDashboard } from "@/lib/workflow.functions";
-import { classLabel, roleLabel, rankIdentity, rankGlyph } from "@/lib/rpg";
+import { classLabel, roleLabel, rankIdentity, rankGlyph, rankLabel, factionFor } from "@/lib/rpg";
 import { GRADE_META, type Grade } from "@/lib/employee-data";
 
 export const Route = createFileRoute("/")({
@@ -70,8 +70,8 @@ function LinkedHome({ d }: { d: any }) {
   const isShipbuilder = role === "director";
   const totals = d.totals ?? { stars: 0, moons: 0, suns: 0 };
   const latestGrade = d.grades?.[0]?.grade ?? "—";
-  const rankName = s.rank?.name ?? d.evaluation?.current_rank_name ?? "Unranked";
   const rankKey  = s.current_rank_key ?? s.rpg?.rank_key ?? s.rank?.key ?? null;
+  const rankName = rankLabel(rankKey) || s.rank?.name || d.evaluation?.current_rank_name || "Unranked";
   const rankIdent = rankIdentity(rankKey);
   const rankGly   = rankGlyph(rankKey);
   const rankColor = isShipbuilder ? "var(--color-gold)" : (s.rank?.color ?? "var(--color-gold)");
@@ -80,8 +80,18 @@ function LinkedHome({ d }: { d: any }) {
     .split(/\s+/).filter(Boolean).slice(0, 2).map((w: string) => w[0]?.toUpperCase()).join("") || "—";
   const legacyTitle = isShipbuilder ? "The Shipbuilder" : (d.legacy?.currentTitle?.name ?? "Wanderer");
 
+  const classKey = s.rpg?.primary_class ?? null;
+  const roleKey  = s.rpg?.primary_role ?? null;
+  const className   = classLabel(classKey);
+  const roleName    = roleLabel(roleKey);
+  const faction     = factionFor(classKey);
+  // Page title combines Rank + Role (e.g. "Bronze Hunter"). Falls back to rank name only.
+  const heroTitle = isShipbuilder
+    ? "⚓ Beyond Rank"
+    : `${rankGly ? rankGly + " " : ""}${rankName}${roleName ? " " + roleName : ""}`;
+
   // Secondary class unlocks at Gold; use current rank ordering from RPG data if available.
-  const goldOrHigher = /gold|black|legend|beyond/i.test(rankName);
+  const goldOrHigher = /gold|platinum|diamond|black|mystical|legend|beyond/i.test(rankName);
   const secondaryUnlocked = goldOrHigher && Boolean(s.rpg?.secondary_class);
 
   return (
@@ -104,8 +114,9 @@ function LinkedHome({ d }: { d: any }) {
               <div className="text-[10px] uppercase tracking-[0.25em] text-gold">{legacyTitle}</div>
               <div className="font-display text-lg text-foreground/80">{s.name}</div>
 
+              {/* Hero title = Rank + Class-role (e.g. "Bronze Hunter") */}
               <div className="mt-1 font-display text-3xl leading-tight text-foreground">
-                {isShipbuilder ? "⚓ Beyond Rank" : `${rankGly} ${rankName}`}
+                {heroTitle}
               </div>
               {!isShipbuilder && rankIdent && (
                 <div className="text-sm italic text-muted-foreground">"{rankIdent}"</div>
@@ -114,36 +125,27 @@ function LinkedHome({ d }: { d: any }) {
                 <div className="text-sm italic text-gold/80">Charts the course. Builds the ship.</div>
               )}
 
-              {(s.rpg?.primary_class || s.rpg?.primary_role) && (
-                <div className="mt-2 text-sm text-foreground">
-                  {classLabel(s.rpg.primary_class)}
-                  {s.rpg?.primary_role && <> · <span className="text-gold">{roleLabel(s.rpg.primary_role)}</span></>}
+              {/* Faction — small subtitle badge, never larger than Class */}
+              {faction && !isShipbuilder && (
+                <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-gold/30 bg-gold/5 px-2.5 py-0.5 text-[10px] uppercase tracking-widest text-gold/90">
+                  <span>{faction.glyph}</span>
+                  <span>{faction.label}</span>
                 </div>
               )}
 
-              <div className="mt-2">
-                <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Business Unit</div>
-                <div className="text-sm text-foreground">{s.business_unit || "—"}</div>
+              {/* Ordered identity fields: Profession · Class · Rank · Business Unit · Fleet · Manager */}
+              <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <IdField label="Profession"    value={s.profession || s.job_title || roleName || "—"} />
+                <IdField label="Class"         value={className || "—"} />
+                <IdField label="Rank"          value={rankName} accent />
+                <IdField label="Business Unit" value={s.business_unit || "—"} />
+                {s.location?.name && <IdField label="Fleet" value={s.location.name} />}
+                {!isShipbuilder ? (
+                  <IdField label="Manager" value={s.manager?.name ?? "Unassigned"} />
+                ) : (
+                  <IdField label="Role" value="Director · Beyond Rank" accent />
+                )}
               </div>
-
-              {s.location?.name && (
-                <div className="mt-2">
-                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Fleet</div>
-                  <div className="text-sm text-foreground">{s.location.name}</div>
-                </div>
-              )}
-
-              {!isShipbuilder ? (
-                <div className="mt-2">
-                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Manager</div>
-                  <div className="text-sm text-foreground">{s.manager?.name ?? "Unassigned"}</div>
-                </div>
-              ) : (
-                <div className="mt-2">
-                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Role</div>
-                  <div className="text-sm text-gold/80">Director · Beyond Rank</div>
-                </div>
-              )}
 
               <div className="mt-3">
                 <div className="text-[9px] uppercase tracking-widest text-muted-foreground/50">Guild ID</div>
@@ -261,6 +263,15 @@ function LinkedHome({ d }: { d: any }) {
   );
 }
 
+function IdField({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+  return (
+    <div>
+      <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
+      <div className={`text-sm ${accent ? "text-gold" : "text-foreground"}`}>{value}</div>
+    </div>
+  );
+}
+
 function MiniStat({ label, value, sub, color }: { label: string; value: string; sub: string; color: string }) {
   return (
     <div className="rounded-md border border-border bg-ink/50 p-3 text-center">
@@ -358,20 +369,22 @@ function PromotionProgress({ d }: { d: any }) {
   const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
 
   const currentRankKey = ev.current_rank_key ?? s.current_rank_key ?? null;
-  const currentRankName = ev.current_rank_name ?? "Unranked";
+  const currentRankName = rankLabel(currentRankKey) || ev.current_rank_name || "Unranked";
+  const nextRankKey = ev.next_rank_key ?? null;
+  const nextRankName = rankLabel(nextRankKey) || ev.next_rank_name || nextRank;
   const currentRankGlyph = rankGlyph(currentRankKey);
 
   return (
     <section className="card-ornate-gold p-8 sm:p-10">
       <div className="text-center">
         <div className="text-[10px] uppercase tracking-[0.3em] text-gold">Ascension</div>
-        <h2 className="mt-2 font-display text-2xl text-foreground sm:text-3xl">Promotion Journey — {nextRank}</h2>
+        <h2 className="mt-2 font-display text-2xl text-foreground sm:text-3xl">Promotion Journey — {nextRankName}</h2>
       </div>
 
       <div className="mt-8">
         <div className="flex items-center justify-between">
           <span className="font-display text-sm text-foreground">{currentRankGlyph} {currentRankName}</span>
-          <span className="font-display text-sm text-gold">{nextRank}</span>
+          <span className="font-display text-sm text-gold">{nextRankName}</span>
         </div>
         <div className="relative mt-3 h-2 w-full overflow-visible rounded-full bg-ink/60">
           <div

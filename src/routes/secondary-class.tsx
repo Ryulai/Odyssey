@@ -5,7 +5,7 @@ export const Route = createFileRoute("/secondary-class")({
   head: () => ({
     meta: [
       { title: "Secondary Class — The Odyssey Guide" },
-      { name: "description", content: "Your second profession — its own performance, ranking, and promotion history, tracked independently from your Class." },
+      { name: "description", content: "Your Secondary Class — an independent second Class with its own Monthly Performance, Ranking, and Promotion Journey." },
     ],
   }),
   component: () => <AuthGate><SecondaryClassPage /></AuthGate>,
@@ -14,7 +14,7 @@ export const Route = createFileRoute("/secondary-class")({
 // ─── Placeholder data (System 3) ───────────────────────────────────
 const SECONDARY = {
   unlocked: false,
-  unlockRank: "Gold Hunter",
+  unlockRank: "Gold",
   chosenClass: null as string | null,
   chosenRole: null as string | null,
 };
@@ -30,7 +30,7 @@ function SecondaryClassPage() {
               Secondary Class
             </div>
             <div className="text-xs text-muted-foreground">
-              System 3 · A complete second profession
+              System 3 · An independent second Class
             </div>
           </div>
           <Link
@@ -47,14 +47,14 @@ function SecondaryClassPage() {
             About This System
           </div>
           <p className="mt-3 text-sm text-foreground/90">
-            Your Secondary Class is an <span className="text-gold">independent second profession</span>.
-            It has its own <span className="text-gold">Performance</span>, its own{" "}
-            <span className="text-gold">Ranking</span>, its own promotion history, and its own progression —
-            calculated the same way as your Class, but tracked separately.
+            Your Secondary Class is an <span className="text-gold">independent second Class</span>.
+            It has its own <span className="text-gold">Monthly Performance</span>, its own{" "}
+            <span className="text-gold">Ranking</span>, its own <span className="text-gold">Promotion Journey</span>,
+            and its own records. It follows exactly the same systems as your main Class while remaining completely independent.
           </p>
           <p className="mt-3 text-xs italic text-muted-foreground">
             Example: Class · Vanguard  |  Secondary Class · Battle Mage. Both have their own rank,
-            grade, promotions, and records. Future voyages will support multiple secondaries.
+            grade, promotions, and records. Future versions will support multiple Secondary Classes.
           </p>
         </section>
 
@@ -67,10 +67,10 @@ function SecondaryClassPage() {
             <div className="mt-5 font-display text-xl text-gold">Locked</div>
             <p className="mt-2 text-sm text-muted-foreground">
               Your Secondary Class unlocks at{" "}
-              <span className="text-gold">{SECONDARY.unlockRank}</span> in your Class.
+              <span className="text-gold">{SECONDARY.unlockRank}</span> Rank in your Class.
             </p>
             <p className="mt-1 text-[11px] italic text-muted-foreground">
-              Master your first profession before beginning your second journey.
+              Every great adventurer first masters one Class before walking another path.
             </p>
 
             <div className="mx-auto mt-6 max-w-md rounded-lg border border-border/60 bg-ink/40 p-4 text-left">
@@ -78,10 +78,10 @@ function SecondaryClassPage() {
                 What unlocks
               </div>
               <ul className="mt-2 space-y-1.5 text-xs text-foreground/90">
-                <li>◇ Choose a second class and role</li>
+                <li>◇ Choose a second Class and role</li>
                 <li>◇ Independent Monthly Performance (System 1)</li>
                 <li>◇ Independent Rank progression (System 2)</li>
-                <li>◇ Separate promotion history & records</li>
+                <li>◇ Separate Promotion Journey &amp; records</li>
               </ul>
             </div>
 

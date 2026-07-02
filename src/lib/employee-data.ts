@@ -1,10 +1,10 @@
 export type Grade = "A" | "B" | "C" | "D";
 
 export const GRADE_META: Record<Grade, { label: string; tagline: string; color: string }> = {
-  A: { label: "Full Sail", tagline: "Excellent Performance", color: "var(--color-grade-a)" },
-  B: { label: "Steady Voyage", tagline: "Good Performance", color: "var(--color-grade-b)" },
-  C: { label: "On Course", tagline: "Basic Requirement Achieved", color: "var(--color-grade-c)" },
-  D: { label: "Adrift", tagline: "Needs Improvement", color: "var(--color-grade-d)" },
+  A: { label: "Outstanding", tagline: "A voyage worthy of song.",              color: "var(--color-grade-a)" },
+  B: { label: "Reliable",    tagline: "Steady hands, steady sails.",           color: "var(--color-grade-b)" },
+  C: { label: "Developing",  tagline: "Winds shifting — adjust the course.",   color: "var(--color-grade-c)" },
+  D: { label: "Recovery",    tagline: "Return to harbor. Rebuild. Sail again.",color: "var(--color-grade-d)" },
 };
 
 export type RankKey =

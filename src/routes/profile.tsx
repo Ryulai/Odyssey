@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AuthGate } from "@/components/auth-gate";
 import { getStaffDashboard } from "@/lib/workflow.functions";
 import { GRADE_META } from "@/lib/employee-data";
-import { classLabel, roleLabel, rankIdentity, rankGlyph } from "@/lib/rpg";
+import { classLabel, roleLabel, rankIdentity, rankGlyph, rankLabel, factionFor } from "@/lib/rpg";
 
 
 
@@ -127,7 +127,15 @@ function CharacterSheet({ d, isShipbuilder = false }: { d: any; isShipbuilder?: 
   const rankKey = s.current_rank_key ?? s.rpg?.current_rank_key ?? s.rank?.key ?? null;
   const rankIdent = rankIdentity(rankKey);
   const rankGly = rankGlyph(rankKey);
-  const rankName = s.rank?.name ?? ev?.current_rank_name ?? "Unranked";
+  const rankName = rankLabel(rankKey) || s.rank?.name || ev?.current_rank_name || "Unranked";
+  const classKey = s.rpg?.primary_class ?? null;
+  const roleKey  = s.rpg?.primary_role ?? null;
+  const className = classLabel(classKey);
+  const roleName = roleLabel(roleKey);
+  const faction = factionFor(classKey);
+  const heroTitle = isShipbuilder
+    ? "⚓ Beyond Rank"
+    : `${rankGly ? rankGly + " " : ""}${rankName}${roleName ? " " + roleName : ""}`;
   return (
     <section className="rounded-md border border-gold/30 bg-gradient-to-br from-ink/60 to-ink/30 p-6">
       <div>
@@ -136,9 +144,9 @@ function CharacterSheet({ d, isShipbuilder = false }: { d: any; isShipbuilder?: 
         )}
         <div className="font-display text-lg text-foreground/80">{s.name}</div>
 
-        {/* 1. Rank — largest */}
+        {/* Hero title = Rank + Class-role (e.g. "Bronze Hunter") */}
         <div className="mt-1 font-display text-3xl leading-tight text-gold">
-          {isShipbuilder ? "⚓ Beyond Rank" : `${rankGly} ${rankName}`}
+          {heroTitle}
         </div>
         {!isShipbuilder && rankIdent && (
           <div className="text-sm italic text-muted-foreground">"{rankIdent}"</div>
@@ -147,38 +155,28 @@ function CharacterSheet({ d, isShipbuilder = false }: { d: any; isShipbuilder?: 
           <div className="text-sm italic text-gold/80">Charts the course. Builds the ship.</div>
         )}
 
-        {/* 2. Primary Class & Role */}
-        {(s.rpg?.primary_class || s.rpg?.primary_role) && (
-          <div className="mt-2 text-sm text-foreground">
-            {classLabel(s.rpg.primary_class)}
-            {s.rpg?.primary_role && <> · <span className="text-gold">{roleLabel(s.rpg.primary_role)}</span></>}
+        {/* Faction (small badge) */}
+        {faction && !isShipbuilder && (
+          <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-gold/30 bg-gold/5 px-2.5 py-0.5 text-[10px] uppercase tracking-widest text-gold/90">
+            <span>{faction.glyph}</span><span>{faction.label}</span>
           </div>
         )}
 
-        {/* 3. Business Unit */}
-        <div className="mt-1 text-xs uppercase tracking-widest text-muted-foreground">
-          {s.business_unit || "—"}
+        {/* Ordered identity: Profession · Class · Rank · Business Unit · Fleet · Manager */}
+        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <PField label="Profession"    value={s.profession || s.job_title || roleName || "—"} />
+          <PField label="Class"         value={className || "—"} />
+          <PField label="Rank"          value={rankName} accent />
+          <PField label="Business Unit" value={s.business_unit || "—"} />
+          {s.location?.name && <PField label="Fleet" value={s.location.name} />}
+          {!isShipbuilder && <PField label="Manager" value={s.manager?.name ?? "Unassigned"} />}
         </div>
 
-        {/* 4. Fleet */}
-        {s.location?.name && (
-          <div className="mt-0.5 text-xs text-muted-foreground">{s.location.name}</div>
-        )}
-
-        {/* 5. Manager */}
-        {!isShipbuilder ? (
-          <div className="mt-1 text-[11px] text-muted-foreground">
-            Manager: <span className="text-foreground">{s.manager?.name ?? "Unassigned"}</span>
-            {s.email && <> · {s.email}</>}
-          </div>
-        ) : (
-          <div className="mt-1 text-[11px] text-muted-foreground">{s.email}</div>
-        )}
-        {(s.phone || s.branch) && !isShipbuilder && (
-          <div className="mt-1 text-[11px] text-muted-foreground">
-            {s.branch && <>Branch: <span className="text-foreground">{s.branch}</span></>}
-            {s.branch && s.phone && " · "}
-            {s.phone && <>Phone: <span className="text-foreground">{s.phone}</span></>}
+        {(s.email || s.phone || s.branch) && (
+          <div className="mt-2 text-[11px] text-muted-foreground">
+            {s.email && <>{s.email}</>}
+            {s.branch && <> · Branch: <span className="text-foreground">{s.branch}</span></>}
+            {s.phone && <> · Phone: <span className="text-foreground">{s.phone}</span></>}
           </div>
         )}
       </div>
@@ -201,6 +199,14 @@ function CharacterSheet({ d, isShipbuilder = false }: { d: any; isShipbuilder?: 
         </>
       )}
     </section>
+  );
+}
+function PField({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+  return (
+    <div>
+      <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
+      <div className={`text-sm ${accent ? "text-gold" : "text-foreground"}`}>{value}</div>
+    </div>
   );
 }
 
