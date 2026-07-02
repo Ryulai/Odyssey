@@ -336,7 +336,7 @@ export const deleteStaff = createServerFn({ method: "POST" })
 
 export const transferStaff = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { id: string; manager_id?: string | null; location_id?: string | null; status?: "active" | "inactive" }) => d)
+  .inputValidator((d: { id: string; manager_id?: string | null; location_id?: string | null; status?: string }) => d)
   .handler(async ({ context, data }) => {
     requireDirector(await currentUserRole(context));
     const patch: any = {};
