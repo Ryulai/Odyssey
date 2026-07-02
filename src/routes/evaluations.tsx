@@ -31,7 +31,7 @@ function EvaluationsPage() {
   const { role } = useRole();
   const canWrite = can(role, "evaluations.write");
   const qc = useQueryClient();
-  const { data: staff = [] } = useQuery({ queryKey: ["staff"], queryFn: () => listStaff() });
+  const { data: staff = [] } = useQuery({ queryKey: ["staff"], queryFn: () => listStaff(), enabled: canWrite });
   const { data: cfg } = useQuery({ queryKey: ["grades"], queryFn: () => getGradeConfig() });
   const { data: evals = [], isLoading } = useQuery({ queryKey: ["evaluations"], queryFn: () => listEvaluations() });
 
