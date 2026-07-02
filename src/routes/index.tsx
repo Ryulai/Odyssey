@@ -297,40 +297,6 @@ function PromotionProgress({ d }: { d: any }) {
   );
 }
 
-function RequirementCard({
-  label, value, hint, progress, icon, accent, statusOk,
-}: {
-  label: string; value: string; hint: string; progress: number;
-  icon: string; accent?: string; statusOk?: boolean;
-}) {
-  const color = accent ?? "var(--color-gold)";
-  return (
-    <div className="relative flex flex-col rounded-lg border border-border bg-ink/40 p-5">
-      <div className="flex items-center justify-between">
-        <span className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">{label}</span>
-        <span className="font-display text-lg" style={{ color }}>{icon}</span>
-      </div>
-      <div className="mt-3 font-display text-xl" style={{ color }}>{value}</div>
-      <div className="mt-1 min-h-[2.5rem] text-[11px] leading-snug text-muted-foreground">{hint}</div>
-      <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-ink">
-        <div
-          className="h-full rounded-full transition-all"
-          style={{
-            width: `${Math.max(0, Math.min(100, progress))}%`,
-            background: color,
-            boxShadow: `0 0 10px -2px ${color}`,
-          }}
-        />
-      </div>
-      {statusOk && (
-        <span className="mt-3 inline-flex w-fit items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-400/10 px-2 py-0.5 text-[10px] uppercase tracking-widest text-emerald-300">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]" />
-          Eligible
-        </span>
-      )}
-    </div>
-  );
-}
 
 
 /* ----------------------------- Header ----------------------------- */
