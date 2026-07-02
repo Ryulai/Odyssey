@@ -15,23 +15,24 @@ export const Route = createFileRoute("/career")({
 const HEADER = {
   name: "Ryu Lai",
   profession: "Sales Ambassador",
-  className: "Ranger · Hunter",
-  rank: "Bronze Hunter",
+  faction: "🏹 Ranger Guild",
+  className: "Hunter",
+  rank: "Bronze",
   businessUnit: "Sales",
   tagline: "I Can Do It.",
 };
 
 const PERFORMANCE = {
   grade: "B" as "A" | "B" | "C" | "D",
-  gradeLabel: "Consistent",
+  gradeLabel: "Reliable",
   score: 82,
   month: "November 2026",
   summary: "Steady voyage this month. Sales and attendance held strong; teamwork trending upward. One SOP note pending Captain review.",
 };
 
 const RANKING = {
-  current: "Bronze Hunter",
-  next: "Silver Hunter",
+  current: "Bronze",
+  next: "Silver",
   journeyPct: 62,
   requirements: [
     { label: "Tenure at rank",       current: "4 mo",  target: "6 mo",  done: false },
@@ -44,12 +45,12 @@ const RANKING = {
 };
 
 const JOURNEY = [
-  { key: "apprentice", name: "Apprentice",     glyph: "⚓" },
-  { key: "bronze",     name: "Bronze Hunter",  glyph: "🥉" },
-  { key: "silver",     name: "Silver Hunter",  glyph: "🥈" },
-  { key: "gold",       name: "Gold Hunter",    glyph: "🥇" },
-  { key: "black",      name: "Black Hunter",   glyph: "🖤" },
-  { key: "legend",     name: "Legend",         glyph: "☀" },
+  { key: "apprentice", name: "Apprentice", glyph: "⚓" },
+  { key: "bronze",     name: "Bronze",     glyph: "🥉" },
+  { key: "silver",     name: "Silver",     glyph: "🥈" },
+  { key: "gold",       name: "Gold",       glyph: "🥇" },
+  { key: "black",      name: "Black",      glyph: "🖤" },
+  { key: "legend",     name: "Legend",     glyph: "☀" },
 ];
 const CURRENT_KEY = "bronze";
 
@@ -57,7 +58,7 @@ const STATS = {
   yearsServed: "2y 3m",
   totalPromotions: 2,
   currentLegacy: "3 ★ · 0 ☾ · 0 ☀",
-  careerStarted: "Aug 2024",
+  classStarted: "Aug 2024",
 };
 
 const gradeReqDone = RANKING.requirements.filter(r => r.done).length;
@@ -86,7 +87,7 @@ function CareerPage() {
           </Link>
         </header>
 
-        {/* 1 · CAREER HEADER */}
+        {/* 1 · CLASS HEADER */}
         <section className="relative overflow-hidden rounded-2xl border border-gold/25 bg-ink/40 p-8">
           <div
             className="pointer-events-none absolute inset-0 opacity-[0.05]"
@@ -94,15 +95,18 @@ function CareerPage() {
           />
           <div className="relative">
             <div className="text-[10px] uppercase tracking-[0.4em] text-muted-foreground">
-              Career Profile
+              Class Profile
             </div>
             <div className="mt-3 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <div className="font-display text-3xl text-foreground">{HEADER.name}</div>
                 <div className="mt-1 text-sm italic text-gold/80">"{HEADER.tagline}"</div>
+                <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-gold/30 bg-gold/5 px-2.5 py-0.5 text-[10px] uppercase tracking-widest text-gold/90">
+                  {HEADER.faction}
+                </div>
               </div>
               <div className="rounded-md border border-gold/30 bg-gold/5 px-3 py-1.5 text-[10px] uppercase tracking-widest text-gold">
-                {HEADER.rank}
+                {HEADER.rank} {HEADER.className}
               </div>
             </div>
 
@@ -177,7 +181,7 @@ function CareerPage() {
                 </div>
               </div>
               <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                Career
+                Class
               </div>
             </div>
 
@@ -237,11 +241,11 @@ function CareerPage() {
           </section>
         </div>
 
-        {/* 4 · CAREER JOURNEY */}
+        {/* 4 · CLASS JOURNEY */}
         <section className="mt-6 rounded-xl border border-border bg-ink/30 p-6 sm:p-8">
           <div className="mb-6 flex items-baseline justify-between">
             <div className="font-display text-xs uppercase tracking-[0.3em] text-gold">
-              Career Journey
+              Class Journey
             </div>
             <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
               Rank Timeline
@@ -297,11 +301,11 @@ function CareerPage() {
           </ol>
         </section>
 
-        {/* 5 · CAREER STATISTICS */}
+        {/* 5 · CLASS STATISTICS */}
         <section className="mt-6 rounded-xl border border-border bg-ink/30 p-6 sm:p-8">
           <div className="mb-6 flex items-baseline justify-between">
             <div className="font-display text-xs uppercase tracking-[0.3em] text-gold">
-              Career Statistics
+              Class Statistics
             </div>
             <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
               Lifetime
@@ -312,7 +316,7 @@ function CareerPage() {
             <StatCard label="Years Served"     value={STATS.yearsServed} />
             <StatCard label="Total Promotions" value={String(STATS.totalPromotions)} />
             <StatCard label="Current Legacy"   value={STATS.currentLegacy} />
-            <StatCard label="Career Started"   value={STATS.careerStarted} />
+            <StatCard label="Class Started"    value={STATS.classStarted} />
           </div>
         </section>
 
