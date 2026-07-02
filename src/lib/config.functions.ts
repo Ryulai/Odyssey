@@ -191,7 +191,7 @@ export const upsertStaff = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: {
     id?: string; name: string; email?: string | null; role: string;
-    role_family?: "hunter" | "operational"; department: string; manager_id?: string | null;
+    role_family?: "hunter" | "operational"; business_unit: string; manager_id?: string | null;
     status?: string; user_id?: string | null; app_role?: AppRole | null;
     location_id?: string | null;
     employee_code?: string | null; join_date?: string | null;
@@ -264,7 +264,7 @@ export const upsertStaff = createServerFn({ method: "POST" })
       email: data.email?.trim().toLowerCase() || null,
       role: data.role,
       role_family: derivedFamily,
-      department: data.department,
+      business_unit: data.business_unit,
       manager_id: actorRole === "manager" ? actorStaffId : (data.manager_id || null),
       status: data.status ?? "active",
       location_id: data.location_id ?? null,
