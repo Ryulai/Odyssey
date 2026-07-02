@@ -122,7 +122,13 @@ function LinkedHome({ d }: { d: any }) {
             <div>
               <div className="text-[10px] uppercase tracking-[0.25em] text-gold">{legacyTitle}</div>
               <h1 className="font-display text-2xl text-foreground sm:text-3xl">{s.name}</h1>
-              <p className="text-sm text-muted-foreground">{s.role} · {s.department ?? "—"} · {isShipbuilder ? "System Builder" : (isHunter ? "Hunter Path" : "Operational Path")}</p>
+              <p className="text-sm text-muted-foreground capitalize">
+                {s.role || "—"}
+                {s.rpg?.primary_class && <> · <span className="text-foreground">{s.rpg.primary_class}</span></>}
+                {s.rpg?.primary_role && <> · <span className="text-gold">{s.rpg.primary_role}</span></>}
+                {" · "}
+                <span className="text-foreground normal-case">{isShipbuilder ? "System Builder" : (rankName.replace(" Hunter", "") || "Bronze")}</span>
+              </p>
               {!isShipbuilder ? (
                 <p className="mt-1 text-xs text-muted-foreground">
                   Manager: <span className="text-foreground">{s.manager?.name ?? "Unassigned"}</span>

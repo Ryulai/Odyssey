@@ -15,6 +15,7 @@ import {
 import {
   listLegacyHoldings, upsertLegacyHolding, deleteLegacyHolding,
 } from "@/lib/legacy.functions";
+import { PRIMARY_CLASSES, CLASS_ROLES, TEMPORARY_ROLES, RANKS, titleCase, type PrimaryClass } from "@/lib/rpg";
 
 
 export const Route = createFileRoute("/admin")({
@@ -178,7 +179,13 @@ type StaffRow = {
   status: "active" | "inactive"; user_id: string | null; app_role?: "director" | "manager" | "staff" | null;
   location_id?: string | null;
   employee_code?: string | null; join_date?: string | null;
+  phone?: string | null; branch?: string | null;
   career_path?: string | null; shipbuilder_path?: string | null;
+  // Sprint 1 — RPG hierarchy
+  primary_class?: string | null; primary_role?: string | null;
+  secondary_class?: string | null; secondary_role?: string | null;
+  secondary_unlocked?: boolean;
+  rank_key?: string | null;
   total_stars?: number; latest_grade?: string | null;
   promotion_ready?: boolean; promotion_next_rank_name?: string | null;
 };
@@ -201,7 +208,10 @@ function StaffModule() {
   const blank: StaffRow = {
     id: "", name: "", email: "", role: "", role_family: "hunter", department: "Sales",
     manager_id: null, status: "active", user_id: null, app_role: "staff", location_id: null,
-    employee_code: "", join_date: "", career_path: "", shipbuilder_path: "",
+    employee_code: "", join_date: "", phone: "", branch: "", career_path: "", shipbuilder_path: "",
+    primary_class: "ranger", primary_role: "hunter",
+    secondary_class: null, secondary_role: null, secondary_unlocked: false,
+    rank_key: "bronze",
   };
 
   return (
@@ -214,7 +224,8 @@ function StaffModule() {
                 <th className="py-2 pr-3">Name</th>
                 <th className="py-2 pr-3">Emp ID</th>
                 <th className="py-2 pr-3">Role</th>
-                <th className="py-2 pr-3">Path</th>
+                <th className="py-2 pr-3">Class · Role</th>
+                <th className="py-2 pr-3">Rank</th>
                 <th className="py-2 pr-3">Fleet</th>
                 <th className="py-2 pr-3">Manager</th>
                 <th className="py-2 pr-3">Joined</th>
@@ -235,7 +246,14 @@ function StaffModule() {
                   <td className="py-2 pr-3 text-muted-foreground">{s.employee_code ?? "—"}</td>
                   <td className="py-2 pr-3 text-muted-foreground">{s.role}</td>
                   <td className="py-2 pr-3 text-muted-foreground capitalize">
-                    {s.role_family}
+                    {s.primary_class ? (
+                      <div>
+                        <span className="text-foreground">{s.primary_class}</span>
+                        {s.primary_role && <span className="text-muted-foreground"> · {s.primary_role}</span>}
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground/70">— unassigned —</span>
+                    )}
                     {(s.career_path || s.shipbuilder_path) && (
                       <div className="text-[10px] text-muted-foreground/80">
                         {s.career_path && <span>C: {s.career_path}</span>}
@@ -244,6 +262,7 @@ function StaffModule() {
                       </div>
                     )}
                   </td>
+                  <td className="py-2 pr-3 text-muted-foreground capitalize">{s.current_rank_key ?? s.rank_key ?? "bronze"}</td>
                   <td className="py-2 pr-3 text-muted-foreground">{locations.find((l: any) => l.id === s.location_id)?.name ?? <span className="text-amber-300/80">— Unassigned —</span>}</td>
                   <td className="py-2 pr-3 text-muted-foreground">{staff.find((x: any) => x.id === s.manager_id)?.name ?? "—"}</td>
                   <td className="py-2 pr-3 text-muted-foreground">{s.join_date ?? "—"}</td>
@@ -277,7 +296,7 @@ function StaffModule() {
                   </td>
                 </tr>
               ))}
-              {!staff.length && (<tr><td colSpan={12} className="py-6 text-center text-xs text-muted-foreground">No staff yet. Click "Add Staff" to log your first crew member.</td></tr>)}
+              {!staff.length && (<tr><td colSpan={13} className="py-6 text-center text-xs text-muted-foreground">No staff yet. Click "Add Staff" to log your first crew member.</td></tr>)}
             </tbody>
           </table>
         </div>
@@ -374,6 +393,8 @@ function StaffForm({ row, managers, accounts, locations, isDirector, onSave, onC
       <Field label="Name"><input className={inputCls} value={d.name} onChange={e => set("name", e.target.value)} required /></Field>
       <Field label="Employee ID"><input className={inputCls} value={d.employee_code ?? ""} onChange={e => set("employee_code", e.target.value)} placeholder="e.g. NAV-0042" /></Field>
       <Field label="Email"><input type="email" className={inputCls} value={d.email ?? ""} onChange={e => set("email", e.target.value)} /></Field>
+      <Field label="Phone"><input className={inputCls} value={d.phone ?? ""} onChange={e => set("phone", e.target.value)} placeholder="e.g. +60 12 345 6789" /></Field>
+      <Field label="Branch"><input className={inputCls} value={d.branch ?? ""} onChange={e => set("branch", e.target.value)} placeholder="e.g. KL · Ting Livehouse" /></Field>
       <Field label="Join Date"><input type="date" className={inputCls} value={d.join_date ?? ""} onChange={e => set("join_date", e.target.value)} /></Field>
 
       {/* Work Identity */}
@@ -399,13 +420,55 @@ function StaffForm({ row, managers, accounts, locations, isDirector, onSave, onC
 
       {/* RPG Identity */}
       <div className="sm:col-span-2 -mb-1 mt-3 border-b border-border/60 pb-1 text-[10px] font-display uppercase tracking-[0.25em] text-muted-foreground">RPG Identity — character class & progression</div>
-      <Field label="Class / Path">
-        <select className={inputCls} value={d.role_family} onChange={e => set("role_family", e.target.value as any)}>
-          <option value="hunter">Hunter (progression)</option><option value="operational">Operational (skills)</option>
+      <Field label="Primary Class">
+        <select className={inputCls} value={d.primary_class ?? "ranger"} onChange={e => {
+          const cls = e.target.value as any;
+          set("primary_class", cls);
+          // Reset role to first valid option for the newly chosen class.
+          set("primary_role", CLASS_ROLES[cls as PrimaryClass]?.[0] ?? null);
+        }}>
+          {PRIMARY_CLASSES.map(c => <option key={c} value={c}>{titleCase(c)}</option>)}
+        </select>
+      </Field>
+      <Field label="Primary Role">
+        <select className={inputCls} value={d.primary_role ?? ""} onChange={e => set("primary_role", e.target.value || null)} required>
+          <option value="">— Select role —</option>
+          {(CLASS_ROLES[(d.primary_class ?? "ranger") as PrimaryClass] ?? []).map(r => (
+            <option key={r} value={r}>
+              {titleCase(r)}{TEMPORARY_ROLES.has(r) ? " (Temporary)" : ""}
+            </option>
+          ))}
+        </select>
+      </Field>
+      <Field label="Rank">
+        <select className={inputCls} value={d.rank_key ?? "bronze"} onChange={e => set("rank_key", e.target.value)}>
+          {RANKS.map(r => (
+            <option key={r.key} value={r.key} disabled={!r.unlocked}>
+              {r.label}{r.unlocked ? "" : " — locked"}
+            </option>
+          ))}
         </select>
       </Field>
       <Field label="Career Tree Path"><input className={inputCls} value={d.career_path ?? ""} onChange={e => set("career_path", e.target.value)} placeholder="e.g. Master Ambassador" /></Field>
       <Field label="Shipbuilder Tree Path"><input className={inputCls} value={d.shipbuilder_path ?? ""} onChange={e => set("shipbuilder_path", e.target.value)} placeholder="e.g. Venue Partner" /></Field>
+
+      {/* Secondary Career — stored but LOCKED until Gold rank in the future */}
+      <div className="sm:col-span-2 -mb-1 mt-3 border-b border-border/60 pb-1 text-[10px] font-display uppercase tracking-[0.25em] text-muted-foreground">
+        Secondary Career — 🔒 locked (unlocks at Gold rank)
+      </div>
+      <Field label="Secondary Class">
+        <select className={inputCls} value={d.secondary_class ?? ""} disabled title="Locked until Gold rank">
+          <option value="">— locked —</option>
+        </select>
+      </Field>
+      <Field label="Secondary Role">
+        <select className={inputCls} value={d.secondary_role ?? ""} disabled title="Locked until Gold rank">
+          <option value="">— locked —</option>
+        </select>
+      </Field>
+      <div className="sm:col-span-2 rounded border border-border/60 bg-ink/40 px-3 py-2 text-[11px] italic text-muted-foreground">
+        Secondary career is reserved for a future sprint. The fields exist in the database but are not editable or displayed on the dashboard until the crew member reaches Gold rank.
+      </div>
 
       <div className="sm:col-span-2 -mb-1 mt-3 border-b border-border/60 pb-1 text-[10px] font-display uppercase tracking-[0.25em] text-muted-foreground">Account</div>
 
