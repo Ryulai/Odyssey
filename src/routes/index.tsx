@@ -147,8 +147,9 @@ function LinkedHome({ d }: { d: any }) {
               )}
 
               {/* 3. Business Unit */}
-              <div className="mt-1 text-xs uppercase tracking-widest text-muted-foreground">
-                {s.business_unit || "—"}
+              <div className="mt-2">
+                <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Business Unit</div>
+                <div className="text-sm text-foreground">{s.business_unit || "—"}</div>
               </div>
 
               {/* 4. Fleet */}
