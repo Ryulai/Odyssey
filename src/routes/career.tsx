@@ -4,8 +4,8 @@ import { AuthGate } from "@/components/auth-gate";
 export const Route = createFileRoute("/career")({
   head: () => ({
     meta: [
-      { title: "Main Career — The Odyssey Guide" },
-      { name: "description", content: "The home of your primary profession — powered by the Performance and Ranking systems." },
+      { title: "Class — The Odyssey Guide" },
+      { name: "description", content: "The home of your Class — the profession you have mastered, powered by the Performance and Ranking systems." },
     ],
   }),
   component: () => <AuthGate><CareerPage /></AuthGate>,
@@ -72,10 +72,10 @@ function CareerPage() {
         <header className="mb-8 flex items-center justify-between">
           <div>
             <div className="font-display text-lg font-semibold uppercase tracking-widest text-gold">
-              Main Career
+              Class
             </div>
             <div className="text-xs text-muted-foreground">
-              Your primary profession — Performance & Ranking
+              The profession you have mastered — Performance & Ranking
             </div>
           </div>
           <Link

@@ -4,29 +4,31 @@
  * A "System" is a progression / calculation engine, NOT a page.
  * One page may host multiple systems.
  *
- *   System 1 · Main Career Performance   (ABCD monthly scoring)
- *   System 2 · Main Career Ranking       (Bronze → Silver → Gold → Black …)
- *   System 3 · Secondary Career          (independent second profession)
- *   System 4 · Mentorship                (reserved — architecture only)
- *   System 5 · Ownership                 (reserved — architecture only)
+ *   System 1 · Class Performance        (ABCD monthly scoring)
+ *   System 2 · Class Ranking            (Bronze → Silver → Gold → Black …)
+ *   System 3 · Secondary Class          (independent second profession)
+ *   System 4 · Mentorship               (reserved — architecture only)
+ *   System 5 · Ownership                (reserved — architecture only)
  *
  * Page hosting map (current):
- *   /                → overview only
+ *   /                → dashboard summaries only
  *   /performance     → System 1
- *   /career          → System 1 (summary) + System 2
- *   /secondary-career → System 3
- *   (future)         → System 4
- *   (future)         → System 5
+ *   /career          → System 1 (summary) + System 2  — the "Class" page
+ *   /secondary-class → System 3
+ *   (future)         → System 4 · Mentorship
+ *   (future)         → System 5 · Ownership
  *
- * IMPORTANT: The old "Five Growth Trees" concept is retired.
- * Do not reintroduce Career / Partner / Mentor / Leadership / Secondary
- * "trees" as a unified UI surface.
+ * IMPORTANT: The old "Five Growth Trees" concept — including Career Tree,
+ * Partner Tree, Mentor Tree, Leadership Tree, Navigator Tree, Captain Tree,
+ * Shipbuilder Tree, "Path of Navigator", "Path of Captain", "Main Career",
+ * "Primary Career", "Secondary Career" — is fully retired. Do not
+ * reintroduce those pages, UI surfaces, or terminology.
  */
 
 export type SystemId =
   | "performance"
   | "ranking"
-  | "secondary_career"
+  | "secondary_class"
   | "mentorship"
   | "ownership";
 
@@ -48,8 +50,8 @@ export const SYSTEMS: Record<SystemId, SystemDef> = {
   performance: {
     id: "performance",
     ordinal: 1,
-    name: "Main Career Performance",
-    purpose: "Monthly ABCD grade + composite score for the primary profession.",
+    name: "Class Performance",
+    purpose: "Monthly ABCD grade + composite score for the Class.",
     status: "active",
     hostedOn: ["/performance", "/career", "/evaluations"],
     engineModules: ["src/lib/evaluations.functions.ts"],
@@ -57,28 +59,28 @@ export const SYSTEMS: Record<SystemId, SystemDef> = {
   ranking: {
     id: "ranking",
     ordinal: 2,
-    name: "Main Career Ranking",
-    purpose: "Long-term rank progression (Bronze → Silver → Gold → Black → …) for the primary profession.",
+    name: "Class Ranking",
+    purpose: "Long-term rank progression (Bronze → Silver → Gold → Black → …) for the Class.",
     status: "active",
     hostedOn: ["/career", "/promotions"],
     engineModules: ["src/lib/workflow.functions.ts"],
   },
-  secondary_career: {
-    id: "secondary_career",
+  secondary_class: {
+    id: "secondary_class",
     ordinal: 3,
-    name: "Secondary Career",
+    name: "Secondary Class",
     purpose:
-      "A complete second profession, tracked independently of the main career. Has its own performance, ranking, promotion history, and career progress. Future: multiple secondaries.",
+      "A complete second profession, tracked independently of the Class. Has its own performance, ranking, promotion history, and progress. Future: multiple secondaries.",
     status: "active",
-    hostedOn: ["/secondary-career"],
-    engineModules: ["src/lib/secondary-career.functions.ts"],
+    hostedOn: ["/secondary-class"],
+    engineModules: ["src/lib/secondary-class.functions.ts"],
   },
   mentorship: {
     id: "mentorship",
     ordinal: 4,
     name: "Mentorship",
     purpose:
-      "Reserved. Will track mentors, students, mentor rank, mentorship history, and mentorship achievements. Do NOT build pages or UI yet.",
+      "Reserved. Will track mentors, students, mentor rank, mentorship history, and mentorship achievements. Do NOT build pages or UI yet — homepage shows Coming Soon only.",
     status: "reserved",
     hostedOn: [],
     engineModules: [],
@@ -88,7 +90,7 @@ export const SYSTEMS: Record<SystemId, SystemDef> = {
     ordinal: 5,
     name: "Ownership",
     purpose:
-      "Reserved. Will track ownership, shares, investment, business responsibility, and decision rights. Do NOT build pages or UI yet.",
+      "Reserved. Will track ownership, shares, investment, business responsibility, and decision rights. Do NOT build pages or UI yet — homepage shows Coming Soon only.",
     status: "reserved",
     hostedOn: [],
     engineModules: [],
@@ -98,7 +100,7 @@ export const SYSTEMS: Record<SystemId, SystemDef> = {
 export const SYSTEM_ORDER: SystemId[] = [
   "performance",
   "ranking",
-  "secondary_career",
+  "secondary_class",
   "mentorship",
   "ownership",
 ];

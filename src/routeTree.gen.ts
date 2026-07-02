@@ -9,7 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SecondaryCareerRouteImport } from './routes/secondary-career'
+import { Route as SecondaryClassRouteImport } from './routes/secondary-class'
 import { Route as PromotionsRouteImport } from './routes/promotions'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PerformanceRouteImport } from './routes/performance'
@@ -22,9 +22,9 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 
-const SecondaryCareerRoute = SecondaryCareerRouteImport.update({
-  id: '/secondary-career',
-  path: '/secondary-career',
+const SecondaryClassRoute = SecondaryClassRouteImport.update({
+  id: '/secondary-class',
+  path: '/secondary-class',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PromotionsRoute = PromotionsRouteImport.update({
@@ -95,7 +95,7 @@ export interface FileRoutesByFullPath {
   '/performance': typeof PerformanceRoute
   '/profile': typeof ProfileRoute
   '/promotions': typeof PromotionsRoute
-  '/secondary-career': typeof SecondaryCareerRoute
+  '/secondary-class': typeof SecondaryClassRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -109,7 +109,7 @@ export interface FileRoutesByTo {
   '/performance': typeof PerformanceRoute
   '/profile': typeof ProfileRoute
   '/promotions': typeof PromotionsRoute
-  '/secondary-career': typeof SecondaryCareerRoute
+  '/secondary-class': typeof SecondaryClassRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -124,7 +124,7 @@ export interface FileRoutesById {
   '/performance': typeof PerformanceRoute
   '/profile': typeof ProfileRoute
   '/promotions': typeof PromotionsRoute
-  '/secondary-career': typeof SecondaryCareerRoute
+  '/secondary-class': typeof SecondaryClassRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -140,7 +140,7 @@ export interface FileRouteTypes {
     | '/performance'
     | '/profile'
     | '/promotions'
-    | '/secondary-career'
+    | '/secondary-class'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -154,7 +154,7 @@ export interface FileRouteTypes {
     | '/performance'
     | '/profile'
     | '/promotions'
-    | '/secondary-career'
+    | '/secondary-class'
   id:
     | '__root__'
     | '/'
@@ -168,7 +168,7 @@ export interface FileRouteTypes {
     | '/performance'
     | '/profile'
     | '/promotions'
-    | '/secondary-career'
+    | '/secondary-class'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -183,16 +183,16 @@ export interface RootRouteChildren {
   PerformanceRoute: typeof PerformanceRoute
   ProfileRoute: typeof ProfileRoute
   PromotionsRoute: typeof PromotionsRoute
-  SecondaryCareerRoute: typeof SecondaryCareerRoute
+  SecondaryClassRoute: typeof SecondaryClassRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/secondary-career': {
-      id: '/secondary-career'
-      path: '/secondary-career'
-      fullPath: '/secondary-career'
-      preLoaderRoute: typeof SecondaryCareerRouteImport
+    '/secondary-class': {
+      id: '/secondary-class'
+      path: '/secondary-class'
+      fullPath: '/secondary-class'
+      preLoaderRoute: typeof SecondaryClassRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/promotions': {
@@ -287,7 +287,7 @@ const rootRouteChildren: RootRouteChildren = {
   PerformanceRoute: PerformanceRoute,
   ProfileRoute: ProfileRoute,
   PromotionsRoute: PromotionsRoute,
-  SecondaryCareerRoute: SecondaryCareerRoute,
+  SecondaryClassRoute: SecondaryClassRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
