@@ -1,8 +1,8 @@
 /**
- * SYSTEM 3 — Secondary Career (engine stub)
+ * SYSTEM 3 — Secondary Class (engine stub)
  *
- * A secondary career is a complete second profession, tracked independently
- * of the main career. Same calculation shape as the main-career engines
+ * A Secondary Class is a complete second profession, tracked independently
+ * of the Class. Same calculation shape as the Class engines
  * (Performance + Ranking) but scoped by `(staff_id, career_slot)`.
  *
  * The DB currently stores the *chosen* secondary class/role on `rpg_identity`
@@ -17,7 +17,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export type CareerSlot = "main" | "secondary";
 
-export interface SecondaryCareerSnapshot {
+export interface SecondaryClassSnapshot {
   unlocked: boolean;
   unlock_rank_key: string;      // rank key required to unlock (e.g. "gold")
   class_key: string | null;     // chosen secondary class, if any
@@ -27,10 +27,10 @@ export interface SecondaryCareerSnapshot {
   ranking: null;
 }
 
-/** Read the secondary-career snapshot for the current user's linked staff. */
-export const getMySecondaryCareer = createServerFn({ method: "GET" })
+/** Read the secondary-class snapshot for the current user's linked staff. */
+export const getMySecondaryClass = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<SecondaryCareerSnapshot> => {
+  .handler(async ({ context }): Promise<SecondaryClassSnapshot> => {
     const { data: staff } = await context.supabase
       .from("staff")
       .select("id")

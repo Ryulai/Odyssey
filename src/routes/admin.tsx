@@ -452,12 +452,9 @@ function StaffForm({ row, managers, accounts, locations, isDirector, onSave, onC
           ))}
         </select>
       </Field>
-      <Field label="Career Tree Path"><input className={inputCls} value={d.career_path ?? ""} onChange={e => set("career_path", e.target.value)} placeholder="e.g. Master Ambassador" /></Field>
-      <Field label="Shipbuilder Tree Path"><input className={inputCls} value={d.shipbuilder_path ?? ""} onChange={e => set("shipbuilder_path", e.target.value)} placeholder="e.g. Venue Partner" /></Field>
-
-      {/* Secondary Career — stored but LOCKED until Gold rank in the future */}
+      {/* Secondary Class — stored but LOCKED until Gold rank */}
       <div className="sm:col-span-2 -mb-1 mt-3 border-b border-border/60 pb-1 text-[10px] font-display uppercase tracking-[0.25em] text-muted-foreground">
-        Secondary Career — 🔒 locked (unlocks at Gold rank)
+        Secondary Class — 🔒 locked (unlocks at Gold rank)
       </div>
       <Field label="Secondary Class">
         <select className={inputCls} value={d.secondary_class ?? ""} disabled title="Locked until Gold rank">
@@ -470,7 +467,7 @@ function StaffForm({ row, managers, accounts, locations, isDirector, onSave, onC
         </select>
       </Field>
       <div className="sm:col-span-2 rounded border border-border/60 bg-ink/40 px-3 py-2 text-[11px] italic text-muted-foreground">
-        Secondary career is reserved for a future sprint. The fields exist in the database but are not editable or displayed on the dashboard until the crew member reaches Gold rank.
+        Secondary Class is reserved for a future sprint. The fields exist in the database but are not editable or displayed on the dashboard until the crew member reaches Gold rank.
       </div>
 
       <div className="sm:col-span-2 -mb-1 mt-3 border-b border-border/60 pb-1 text-[10px] font-display uppercase tracking-[0.25em] text-muted-foreground">Account</div>
