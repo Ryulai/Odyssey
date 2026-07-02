@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as PromotionsRouteImport } from './routes/promotions'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as PerformanceRouteImport } from './routes/performance'
 import { Route as ManagerRouteImport } from './routes/manager'
 import { Route as FleetRouteImport } from './routes/fleet'
 import { Route as EvaluationsRouteImport } from './routes/evaluations'
@@ -27,6 +28,11 @@ const PromotionsRoute = PromotionsRouteImport.update({
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PerformanceRoute = PerformanceRouteImport.update({
+  id: '/performance',
+  path: '/performance',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ManagerRoute = ManagerRouteImport.update({
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/evaluations': typeof EvaluationsRoute
   '/fleet': typeof FleetRoute
   '/manager': typeof ManagerRoute
+  '/performance': typeof PerformanceRoute
   '/profile': typeof ProfileRoute
   '/promotions': typeof PromotionsRoute
 }
@@ -84,6 +91,7 @@ export interface FileRoutesByTo {
   '/evaluations': typeof EvaluationsRoute
   '/fleet': typeof FleetRoute
   '/manager': typeof ManagerRoute
+  '/performance': typeof PerformanceRoute
   '/profile': typeof ProfileRoute
   '/promotions': typeof PromotionsRoute
 }
@@ -96,6 +104,7 @@ export interface FileRoutesById {
   '/evaluations': typeof EvaluationsRoute
   '/fleet': typeof FleetRoute
   '/manager': typeof ManagerRoute
+  '/performance': typeof PerformanceRoute
   '/profile': typeof ProfileRoute
   '/promotions': typeof PromotionsRoute
 }
@@ -109,6 +118,7 @@ export interface FileRouteTypes {
     | '/evaluations'
     | '/fleet'
     | '/manager'
+    | '/performance'
     | '/profile'
     | '/promotions'
   fileRoutesByTo: FileRoutesByTo
@@ -120,6 +130,7 @@ export interface FileRouteTypes {
     | '/evaluations'
     | '/fleet'
     | '/manager'
+    | '/performance'
     | '/profile'
     | '/promotions'
   id:
@@ -131,6 +142,7 @@ export interface FileRouteTypes {
     | '/evaluations'
     | '/fleet'
     | '/manager'
+    | '/performance'
     | '/profile'
     | '/promotions'
   fileRoutesById: FileRoutesById
@@ -143,6 +155,7 @@ export interface RootRouteChildren {
   EvaluationsRoute: typeof EvaluationsRoute
   FleetRoute: typeof FleetRoute
   ManagerRoute: typeof ManagerRoute
+  PerformanceRoute: typeof PerformanceRoute
   ProfileRoute: typeof ProfileRoute
   PromotionsRoute: typeof PromotionsRoute
 }
@@ -161,6 +174,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/performance': {
+      id: '/performance'
+      path: '/performance'
+      fullPath: '/performance'
+      preLoaderRoute: typeof PerformanceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/manager': {
@@ -223,19 +243,10 @@ const rootRouteChildren: RootRouteChildren = {
   EvaluationsRoute: EvaluationsRoute,
   FleetRoute: FleetRoute,
   ManagerRoute: ManagerRoute,
+  PerformanceRoute: PerformanceRoute,
   ProfileRoute: ProfileRoute,
   PromotionsRoute: PromotionsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
