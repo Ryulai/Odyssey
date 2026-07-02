@@ -114,112 +114,178 @@ function LinkedHome({ d }: { d: any }) {
 
   return (
     <>
-      {/* 1 · CHARACTER SHEET HERO — the focal point */}
-      <section className="card-ornate-gold relative overflow-hidden px-6 py-10 sm:px-10 sm:py-12">
-        {/* Portrait — clean, no floating icons */}
-        <div className="flex flex-col items-center">
-          <div
-            className="grid h-40 w-40 place-items-center rounded-full font-display text-5xl font-bold sm:h-48 sm:w-48 sm:text-6xl"
-            style={{
-              background: `radial-gradient(circle at 30% 30%, ${rankColor}, oklch(0.2 0.03 250))`,
-              color: "oklch(0.15 0.03 250)",
-              boxShadow: `0 0 0 3px ${rankColor}, 0 0 0 6px oklch(0.15 0.03 250), 0 0 0 7px ${rankColor}55, 0 0 60px -10px ${rankGlow}`,
-            }}
-          >
-            {isShipbuilder ? "⚓" : initials}
+      {/* 1 · CHARACTER SHEET HERO — Celestial Dossier */}
+      <section
+        className="relative overflow-hidden border shadow-[0_0_50px_rgba(0,0,0,0.8)]"
+        style={{
+          background: "#0A0F1E",
+          borderColor: "rgba(197,160,89,0.20)",
+        }}
+      >
+        {/* Corner filigree */}
+        <div className="pointer-events-none absolute inset-0 opacity-10">
+          <div className="absolute left-2 top-2 h-24 w-24 border-l-2 border-t-2" style={{ borderColor: "#C5A059" }} />
+          <div className="absolute right-2 top-2 h-24 w-24 border-r-2 border-t-2" style={{ borderColor: "#C5A059" }} />
+          <div className="absolute bottom-2 left-2 h-24 w-24 border-b-2 border-l-2" style={{ borderColor: "#C5A059" }} />
+          <div className="absolute bottom-2 right-2 h-24 w-24 border-b-2 border-r-2" style={{ borderColor: "#C5A059" }} />
+        </div>
+
+        {/* Header — portrait, identity, tagline */}
+        <div className="relative flex flex-col items-center px-6 pb-6 pt-10">
+          {/* Portrait with soft outer glow */}
+          <div className="relative mb-6">
+            <div
+              className="grid h-28 w-28 place-items-center rounded-full border-2 sm:h-32 sm:w-32"
+              style={{
+                borderColor: rankColor,
+                background: "linear-gradient(to bottom, #1a1f35, #0A0F1E)",
+                boxShadow: `0 0 40px ${rankGlow}, 0 0 20px ${rankGlow}`,
+              }}
+            >
+              <span
+                className="text-3xl font-bold tracking-widest sm:text-4xl"
+                style={{ fontFamily: "'Cinzel', serif", color: rankColor }}
+              >
+                {isShipbuilder ? "⚓" : initials}
+              </span>
+            </div>
+            {/* Rank plate */}
+            <div
+              className="absolute -bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap px-3 py-0.5"
+              style={{ background: rankColor }}
+            >
+              <span
+                className="text-[10px] font-bold uppercase tracking-[0.2em]"
+                style={{ color: "#0A0F1E", fontFamily: "'Inter', sans-serif" }}
+              >
+                {isShipbuilder ? "Beyond Rank" : rankName}
+              </span>
+            </div>
           </div>
 
-          {/* Character title (legacy) */}
-          <div className="mt-6 font-display text-[11px] uppercase tracking-[0.4em] text-gold/90">
-            {legacyTitle}
-          </div>
-
-          {/* Player Name — visually strongest */}
-          <h1 className="mt-2 font-display text-4xl uppercase leading-none tracking-wide text-foreground sm:text-5xl">
-            {s.name}
-          </h1>
-
-          {/* Profession — elegant */}
-          {!isShipbuilder && (
-            <div className="mt-3 font-serif text-lg italic text-foreground/85 sm:text-xl">
+          {/* Identity */}
+          <div className="mt-2 space-y-1 text-center">
+            <p
+              className="text-[10px] uppercase tracking-[0.3em]"
+              style={{ color: "rgba(197,160,89,0.60)", fontFamily: "'Inter', sans-serif" }}
+            >
+              {legacyTitle}
+            </p>
+            <h1
+              className="text-3xl uppercase tracking-wide sm:text-4xl"
+              style={{
+                color: "#E5E7EB",
+                fontFamily: "'Cinzel', serif",
+                textShadow: `0 0 30px ${rankGlow}`,
+              }}
+            >
+              {s.name}
+            </h1>
+            <p
+              className="text-xs font-light uppercase tracking-[0.15em]"
+              style={{ color: "#C5A059", fontFamily: "'Inter', sans-serif" }}
+            >
               {profession}
-            </div>
-          )}
-
-          {/* Rank — prestigious typography, colored, no emoji */}
-          <div
-            className="mt-4 font-display text-2xl uppercase tracking-[0.35em] sm:text-3xl"
-            style={{ color: rankColor, textShadow: `0 0 24px ${rankGlow}` }}
-          >
-            {isShipbuilder ? "Beyond Rank" : rankName}
+              {faction && !isShipbuilder && <> &bull; {faction.label}</>}
+            </p>
           </div>
-
-          {/* Guild badge — subtle */}
-          {faction && !isShipbuilder && (
-            <div className="mt-4 text-[10px] uppercase tracking-[0.35em] text-muted-foreground">
-              {faction.label}
-            </div>
-          )}
 
           {/* Tagline */}
-          {!isShipbuilder && rankIdent && (
-            <div className="mt-3 font-serif text-sm italic text-muted-foreground">"{rankIdent}"</div>
-          )}
-          {isShipbuilder && (
-            <div className="mt-3 font-serif text-sm italic text-gold/80">Charts the course. Builds the ship.</div>
-          )}
+          <div
+            className="mt-6 px-4 text-center text-sm font-light italic"
+            style={{ color: "rgba(197,160,89,0.80)", fontFamily: "'Cormorant Garamond', serif" }}
+          >
+            {isShipbuilder ? "Charts the course. Builds the ship." : `"${rankIdent || "I Can Do It."}"`}
+          </div>
         </div>
 
         {/* Divider */}
-        <div className="mx-auto my-8 h-px w-2/3 bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
+        <div className="flex items-center gap-3 px-8">
+          <div className="h-px flex-1" style={{ background: "linear-gradient(to right, transparent, rgba(197,160,89,0.40), transparent)" }} />
+          <div className="h-1.5 w-1.5 rotate-45 border" style={{ borderColor: "rgba(197,160,89,0.60)" }} />
+          <div className="h-px flex-1" style={{ background: "linear-gradient(to right, transparent, rgba(197,160,89,0.40), transparent)" }} />
+        </div>
 
-        {/* Combined Character + Assignment — single card, two columns */}
-        <div className="rounded-md border border-gold/20 bg-ink/50 p-5 sm:p-6">
-          <div className="grid gap-6 sm:grid-cols-2 sm:gap-10">
-            <div>
-              <div className="mb-4 font-display text-[11px] uppercase tracking-[0.35em] text-gold">Character</div>
-              <div className="space-y-3">
-                <IdRow label="Class"      value={className || "—"} />
-                <IdRow label="Rank"       value={rankName} valueColor={rankColor} />
-                <IdRow label="Profession" value={profession} />
-              </div>
+        {/* Data panels */}
+        <div className="space-y-8 px-6 py-8">
+          {/* Character */}
+          <section>
+            <h3
+              className="mb-4 flex items-center gap-2 text-[10px] uppercase tracking-[0.25em]"
+              style={{ color: "#C5A059", fontFamily: "'Inter', sans-serif" }}
+            >
+              <span className="h-1 w-1 rotate-45" style={{ background: "#C5A059" }} />
+              Character Profile
+            </h3>
+            <div className="grid grid-cols-1 gap-y-3 border-l pl-3" style={{ borderColor: "rgba(197,160,89,0.20)" }}>
+              <DossierRow label="Class"      value={className || "—"} />
+              <DossierRow label="Rank"       value={rankName}         color={rankColor} />
+              <DossierRow label="Profession" value={profession} />
             </div>
-            <div className="sm:border-l sm:border-gold/15 sm:pl-10">
-              <div className="mb-4 font-display text-[11px] uppercase tracking-[0.35em] text-gold">Assignment</div>
-              <div className="space-y-3">
-                <IdRow label="Business Unit" value={s.business_unit || "—"} />
-                <IdRow label="Fleet"         value={s.location?.name || "—"} />
-                <IdRow
-                  label="Manager"
-                  value={isShipbuilder ? "Director · Beyond Rank" : (s.manager?.name ?? "Unassigned")}
-                />
-              </div>
+          </section>
+
+          {/* Assignment */}
+          <section>
+            <h3
+              className="mb-4 flex items-center gap-2 text-[10px] uppercase tracking-[0.25em]"
+              style={{ color: "#C5A059", fontFamily: "'Inter', sans-serif" }}
+            >
+              <span className="h-1 w-1 rotate-45" style={{ background: "#C5A059" }} />
+              Active Assignment
+            </h3>
+            <div className="grid grid-cols-1 gap-y-3 border-l pl-3" style={{ borderColor: "rgba(197,160,89,0.20)" }}>
+              <DossierRow label="Business Unit" value={s.business_unit || "—"} />
+              <DossierRow label="Fleet"         value={s.location?.name || "—"} />
+              <DossierRow
+                label={isShipbuilder ? "Role" : "Manager"}
+                value={isShipbuilder ? "Director · Beyond Rank" : (s.manager?.name ?? "Unassigned")}
+              />
+            </div>
+          </section>
+
+          {/* Stat tiles */}
+          <div className="grid grid-cols-2 gap-4">
+            <div
+              className="border p-4 text-center"
+              style={{ background: "#141C2F", borderColor: "rgba(197,160,89,0.10)" }}
+            >
+              <p className="mb-2 text-[9px] uppercase tracking-[0.2em]" style={{ color: "#C5A059" }}>
+                Monthly Perf.
+              </p>
+              <p className="text-2xl font-bold" style={{ color: gradeMeta?.color ?? "#E2E8F0", fontFamily: "'Cinzel', serif" }}>
+                {latestGrade !== "—" ? `Grade ${latestGrade}` : "—"}
+              </p>
+            </div>
+            <div
+              className="border p-4 text-center"
+              style={{ background: "#141C2F", borderColor: "rgba(197,160,89,0.10)" }}
+            >
+              <p className="mb-2 text-[9px] uppercase tracking-[0.2em]" style={{ color: "#C5A059" }}>
+                Legacy
+              </p>
+              <p className="text-2xl font-bold" style={{ color: "#E2E8F0", fontFamily: "'Cinzel', serif" }}>
+                {totals.stars}
+                <span className="ml-1 text-sm" style={{ color: "#C5A059" }}>★</span>
+              </p>
+              <p className="mt-0.5 text-[10px]" style={{ color: "rgba(226,232,240,0.55)" }}>
+                {totals.moons} Moons · {totals.suns} Suns
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Summary stats — Monthly Performance + Legacy */}
-        <div className="mt-5 grid grid-cols-2 gap-3 sm:gap-4">
-          <MiniStat
-            label="Monthly Performance"
-            value={latestGrade !== "—" ? `Grade ${latestGrade}` : "—"}
-            sub={latestGrade !== "—" ? (gradeMeta?.label ?? "") : "No review yet"}
-            color={latestGrade !== "—" ? (gradeMeta?.color ?? "var(--color-muted-foreground)") : "var(--color-muted-foreground)"}
-          />
-          <MiniStat
-            label="Legacy"
-            value={`${totals.stars}★`}
-            sub={`${totals.moons} Moons · ${totals.suns} Suns`}
-            color="var(--color-gold)"
-          />
-        </div>
-
-        {/* Guild ID — subtle footer */}
-        <div className="mt-5 text-center">
-          <span className="text-[9px] uppercase tracking-widest text-muted-foreground/50">Guild ID · </span>
-          <span className="font-mono text-[10px] tracking-wider text-muted-foreground/40">{s.guild_id ?? "—"}</span>
+        {/* Footer badge */}
+        <div className="flex justify-center pb-8">
+          <div className="flex items-center gap-3 opacity-40">
+            <div className="h-px w-8" style={{ background: "#C5A059" }} />
+            <span className="text-[9px] font-light uppercase tracking-[0.4em]" style={{ color: "#C5A059" }}>
+              Guild ID · {s.guild_id ?? "—"}
+            </span>
+            <div className="h-px w-8" style={{ background: "#C5A059" }} />
+          </div>
         </div>
       </section>
+
 
       {/* Quick actions */}
       <div className="mt-6 flex flex-wrap gap-2">
@@ -332,6 +398,25 @@ function IdRow({ label, value, valueColor }: { label: string; value: string; val
       >
         {value}
       </div>
+    </div>
+  );
+}
+
+function DossierRow({ label, value, color }: { label: string; value: string; color?: string }) {
+  return (
+    <div className="flex items-baseline justify-between gap-4">
+      <span
+        className="text-[11px] uppercase tracking-wider"
+        style={{ color: "#94A3B8", fontFamily: "'Inter', sans-serif" }}
+      >
+        {label}
+      </span>
+      <span
+        className="text-sm font-medium tracking-wide"
+        style={{ color: color ?? "#E2E8F0", fontFamily: "'Inter', sans-serif" }}
+      >
+        {value}
+      </span>
     </div>
   );
 }
