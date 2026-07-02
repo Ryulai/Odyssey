@@ -1633,8 +1633,12 @@ const GROWTH_TREES: GrowthTree[] = [
   },
 ];
 
+// Hidden until fully designed: "career" (Career Tree) and "partner" (Shipbuilder Tree).
+const HIDDEN_TREES = new Set(["career", "partner"]);
+const VISIBLE_TREES = GROWTH_TREES.filter(t => !HIDDEN_TREES.has(t.id));
+
 function GrowthTrees() {
-  const [openId, setOpenId] = useState<string>(GROWTH_TREES[0].id);
+  const [openId, setOpenId] = useState<string>(VISIBLE_TREES[0]?.id ?? "");
   return (
     <section className="space-y-6">
       <div className="card-ornate-gold p-6">
@@ -1652,7 +1656,7 @@ function GrowthTrees() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {GROWTH_TREES.map(t => (
+        {VISIBLE_TREES.map(t => (
           <GrowthTreeSummary
             key={t.id}
             tree={t}
@@ -1662,7 +1666,7 @@ function GrowthTrees() {
         ))}
       </div>
 
-      {GROWTH_TREES.filter(t => t.id === openId).map(t => (
+      {VISIBLE_TREES.filter(t => t.id === openId).map(t => (
         <GrowthTreeDetail key={t.id} tree={t} />
       ))}
     </section>
