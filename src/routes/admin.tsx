@@ -207,7 +207,10 @@ function StaffModule() {
   const blank: StaffRow = {
     id: "", name: "", email: "", role: "", role_family: "hunter", department: "Sales",
     manager_id: null, status: "active", user_id: null, app_role: "staff", location_id: null,
-    employee_code: "", join_date: "", career_path: "", shipbuilder_path: "",
+    employee_code: "", join_date: "", phone: "", branch: "", career_path: "", shipbuilder_path: "",
+    primary_class: "ranger", primary_role: "hunter",
+    secondary_class: null, secondary_role: null, secondary_unlocked: false,
+    rank_key: "bronze",
   };
 
   return (
