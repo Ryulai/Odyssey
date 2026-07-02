@@ -131,7 +131,22 @@ function CharacterSheet({ d, isShipbuilder = false }: { d: any; isShipbuilder?: 
             <div className="text-[10px] uppercase tracking-[0.3em] text-gold">The Shipbuilder</div>
           )}
           <div className="font-display text-2xl text-gold">{s.name}</div>
-          <div className="text-xs uppercase tracking-widest text-muted-foreground">{s.role} · {s.department} · {isShipbuilder ? "System Builder" : s.role_family}</div>
+          <div className="text-xs uppercase tracking-widest text-muted-foreground capitalize">
+            {s.role} · {s.department}
+            {isShipbuilder
+              ? <> · System Builder</>
+              : (s.rpg?.primary_class || s.rpg?.primary_role) && (
+                  <> · <span className="text-foreground">{s.rpg?.primary_class ?? ""}</span>{s.rpg?.primary_role && <> · <span className="text-gold">{s.rpg.primary_role}</span></>}</>
+                )}
+            {!isShipbuilder && <> · <span className="text-foreground normal-case">{s.rank?.name ?? "Bronze"}</span></>}
+          </div>
+          {(s.phone || s.branch) && (
+            <div className="mt-1 text-[11px] text-muted-foreground">
+              {s.branch && <>Branch: <span className="text-foreground">{s.branch}</span></>}
+              {s.branch && s.phone && " · "}
+              {s.phone && <>Phone: <span className="text-foreground">{s.phone}</span></>}
+            </div>
+          )}
           {!isShipbuilder && (
             <div className="mt-1 text-[11px] text-muted-foreground">
               Manager: <span className="text-foreground">{s.manager?.name ?? "Unassigned"}</span>
