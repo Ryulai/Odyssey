@@ -96,79 +96,109 @@ function LinkedHome({ d }: { d: any }) {
 
   return (
     <>
-      {/* 1 · PROFILE */}
-      <section className="card-ornate-gold relative overflow-hidden p-6 sm:p-8">
-        <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
-          <div className="flex items-center gap-5">
+      {/* 1 · PROFILE — Character Sheet Hero */}
+      <section className="card-ornate-gold relative overflow-hidden p-6 sm:p-10">
+        {/* Portrait — top center, oversized, reserved for future emblem overlays */}
+        <div className="flex flex-col items-center">
+          <div className="relative">
+            {/* Guild emblem slot — top-left */}
+            <div className="absolute -left-2 -top-2 grid h-9 w-9 place-items-center rounded-full border border-gold/40 bg-ink/80 text-[13px] text-gold/70 backdrop-blur-sm" title="Guild Emblem">
+              {faction?.glyph ?? "⚑"}
+            </div>
+            {/* Character badge slot — top-right (rank glyph) */}
+            <div className="absolute -right-2 -top-2 grid h-9 w-9 place-items-center rounded-full border border-gold/40 bg-ink/80 text-[13px] text-gold/80 backdrop-blur-sm" title="Character Badge">
+              {rankGly || "★"}
+            </div>
+            {/* Portrait */}
             <div
-              className="grid h-20 w-20 shrink-0 place-items-center rounded-full font-display text-2xl font-bold"
+              className="grid h-32 w-32 place-items-center rounded-full font-display text-4xl font-bold sm:h-40 sm:w-40 sm:text-5xl"
               style={{
                 background: `radial-gradient(circle at 30% 30%, ${rankColor}, oklch(0.2 0.03 250))`,
                 color: "oklch(0.15 0.03 250)",
-                boxShadow: `0 0 0 2px ${rankColor}, 0 0 24px -4px ${rankColor}`,
+                boxShadow: `0 0 0 3px ${rankColor}, 0 0 0 6px oklch(0.15 0.03 250), 0 0 0 7px ${rankColor}66, 0 0 48px -8px ${rankColor}`,
               }}
             >
               {isShipbuilder ? "⚓" : initials}
             </div>
-            <div className="flex-1">
-              <div className="text-[10px] uppercase tracking-[0.25em] text-gold">{legacyTitle}</div>
-              <div className="font-display text-lg text-foreground/80">{s.name}</div>
-
-              {/* Hero title = Rank + Class-role (e.g. "Bronze Hunter") */}
-              <div className="mt-1 font-display text-3xl leading-tight text-foreground">
-                {heroTitle}
-              </div>
-              {!isShipbuilder && rankIdent && (
-                <div className="text-sm italic text-muted-foreground">"{rankIdent}"</div>
-              )}
-              {isShipbuilder && (
-                <div className="text-sm italic text-gold/80">Charts the course. Builds the ship.</div>
-              )}
-
-              {/* Faction — small subtitle badge, never larger than Class */}
-              {faction && !isShipbuilder && (
-                <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-gold/30 bg-gold/5 px-2.5 py-0.5 text-[10px] uppercase tracking-widest text-gold/90">
-                  <span>{faction.glyph}</span>
-                  <span>{faction.label}</span>
-                </div>
-              )}
-
-              {/* Ordered identity fields: Profession · Class · Rank · Business Unit · Fleet · Manager */}
-              <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                <IdField label="Profession"    value={s.profession || s.job_title || roleName || "—"} />
-                <IdField label="Class"         value={className || "—"} />
-                <IdField label="Rank"          value={rankName} accent />
-                <IdField label="Business Unit" value={s.business_unit || "—"} />
-                {s.location?.name && <IdField label="Fleet" value={s.location.name} />}
-                {!isShipbuilder ? (
-                  <IdField label="Manager" value={s.manager?.name ?? "Unassigned"} />
-                ) : (
-                  <IdField label="Role" value="Director · Beyond Rank" accent />
-                )}
-              </div>
-
-              <div className="mt-3">
-                <div className="text-[9px] uppercase tracking-widest text-muted-foreground/50">Guild ID</div>
-                <div className="font-mono text-[10px] tracking-wider text-muted-foreground/40">{s.guild_id ?? "—"}</div>
-              </div>
+            {/* Achievement emblem slot — bottom-center */}
+            <div className="absolute -bottom-2 left-1/2 grid h-9 w-9 -translate-x-1/2 place-items-center rounded-full border border-gold/40 bg-ink/80 text-[13px] text-gold/80 backdrop-blur-sm" title="Achievement Emblem">
+              {totals.suns > 0 ? "☀️" : totals.moons > 0 ? "🌙" : "★"}
+            </div>
+            {/* Company logo slot — bottom-right */}
+            <div className="absolute -bottom-2 -right-3 grid h-9 w-9 place-items-center rounded-full border border-gold/40 bg-ink/80 text-[11px] uppercase tracking-widest text-gold/70 backdrop-blur-sm" title="Company Logo">
+              ⚓
             </div>
           </div>
 
-          {/* Summary stats — Monthly Performance + Legacy */}
-          <div className="grid flex-1 grid-cols-2 gap-3 sm:gap-4">
-            <MiniStat
-              label="Monthly Performance"
-              value={latestGrade !== "—" ? `Grade ${latestGrade}` : "—"}
-              sub={latestGrade !== "—" ? (gradeMeta?.label ?? "") : "No review yet"}
-              color={latestGrade !== "—" ? (gradeMeta?.color ?? "var(--color-muted-foreground)") : "var(--color-muted-foreground)"}
-            />
-            <MiniStat
-              label="Legacy"
-              value={`${totals.stars}★`}
-              sub={`${totals.moons}🌙 · ${totals.suns}☀️`}
-              color="var(--color-gold)"
-            />
+          {/* Legacy title / name / hero title */}
+          <div className="mt-6 text-center">
+            <div className="text-[10px] uppercase tracking-[0.3em] text-gold">{legacyTitle}</div>
+            <div className="mt-1 font-display text-base text-foreground/80">{s.name}</div>
+            <div className="mt-2 font-display text-3xl leading-tight text-foreground sm:text-4xl">
+              {heroTitle}
+            </div>
+            {!isShipbuilder && rankIdent && (
+              <div className="mt-1 text-sm italic text-muted-foreground">"{rankIdent}"</div>
+            )}
+            {isShipbuilder && (
+              <div className="mt-1 text-sm italic text-gold/80">Charts the course. Builds the ship.</div>
+            )}
+            {faction && !isShipbuilder && (
+              <div className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-gold/30 bg-gold/5 px-2.5 py-0.5 text-[10px] uppercase tracking-widest text-gold/90">
+                <span>{faction.glyph}</span>
+                <span>{faction.label}</span>
+              </div>
+            )}
           </div>
+        </div>
+
+        {/* Divider */}
+        <div className="my-7 h-px w-full bg-gradient-to-r from-transparent via-gold/25 to-transparent" />
+
+        {/* Two-column identity: Character (RPG) · Assignment (Work) */}
+        <div className="grid gap-6 sm:grid-cols-2">
+          <div>
+            <div className="mb-3 text-center font-display text-[10px] uppercase tracking-[0.3em] text-gold/80">Character</div>
+            <div className="space-y-2 rounded-md border border-gold/15 bg-ink/40 p-4">
+              <IdField label="Class"      value={className || "—"} />
+              <IdField label="Rank"       value={rankName} accent />
+              <IdField label="Profession" value={s.profession || s.job_title || roleName || "—"} />
+            </div>
+          </div>
+          <div>
+            <div className="mb-3 text-center font-display text-[10px] uppercase tracking-[0.3em] text-gold/80">Assignment</div>
+            <div className="space-y-2 rounded-md border border-gold/15 bg-ink/40 p-4">
+              <IdField label="Business Unit" value={s.business_unit || "—"} />
+              <IdField label="Fleet"         value={s.location?.name || "—"} />
+              {!isShipbuilder ? (
+                <IdField label="Manager" value={s.manager?.name ?? "Unassigned"} />
+              ) : (
+                <IdField label="Role" value="Director · Beyond Rank" accent />
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Summary stats — Monthly Performance + Legacy */}
+        <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4">
+          <MiniStat
+            label="Monthly Performance"
+            value={latestGrade !== "—" ? `Grade ${latestGrade}` : "—"}
+            sub={latestGrade !== "—" ? (gradeMeta?.label ?? "") : "No review yet"}
+            color={latestGrade !== "—" ? (gradeMeta?.color ?? "var(--color-muted-foreground)") : "var(--color-muted-foreground)"}
+          />
+          <MiniStat
+            label="Legacy"
+            value={`${totals.stars}★`}
+            sub={`${totals.moons}🌙 · ${totals.suns}☀️`}
+            color="var(--color-gold)"
+          />
+        </div>
+
+        {/* Guild ID — subtle footer */}
+        <div className="mt-5 text-center">
+          <span className="text-[9px] uppercase tracking-widest text-muted-foreground/50">Guild ID · </span>
+          <span className="font-mono text-[10px] tracking-wider text-muted-foreground/40">{s.guild_id ?? "—"}</span>
         </div>
       </section>
 
