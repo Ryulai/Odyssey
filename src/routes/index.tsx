@@ -322,15 +322,30 @@ function IdField({ label, value, accent }: { label: string; value: string; accen
   );
 }
 
-function MiniStat({ label, value, sub, color }: { label: string; value: string; sub: string; color: string }) {
+function IdRow({ label, value, valueColor }: { label: string; value: string; valueColor?: string }) {
   return (
-    <div className="rounded-md border border-border bg-ink/50 p-3 text-center">
-      <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
-      <div className="mt-1 font-display text-lg leading-tight" style={{ color }}>{value}</div>
-      <div className="text-[11px] text-muted-foreground">{sub}</div>
+    <div className="flex items-baseline justify-between gap-4">
+      <div className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground">{label}</div>
+      <div
+        className="font-display text-base text-foreground sm:text-lg"
+        style={valueColor ? { color: valueColor } : undefined}
+      >
+        {value}
+      </div>
     </div>
   );
 }
+
+function MiniStat({ label, value, sub, color }: { label: string; value: string; sub: string; color: string }) {
+  return (
+    <div className="rounded-md border border-border bg-ink/50 p-4 text-center">
+      <div className="text-[11px] uppercase tracking-widest text-muted-foreground">{label}</div>
+      <div className="mt-1.5 font-display text-xl leading-tight sm:text-2xl" style={{ color }}>{value}</div>
+      <div className="text-xs text-muted-foreground">{sub}</div>
+    </div>
+  );
+}
+
 
 function SummaryCard({
   eyebrow, title, value, valueColor, sub, linkTo, linkLabel, wide,
