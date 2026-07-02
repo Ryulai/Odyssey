@@ -520,6 +520,11 @@ export type Database = {
           class: string
           created_at: string
           current_rank_key: string | null
+          primary_class: string | null
+          primary_role: string | null
+          secondary_class: string | null
+          secondary_role: string | null
+          secondary_unlocked: boolean
           shipbuilder_tree: string | null
           staff_id: string
           updated_at: string
@@ -529,6 +534,11 @@ export type Database = {
           class?: string
           created_at?: string
           current_rank_key?: string | null
+          primary_class?: string | null
+          primary_role?: string | null
+          secondary_class?: string | null
+          secondary_role?: string | null
+          secondary_unlocked?: boolean
           shipbuilder_tree?: string | null
           staff_id: string
           updated_at?: string
@@ -538,6 +548,11 @@ export type Database = {
           class?: string
           created_at?: string
           current_rank_key?: string | null
+          primary_class?: string | null
+          primary_role?: string | null
+          secondary_class?: string | null
+          secondary_role?: string | null
+          secondary_unlocked?: boolean
           shipbuilder_tree?: string | null
           staff_id?: string
           updated_at?: string
@@ -561,6 +576,7 @@ export type Database = {
       }
       staff: {
         Row: {
+          branch: string | null
           career_path: string | null
           created_at: string
           current_rank_key: string | null
@@ -572,6 +588,7 @@ export type Database = {
           location_id: string | null
           manager_id: string | null
           name: string
+          phone: string | null
           role: string
           role_family: string
           shipbuilder_path: string | null
@@ -581,6 +598,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          branch?: string | null
           career_path?: string | null
           created_at?: string
           current_rank_key?: string | null
@@ -592,6 +610,7 @@ export type Database = {
           location_id?: string | null
           manager_id?: string | null
           name: string
+          phone?: string | null
           role?: string
           role_family?: string
           shipbuilder_path?: string | null
@@ -601,6 +620,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          branch?: string | null
           career_path?: string | null
           created_at?: string
           current_rank_key?: string | null
@@ -612,6 +632,7 @@ export type Database = {
           location_id?: string | null
           manager_id?: string | null
           name?: string
+          phone?: string | null
           role?: string
           role_family?: string
           shipbuilder_path?: string | null
