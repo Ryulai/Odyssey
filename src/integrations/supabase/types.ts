@@ -577,14 +577,15 @@ export type Database = {
       staff: {
         Row: {
           branch: string | null
+          business_unit: string
           career_path: string | null
           created_at: string
           current_rank_key: string | null
-          department: string
           email: string | null
           employee_code: string | null
+          guild_id: string | null
           id: string
-          join_date: string | null
+          join_date: string
           location_id: string | null
           manager_id: string | null
           name: string
@@ -601,14 +602,15 @@ export type Database = {
         }
         Insert: {
           branch?: string | null
+          business_unit?: string
           career_path?: string | null
           created_at?: string
           current_rank_key?: string | null
-          department?: string
           email?: string | null
           employee_code?: string | null
+          guild_id?: string | null
           id?: string
-          join_date?: string | null
+          join_date?: string
           location_id?: string | null
           manager_id?: string | null
           name: string
@@ -625,14 +627,15 @@ export type Database = {
         }
         Update: {
           branch?: string | null
+          business_unit?: string
           career_path?: string | null
           created_at?: string
           current_rank_key?: string | null
-          department?: string
           email?: string | null
           employee_code?: string | null
+          guild_id?: string | null
           id?: string
-          join_date?: string | null
+          join_date?: string
           location_id?: string | null
           manager_id?: string | null
           name?: string

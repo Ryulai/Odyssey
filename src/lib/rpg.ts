@@ -48,13 +48,13 @@ export const TEMPORARY_ROLES = new Set<string>([
 ]);
 
 export const RANKS = [
-  { key: "bronze",    label: "Bronze",    unlocked: true  },
-  { key: "silver",    label: "Silver",    unlocked: false },
-  { key: "gold",      label: "Gold",      unlocked: false },
-  { key: "platinum",  label: "Platinum",  unlocked: false },
-  { key: "diamond",   label: "Diamond",   unlocked: false },
-  { key: "mystical",  label: "Mystical",  unlocked: false },
-  { key: "legend",    label: "Legend",    unlocked: false },
+  { key: "bronze",    label: "Bronze",    glyph: "🥉", identity: "I Can Do It.",                     unlocked: true  },
+  { key: "silver",    label: "Silver",    glyph: "🥈", identity: "You Can Trust Me.",                unlocked: false },
+  { key: "gold",      label: "Gold",      glyph: "🥇", identity: "I Can Help Others Grow.",          unlocked: false },
+  { key: "platinum",  label: "Platinum",  glyph: "◆",  identity: "I Set The Standard.",              unlocked: false },
+  { key: "diamond",   label: "Diamond",   glyph: "💎", identity: "I Shape The Craft.",               unlocked: false },
+  { key: "mystical",  label: "Mystical",  glyph: "✦",  identity: "I Guide The Fleet.",               unlocked: false },
+  { key: "legend",    label: "Legend",    glyph: "☀",  identity: "My Story Guides The Next Voyage.", unlocked: false },
 ] as const;
 
 // Lifecycle states for a crew member. Stored as free text in the DB; the UI
@@ -102,6 +102,18 @@ export function rankLabel(key: string | null | undefined): string {
 export function statusLabel(key: string | null | undefined): string {
   const k = normalizeKey(key);
   return (k ? (STATUS_LABEL.get(k as StaffStatus) ?? titleCase(k.replace(/_/g, " "))) : "");
+}
+
+const RANK_META = new Map(RANKS.map(r => [r.key, r]));
+export function rankMeta(key: string | null | undefined) {
+  const k = normalizeKey(key);
+  return (k ? RANK_META.get(k as (typeof RANKS)[number]["key"]) : undefined);
+}
+export function rankIdentity(key: string | null | undefined): string {
+  return rankMeta(key)?.identity ?? "";
+}
+export function rankGlyph(key: string | null | undefined): string {
+  return rankMeta(key)?.glyph ?? "";
 }
 
 export function titleCase(v: string | null | undefined): string {

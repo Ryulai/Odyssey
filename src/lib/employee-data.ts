@@ -126,7 +126,7 @@ export interface Employee {
   avatar: string;
   roleFamily: RoleFamily;
   role: HunterRole | OperationalRole | string;
-  department?: string;
+  business_unit?: string;
   currentGrade: Grade;
   currentRank: RankKey;
   partnerStage: PartnerKey;
@@ -196,7 +196,7 @@ export interface OperationalEmployee {
   id: string;
   name: string;
   role: OperationalRole | string;
-  department: string;
+  business_unit: string;
   joinedOn: string;
   avatar: string;
   currentGrade: Grade;
@@ -461,7 +461,7 @@ export const SAMPLE_OPERATIONAL_EMPLOYEE: OperationalEmployee = {
   id: "op-002",
   name: "Mateo Reyes",
   role: "Bartender",
-  department: "Northwind Lounge · Bar",
+  business_unit: "Northwind Lounge · Bar",
   joinedOn: "2023-08-02",
   avatar: "MR",
   currentGrade: "B",

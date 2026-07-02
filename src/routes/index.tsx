@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useRole, ROLE_META, can, useAuth } from "@/lib/roles";
 import { AuthGate } from "@/components/auth-gate";
 import { getStaffDashboard } from "@/lib/workflow.functions";
-import { classLabel, roleLabel } from "@/lib/rpg";
+import { classLabel, roleLabel, rankIdentity, rankGlyph } from "@/lib/rpg";
 
 import {
   SAMPLE_EMPLOYEE,
@@ -99,6 +99,9 @@ function LinkedHome({ d }: { d: any }) {
   const latestGrade = d.grades?.[0]?.grade ?? "—";
   const rankName = s.rank?.name ?? d.evaluation?.current_rank_name ?? "Unranked";
   const rankSub  = s.rank?.subtitle ?? "";
+  const rankKey  = s.current_rank_key ?? s.rpg?.rank_key ?? s.rank?.key ?? null;
+  const rankIdent = rankIdentity(rankKey);
+  const rankGly   = rankGlyph(rankKey);
   const rankColor = isShipbuilder ? "var(--color-gold)" : (s.rank?.color ?? "var(--color-gold)");
   const gradeMeta = GRADE_META[latestGrade as Grade] ?? null;
   const initials = (s.name ?? "")
@@ -149,11 +152,11 @@ function LinkedHome({ d }: { d: any }) {
               </>
             ) : (
               <>
-                <MiniStat label="Rank" value={rankName.replace(" Hunter", "")} sub={rankSub} color={rankColor} />
+                <MiniStat label="Rank" value={`${rankGly} ${rankName.replace(" Hunter", "")}`.trim()} sub={rankIdent || rankSub} color={rankColor} />
                 <MiniStat label="This Month" value={`Grade ${latestGrade}`} sub={gradeMeta?.label ?? "no review yet"} color={gradeMeta?.color ?? "var(--color-muted-foreground)"} />
                 {isHunter
                   ? <MiniStat label="Legacy" value={`${totals.stars}★`} sub={`${totals.moons}🌙 · ${totals.suns}☀️`} color="var(--color-gold)" />
-                  : <MiniStat label="Discipline" value={s.role} sub={(s.department ?? "").split("·")[0].trim() || "—"} color="var(--color-gold)" />
+                  : <MiniStat label="Discipline" value={s.role} sub={(s.business_unit ?? "").split("·")[0].trim() || "—"} color="var(--color-gold)" />
                 }
               </>
             )}
@@ -1271,14 +1274,14 @@ function OpProfileCard({ emp }: { emp: OperationalEmployee }) {
           <div>
             <div className="text-[10px] uppercase tracking-[0.25em] text-gold">Operational Path</div>
             <h1 className="font-display text-2xl text-foreground sm:text-3xl">{emp.name}</h1>
-            <p className="text-sm text-muted-foreground">{rank.name} {emp.role} · {emp.department}</p>
+            <p className="text-sm text-muted-foreground">{rank.name} {emp.role} · {emp.business_unit}</p>
             <p className="mt-1 text-xs italic text-muted-foreground">Measured by capability & mastery — {years} year{years > 1 ? "s" : ""} of service</p>
           </div>
         </div>
         <div className="grid flex-1 grid-cols-3 gap-3 sm:gap-4">
           <Stat label="Rank" value={rank.name} sub={rank.subtitle} color={rank.color} />
           <Stat label="This Month" value={`Grade ${emp.currentGrade}`} sub={grade.label} color={grade.color} />
-          <Stat label="Discipline" value={emp.role} sub={emp.department.split("·")[0].trim()} color="var(--color-gold)" />
+          <Stat label="Discipline" value={emp.role} sub={emp.business_unit.split("·")[0].trim()} color="var(--color-gold)" />
         </div>
       </div>
     </section>
@@ -1620,35 +1623,25 @@ const GROWTH_TREES: GrowthTree[] = [
     question: "What else can I become?",
     icon: "✦",
     accent: "var(--color-rank-mythic)",
-    driver: "Unlocks at Career Tree milestones · multiple classes can stack",
-    currentIndex: 1,
-    progressPct: 40,
-    progressLabel: "1 secondary unlocked · Bard at 60% · Strategist locked",
+    driver: "Locked — Unlocks at Gold Rank",
+    currentIndex: 0,
+    progressPct: 0,
+    progressLabel: "🔒 Locked",
     stages: [
-      { name: "Hunter (Main)",     blurb: "Your primary class. Always active.",
-        requirements: ["—"],
-        rewards: ["Full Hunter kit"] },
-      { name: "Hunter + Sniper",   blurb: "Precision closer. Specializes in high-value, low-volume hunts.",
-        requirements: ["Gold Hunter", "5 enterprise closes"],
-        rewards: ["Sniper's mark", "Named-account access"] },
-      { name: "Hunter + Bard",     blurb: "Voice of the fleet. Owns story and stage.",
-        requirements: ["Platinum Hunter", "Headline 3 fleet events"],
-        rewards: ["Bard's lyre", "Marketing co-sign"] },
-      { name: "Hunter + Strategist", blurb: "Planner & analyst behind the field.",
-        requirements: ["Diamond Hunter", "Author a winning territory plan"],
-        rewards: ["Strategist's compass", "Planning seat"] },
-      { name: "Hunter + Host",     blurb: "Front-of-house ambassador for guests and partners.",
-        requirements: ["Platinum Hunter", "Host 6 partner evenings"],
-        rewards: ["Host's medallion"] },
-      { name: "Hunter + Event Planner", blurb: "Designs and runs crew gatherings end-to-end.",
-        requirements: ["Captain (Leadership)", "Run 2 flagship events"],
-        rewards: ["Planner's quill"] },
+      { name: "Unlocks at Gold Rank",
+        blurb: "Master your first profession before beginning your second journey. A second class opens once your primary craft is proven at Gold.",
+        requirements: ["Reach Gold Rank in your primary class"],
+        rewards: ["Choose a Secondary Class", "Cross-profession bonuses"] },
     ],
   },
 ];
 
+// Hidden until fully designed: "career" (Career Tree) and "partner" (Shipbuilder Tree).
+const HIDDEN_TREES = new Set(["career", "partner"]);
+const VISIBLE_TREES = GROWTH_TREES.filter(t => !HIDDEN_TREES.has(t.id));
+
 function GrowthTrees() {
-  const [openId, setOpenId] = useState<string>(GROWTH_TREES[0].id);
+  const [openId, setOpenId] = useState<string>(VISIBLE_TREES[0]?.id ?? "");
   return (
     <section className="space-y-6">
       <div className="card-ornate-gold p-6">
@@ -1666,7 +1659,7 @@ function GrowthTrees() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {GROWTH_TREES.map(t => (
+        {VISIBLE_TREES.map(t => (
           <GrowthTreeSummary
             key={t.id}
             tree={t}
@@ -1676,7 +1669,7 @@ function GrowthTrees() {
         ))}
       </div>
 
-      {GROWTH_TREES.filter(t => t.id === openId).map(t => (
+      {VISIBLE_TREES.filter(t => t.id === openId).map(t => (
         <GrowthTreeDetail key={t.id} tree={t} />
       ))}
     </section>
