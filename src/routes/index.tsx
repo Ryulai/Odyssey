@@ -263,6 +263,15 @@ function LinkedHome({ d }: { d: any }) {
   );
 }
 
+function IdField({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+  return (
+    <div>
+      <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
+      <div className={`text-sm ${accent ? "text-gold" : "text-foreground"}`}>{value}</div>
+    </div>
+  );
+}
+
 function MiniStat({ label, value, sub, color }: { label: string; value: string; sub: string; color: string }) {
   return (
     <div className="rounded-md border border-border bg-ink/50 p-3 text-center">
