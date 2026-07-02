@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useRole, ROLE_META, can, useAuth } from "@/lib/roles";
 import { AuthGate } from "@/components/auth-gate";
 import { getStaffDashboard } from "@/lib/workflow.functions";
+import { classLabel, roleLabel } from "@/lib/rpg";
 
 import {
   SAMPLE_EMPLOYEE,
