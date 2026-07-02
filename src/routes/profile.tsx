@@ -124,54 +124,63 @@ function CharacterSheet({ d, isShipbuilder = false }: { d: any; isShipbuilder?: 
   const s = d.staff;
   const ev = d.evaluation;
   const latestGrade = d.grades?.[0]?.grade ?? "—";
+  const rankKey = s.current_rank_key ?? s.rpg?.current_rank_key ?? s.rank?.key ?? null;
+  const rankIdent = rankIdentity(rankKey);
+  const rankGly = rankGlyph(rankKey);
+  const rankName = s.rank?.name ?? ev?.current_rank_name ?? "Unranked";
   return (
     <section className="rounded-md border border-gold/30 bg-gradient-to-br from-ink/60 to-ink/30 p-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          {isShipbuilder && (
-            <div className="text-[10px] uppercase tracking-[0.3em] text-gold">The Shipbuilder</div>
-          )}
-          <div className="font-display text-2xl text-gold">{s.name}</div>
-          <div className="text-xs uppercase tracking-widest text-muted-foreground capitalize">
-            {s.role} · {s.business_unit}
-            {isShipbuilder
-              ? <> · System Builder</>
-              : (s.rpg?.primary_class || s.rpg?.primary_role) && (
-                  <> · <span className="text-foreground">{classLabel(s.rpg?.primary_class)}</span>{s.rpg?.primary_role && <> · <span className="text-gold">{roleLabel(s.rpg.primary_role)}</span></>}</>
-                )}
-            {!isShipbuilder && <> · <span className="text-foreground normal-case">{s.rank?.name ?? "Bronze"}</span></>}
+      <div>
+        {isShipbuilder && (
+          <div className="text-[10px] uppercase tracking-[0.3em] text-gold">The Shipbuilder</div>
+        )}
+        <div className="font-display text-lg text-foreground/80">{s.name}</div>
+
+        {/* 1. Rank — largest */}
+        <div className="mt-1 font-display text-3xl leading-tight text-gold">
+          {isShipbuilder ? "⚓ Beyond Rank" : `${rankGly} ${rankName}`}
+        </div>
+        {!isShipbuilder && rankIdent && (
+          <div className="text-sm italic text-muted-foreground">"{rankIdent}"</div>
+        )}
+        {isShipbuilder && (
+          <div className="text-sm italic text-gold/80">Charts the course. Builds the ship.</div>
+        )}
+
+        {/* 2. Primary Class & Role */}
+        {(s.rpg?.primary_class || s.rpg?.primary_role) && (
+          <div className="mt-2 text-sm text-foreground">
+            {classLabel(s.rpg.primary_class)}
+            {s.rpg?.primary_role && <> · <span className="text-gold">{roleLabel(s.rpg.primary_role)}</span></>}
           </div>
-          {(s.phone || s.branch) && (
-            <div className="mt-1 text-[11px] text-muted-foreground">
-              {s.branch && <>Branch: <span className="text-foreground">{s.branch}</span></>}
-              {s.branch && s.phone && " · "}
-              {s.phone && <>Phone: <span className="text-foreground">{s.phone}</span></>}
-            </div>
-          )}
-          {!isShipbuilder && (
-            <div className="mt-1 text-[11px] text-muted-foreground">
-              Manager: <span className="text-foreground">{s.manager?.name ?? "Unassigned"}</span>
-              {s.email && <> · {s.email}</>}
-            </div>
-          )}
-          {isShipbuilder && s.email && (
-            <div className="mt-1 text-[11px] text-muted-foreground">{s.email}</div>
-          )}
+        )}
+
+        {/* 3. Business Unit */}
+        <div className="mt-1 text-xs uppercase tracking-widest text-muted-foreground">
+          {s.business_unit || "—"}
         </div>
-        <div className="text-right">
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Status</div>
-          {isShipbuilder ? (
-            <>
-              <div className="font-display text-xl text-gold">Beyond Rank</div>
-              <div className="text-[10px] italic text-muted-foreground">Charts the course. Builds the ship.</div>
-            </>
-          ) : (
-            <>
-              <div className="font-display text-xl text-gold">{s.rank?.name ?? ev?.current_rank_name ?? "Unranked"}</div>
-              <div className="text-[10px] italic text-muted-foreground">{s.rank?.subtitle ?? ""}</div>
-            </>
-          )}
-        </div>
+
+        {/* 4. Fleet */}
+        {s.location?.name && (
+          <div className="mt-0.5 text-xs text-muted-foreground">{s.location.name}</div>
+        )}
+
+        {/* 5. Manager */}
+        {!isShipbuilder ? (
+          <div className="mt-1 text-[11px] text-muted-foreground">
+            Manager: <span className="text-foreground">{s.manager?.name ?? "Unassigned"}</span>
+            {s.email && <> · {s.email}</>}
+          </div>
+        ) : (
+          <div className="mt-1 text-[11px] text-muted-foreground">{s.email}</div>
+        )}
+        {(s.phone || s.branch) && !isShipbuilder && (
+          <div className="mt-1 text-[11px] text-muted-foreground">
+            {s.branch && <>Branch: <span className="text-foreground">{s.branch}</span></>}
+            {s.branch && s.phone && " · "}
+            {s.phone && <>Phone: <span className="text-foreground">{s.phone}</span></>}
+          </div>
+        )}
       </div>
 
       {!isShipbuilder && (
