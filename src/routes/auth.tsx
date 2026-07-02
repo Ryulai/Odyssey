@@ -37,7 +37,7 @@ function AuthPage() {
     setError(null); setBusy(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email, password,
           options: {
             emailRedirectTo: `${window.location.origin}/`,
@@ -45,6 +45,13 @@ function AuthPage() {
           },
         });
         if (error) throw error;
+        // If email confirmation is required, no session is issued yet.
+        // Do NOT call protected server fns — they'll 401 as "Unauthorized".
+        if (!data.session) {
+          setError("Check your email to confirm your account, then sign in.");
+          setMode("signin");
+          return;
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -57,6 +64,7 @@ function AuthPage() {
       setBusy(false);
     }
   }
+
 
   const inputCls = "w-full rounded-md border border-border bg-ink/60 px-3 py-2 text-sm text-foreground focus:border-gold focus:outline-none";
 
