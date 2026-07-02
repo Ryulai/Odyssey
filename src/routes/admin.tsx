@@ -475,7 +475,7 @@ function StaffForm({ row, managers, accounts, locations, isDirector, onSave, onC
 
       <Field label="Status">
         <select className={inputCls} value={d.status} onChange={e => set("status", e.target.value as any)}>
-          <option value="active">Active</option><option value="inactive">Inactive</option>
+          {STAFF_STATUSES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
         </select>
       </Field>
       {isDirector && <Field label="Linked User Account">
