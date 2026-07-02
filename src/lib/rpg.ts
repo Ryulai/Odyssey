@@ -69,8 +69,20 @@ export const STAFF_STATUSES = [
 
 export type StaffStatus = (typeof STAFF_STATUSES)[number]["key"];
 
-// Secondary career unlocks at Gold rank in the future.
+// Secondary Class unlocks at Gold rank in the future.
 export const SECONDARY_UNLOCK_RANK = "gold";
+
+// Faction = world affiliation (guild/order). Derived from Class.
+export const FACTIONS: Record<PrimaryClass, { label: string; glyph: string }> = {
+  ranger:   { label: "Ranger Guild",   glyph: "🏹" },
+  warrior:  { label: "Warrior Guild",  glyph: "⚔" },
+  mage:     { label: "Mage Guild",     glyph: "🔮" },
+  guardian: { label: "Guardian Guild", glyph: "🛡" },
+};
+export function factionFor(classKey: string | null | undefined) {
+  const k = classKey ? classKey.trim().toLowerCase().replace(/\s+/g, "_") : null;
+  return (k && (FACTIONS as any)[k]) as { label: string; glyph: string } | undefined;
+}
 
 /* ---------- key → label helpers (UI ONLY) ---------- */
 

@@ -42,17 +42,17 @@ const HISTORY = [
 ];
 
 const GRADE_INFO: Record<"A" | "B" | "C" | "D", { title: string; blurb: string; color: string; glow: string }> = {
-  A: { title: "Outstanding",           blurb: "A voyage worthy of song.",                color: "#F5D07A", glow: "shadow-[0_0_60px_-10px_rgba(245,208,122,0.55)]" },
-  B: { title: "Consistent",            blurb: "Steady hands, steady sails.",             color: "#A8C8FF", glow: "shadow-[0_0_60px_-10px_rgba(168,200,255,0.45)]" },
-  C: { title: "Needs Improvement",     blurb: "Winds shifting — adjust the course.",     color: "#E9A26A", glow: "shadow-[0_0_60px_-10px_rgba(233,162,106,0.45)]" },
-  D: { title: "Performance Recovery",  blurb: "Return to harbor. Rebuild. Sail again.",  color: "#E07070", glow: "shadow-[0_0_60px_-10px_rgba(224,112,112,0.45)]" },
+  A: { title: "Outstanding", blurb: "A voyage worthy of song.",               color: "#F5D07A", glow: "shadow-[0_0_60px_-10px_rgba(245,208,122,0.55)]" },
+  B: { title: "Reliable",    blurb: "Steady hands, steady sails.",            color: "#A8C8FF", glow: "shadow-[0_0_60px_-10px_rgba(168,200,255,0.45)]" },
+  C: { title: "Developing",  blurb: "Winds shifting — adjust the course.",    color: "#E9A26A", glow: "shadow-[0_0_60px_-10px_rgba(233,162,106,0.45)]" },
+  D: { title: "Recovery",    blurb: "Return to harbor. Rebuild. Sail again.", color: "#E07070", glow: "shadow-[0_0_60px_-10px_rgba(224,112,112,0.45)]" },
 };
 
 const GRADE_REFERENCE: { grade: "A" | "B" | "C" | "D"; short: string }[] = [
   { grade: "A", short: "Outstanding" },
   { grade: "B", short: "Reliable" },
-  { grade: "C", short: "Needs Improvement" },
-  { grade: "D", short: "Performance Recovery" },
+  { grade: "C", short: "Developing" },
+  { grade: "D", short: "Recovery" },
 ];
 
 function PerformancePage() {
