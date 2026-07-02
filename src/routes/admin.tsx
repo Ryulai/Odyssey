@@ -223,7 +223,8 @@ function StaffModule() {
                 <th className="py-2 pr-3">Name</th>
                 <th className="py-2 pr-3">Emp ID</th>
                 <th className="py-2 pr-3">Role</th>
-                <th className="py-2 pr-3">Path</th>
+                <th className="py-2 pr-3">Class · Role</th>
+                <th className="py-2 pr-3">Rank</th>
                 <th className="py-2 pr-3">Fleet</th>
                 <th className="py-2 pr-3">Manager</th>
                 <th className="py-2 pr-3">Joined</th>
