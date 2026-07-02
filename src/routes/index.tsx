@@ -402,6 +402,25 @@ function IdRow({ label, value, valueColor }: { label: string; value: string; val
   );
 }
 
+function DossierRow({ label, value, color }: { label: string; value: string; color?: string }) {
+  return (
+    <div className="flex items-baseline justify-between gap-4">
+      <span
+        className="text-[11px] uppercase tracking-wider"
+        style={{ color: "#94A3B8", fontFamily: "'Inter', sans-serif" }}
+      >
+        {label}
+      </span>
+      <span
+        className="text-sm font-medium tracking-wide"
+        style={{ color: color ?? "#E2E8F0", fontFamily: "'Inter', sans-serif" }}
+      >
+        {value}
+      </span>
+    </div>
+  );
+}
+
 function MiniStat({ label, value, sub, color }: { label: string; value: string; sub: string; color: string }) {
   return (
     <div className="rounded-md border border-border bg-ink/50 p-4 text-center">
