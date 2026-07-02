@@ -190,7 +190,7 @@ function LinkedHome({ d }: { d: any }) {
               </>
             ) : (
               <>
-                <MiniStat label="This Month" value={`Grade ${latestGrade}`} sub={gradeMeta?.label ?? "no review yet"} color={gradeMeta?.color ?? "var(--color-muted-foreground)"} />
+                <MiniStat label="Monthly Performance" value={latestGrade !== "—" ? `Current Grade ${latestGrade}` : "No Monthly Review Yet"} sub={latestGrade !== "—" ? (gradeMeta?.label ?? "") : ""} color={latestGrade !== "—" ? (gradeMeta?.color ?? "var(--color-muted-foreground)") : "var(--color-muted-foreground)"} />
                 {isHunter
                   ? <MiniStat label="Legacy" value={`${totals.stars}★`} sub={`${totals.moons}🌙 · ${totals.suns}☀️`} color="var(--color-gold)" />
                   : <MiniStat label="Discipline" value={s.role} sub={(s.business_unit ?? "").split("·")[0].trim() || "—"} color="var(--color-gold)" />
