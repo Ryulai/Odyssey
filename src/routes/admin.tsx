@@ -245,11 +245,11 @@ function StaffModule() {
                   </td>
                   <td className="py-2 pr-3 text-muted-foreground">{s.employee_code ?? "—"}</td>
                   <td className="py-2 pr-3 text-muted-foreground">{s.role}</td>
-                  <td className="py-2 pr-3 text-muted-foreground capitalize">
+                  <td className="py-2 pr-3 text-muted-foreground">
                     {s.primary_class ? (
                       <div>
-                        <span className="text-foreground">{s.primary_class}</span>
-                        {s.primary_role && <span className="text-muted-foreground"> · {s.primary_role}</span>}
+                        <span className="text-foreground">{classLabel(s.primary_class)}</span>
+                        {s.primary_role && <span className="text-muted-foreground"> · {roleLabel(s.primary_role)}</span>}
                       </div>
                     ) : (
                       <span className="text-muted-foreground/70">— unassigned —</span>
@@ -262,7 +262,7 @@ function StaffModule() {
                       </div>
                     )}
                   </td>
-                  <td className="py-2 pr-3 text-muted-foreground capitalize">{s.current_rank_key ?? s.rank_key ?? "bronze"}</td>
+                  <td className="py-2 pr-3 text-muted-foreground">{rankLabel(s.current_rank_key ?? s.rank_key ?? "bronze")}</td>
                   <td className="py-2 pr-3 text-muted-foreground">{locations.find((l: any) => l.id === s.location_id)?.name ?? <span className="text-amber-300/80">— Unassigned —</span>}</td>
                   <td className="py-2 pr-3 text-muted-foreground">{staff.find((x: any) => x.id === s.manager_id)?.name ?? "—"}</td>
                   <td className="py-2 pr-3 text-muted-foreground">{s.join_date ?? "—"}</td>
@@ -277,7 +277,7 @@ function StaffModule() {
                           ? <span className="text-muted-foreground">Building</span>
                           : <span className="text-muted-foreground">Max</span>}
                   </td>
-                  <td className="py-2 pr-3 text-muted-foreground capitalize">{s.status ?? "active"}</td>
+                  <td className="py-2 pr-3 text-muted-foreground">{statusLabel(s.status ?? "active")}</td>
                   <td className="py-2 pr-3 text-right">
                     <div className="inline-flex flex-wrap justify-end gap-2">
                       <Btn variant="ghost" onClick={() => setEditing(s)}>Edit</Btn>
