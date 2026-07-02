@@ -176,7 +176,7 @@ function LinkedHome({ d }: { d: any }) {
               </>
             ) : (
               <>
-                <MiniStat label="Rank" value={`${rankGly} ${rankName.replace(" Hunter", "")}`.trim()} sub={rankIdent || rankSub} color={rankColor} />
+                <MiniStat label="Guild ID" value={s.guild_id ?? "—"} sub="Permanent Record" color="var(--color-gold)" />
                 <MiniStat label="This Month" value={`Grade ${latestGrade}`} sub={gradeMeta?.label ?? "no review yet"} color={gradeMeta?.color ?? "var(--color-muted-foreground)"} />
                 {isHunter
                   ? <MiniStat label="Legacy" value={`${totals.stars}★`} sub={`${totals.moons}🌙 · ${totals.suns}☀️`} color="var(--color-gold)" />
