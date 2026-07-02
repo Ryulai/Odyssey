@@ -97,11 +97,11 @@ export function roleLabel(key: string | null | undefined): string {
 }
 export function rankLabel(key: string | null | undefined): string {
   const k = normalizeKey(key);
-  return (k && RANK_LABEL.get(k)) || (k ? titleCase(k) : "");
+  return (k ? (RANK_LABEL.get(k as (typeof RANKS)[number]["key"]) ?? titleCase(k)) : "");
 }
 export function statusLabel(key: string | null | undefined): string {
   const k = normalizeKey(key);
-  return (k && STATUS_LABEL.get(k)) || (k ? titleCase(k.replace(/_/g, " ")) : "");
+  return (k ? (STATUS_LABEL.get(k as StaffStatus) ?? titleCase(k.replace(/_/g, " "))) : "");
 }
 
 export function titleCase(v: string | null | undefined): string {
