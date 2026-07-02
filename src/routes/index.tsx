@@ -147,8 +147,9 @@ function LinkedHome({ d }: { d: any }) {
               )}
 
               {/* 3. Business Unit */}
-              <div className="mt-1 text-xs uppercase tracking-widest text-muted-foreground">
-                {s.business_unit || "—"}
+              <div className="mt-2">
+                <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Business Unit</div>
+                <div className="text-sm text-foreground">{s.business_unit || "—"}</div>
               </div>
 
               {/* 4. Fleet */}
@@ -230,129 +231,72 @@ function PromotionProgress({ d }: { d: any }) {
   const primaryClass = s.rpg?.primary_class ?? null;
   const showAchievements = primaryClass === "ranger" || (s.role_family ?? "hunter") === "hunter";
 
-  const currentRank = ev.current_rank_name ?? "Unranked";
-  const nextRank    = ev.next_rank_name ?? null;
+  const nextRank = ev.next_rank_name ?? null;
+  if (!nextRank) return null;
 
-  // Monthly Reviews requirement: A grades needed for next rank
-  const reviewsHave   = Number(ev.a_grades ?? 0);
-  const reviewsNeed   = Number(ev.next_min_a_grades ?? 0);
-  const reviewsPct    = reviewsNeed ? Math.min(100, (reviewsHave / reviewsNeed) * 100) : 100;
+  const reviewsHave = Number(ev.a_grades ?? 0);
+  const reviewsNeed = Number(ev.next_min_a_grades ?? 0);
+  const reviewsDone = reviewsNeed ? reviewsHave >= reviewsNeed : true;
 
   const achHave = Number(ev.total_stars ?? 0);
   const achNeed = Number(ev.next_min_total_stars ?? 0);
-  const achPct  = achNeed ? Math.min(100, (achHave / achNeed) * 100) : 100;
+  const achDone = achNeed ? achHave >= achNeed : true;
 
   const latestGrade = d.grades?.[0]?.grade ?? "—";
-  const gradeMeta = GRADE_META[latestGrade as Grade] ?? null;
-  const gradeOk = latestGrade === "A" || latestGrade === "B";
+  const gradeDone = latestGrade === "A" || latestGrade === "B";
 
-  // Overall pct: average of the tracked pillars that apply
-  const parts = [reviewsPct];
-  if (showAchievements) parts.push(achPct);
-  const overallPct = Math.round(parts.reduce((a,b)=>a+b,0) / parts.length);
+  const standingDone = true;
+
+  const reqs: { label: string; done: boolean }[] = [
+    { label: "Monthly Reviews", done: reviewsDone },
+    { label: "Monthly Grade", done: gradeDone },
+    { label: "Guild Standing", done: standingDone },
+  ];
+  if (showAchievements) reqs.push({ label: "Achievement", done: achDone });
+
+  const completed = reqs.filter((r) => r.done).length;
+  const total = reqs.length;
 
   return (
     <section className="card-ornate-gold p-8 sm:p-10">
       <div className="text-center">
         <div className="text-[10px] uppercase tracking-[0.3em] text-gold">Ascension</div>
-        <h2 className="mt-2 font-display text-2xl text-foreground sm:text-3xl">Promotion Progress</h2>
-        <p className="mt-2 text-sm italic text-muted-foreground">Your journey toward the next Rank.</p>
+        <h2 className="mt-2 font-display text-2xl text-foreground sm:text-3xl">Journey to {nextRank}</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Requirements</p>
       </div>
 
-      {/* Overall bar */}
-      <div className="mt-8">
-        <div className="flex items-baseline justify-between">
-          <span className="font-display text-sm uppercase tracking-widest text-muted-foreground">
-            {currentRank} <span className="text-gold">→</span> {nextRank ?? "Pinnacle"}
-          </span>
-          <span className="font-display text-2xl text-gold">{nextRank ? `${overallPct}%` : "MAX"}</span>
-        </div>
-        <div className="mt-3 h-4 w-full overflow-hidden rounded-full border border-gold/40 bg-ink">
+      <div className="mt-10 space-y-3">
+        {reqs.map((req) => (
           <div
-            className="h-full rounded-full transition-all"
-            style={{
-              width: `${nextRank ? overallPct : 100}%`,
-              background: "linear-gradient(90deg, color-mix(in oklch, var(--color-gold) 40%, transparent), var(--color-gold))",
-              boxShadow: "0 0 20px -4px var(--color-gold)",
-            }}
-          />
-        </div>
+            key={req.label}
+            className={`flex items-center gap-4 rounded-md border px-5 py-4 ${
+              req.done ? "border-border/40" : "border-gold/25 bg-ink/40"
+            }`}
+          >
+            <span
+              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md border font-display text-sm ${
+                req.done ? "border-gold/40 text-gold" : "border-border text-muted-foreground"
+              }`}
+            >
+              {req.done ? "✓" : "□"}
+            </span>
+            <span className={`text-sm ${req.done ? "text-foreground/50" : "text-foreground"}`}>
+              {req.label}
+            </span>
+          </div>
+        ))}
       </div>
 
-      {/* Requirement cards */}
-      <div className={`mt-8 grid gap-5 ${showAchievements ? "sm:grid-cols-2 lg:grid-cols-4" : "sm:grid-cols-3"}`}>
-        <RequirementCard
-          label="Monthly Reviews"
-          value={reviewsNeed ? `${reviewsHave} / ${reviewsNeed}` : `${reviewsHave}`}
-          hint={reviewsNeed ? "A-grade reviews required" : "No further reviews required"}
-          progress={reviewsPct}
-          icon="★"
-        />
-        <RequirementCard
-          label="Performance Grade"
-          value={latestGrade === "—" ? "—" : `Grade ${latestGrade}`}
-          hint="Maintain the required monthly performance."
-          progress={gradeOk ? 100 : latestGrade === "—" ? 0 : 40}
-          icon="◈"
-          accent={gradeMeta?.color}
-        />
-        <RequirementCard
-          label="Guild Standing"
-          value="Good Standing"
-          hint="No disciplinary issues on record."
-          progress={100}
-          icon="✦"
-          accent="oklch(0.78 0.16 155)"
-          statusOk
-        />
-        {showAchievements && (
-          <RequirementCard
-            label="Achievements"
-            value={achNeed ? `${achHave} / ${achNeed}★` : `${achHave}★`}
-            hint={achNeed ? "Stars toward the next Rank" : "No further stars required"}
-            progress={achPct}
-            icon="⚔"
-          />
-        )}
+      <div className="mt-10 flex items-center justify-center gap-3">
+        <span className="font-display text-3xl text-gold">{completed}</span>
+        <span className="text-lg text-muted-foreground">/</span>
+        <span className="font-display text-3xl text-gold">{total}</span>
+        <span className="ml-1 text-sm text-muted-foreground">Requirements Completed</span>
       </div>
     </section>
   );
 }
 
-function RequirementCard({
-  label, value, hint, progress, icon, accent, statusOk,
-}: {
-  label: string; value: string; hint: string; progress: number;
-  icon: string; accent?: string; statusOk?: boolean;
-}) {
-  const color = accent ?? "var(--color-gold)";
-  return (
-    <div className="relative flex flex-col rounded-lg border border-border bg-ink/40 p-5">
-      <div className="flex items-center justify-between">
-        <span className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">{label}</span>
-        <span className="font-display text-lg" style={{ color }}>{icon}</span>
-      </div>
-      <div className="mt-3 font-display text-xl" style={{ color }}>{value}</div>
-      <div className="mt-1 min-h-[2.5rem] text-[11px] leading-snug text-muted-foreground">{hint}</div>
-      <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-ink">
-        <div
-          className="h-full rounded-full transition-all"
-          style={{
-            width: `${Math.max(0, Math.min(100, progress))}%`,
-            background: color,
-            boxShadow: `0 0 10px -2px ${color}`,
-          }}
-        />
-      </div>
-      {statusOk && (
-        <span className="mt-3 inline-flex w-fit items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-400/10 px-2 py-0.5 text-[10px] uppercase tracking-widest text-emerald-300">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]" />
-          Eligible
-        </span>
-      )}
-    </div>
-  );
-}
 
 
 /* ----------------------------- Header ----------------------------- */
