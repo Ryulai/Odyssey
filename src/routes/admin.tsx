@@ -31,7 +31,7 @@ export const Route = createFileRoute("/admin")({
 type AdminTab = "staff" | "locations" | "holdings" | "grades" | "achievements" | "ranks" | "legacy";
 
 const TABS: { key: AdminTab; label: string; hint: string; cap: Capability }[] = [
-  { key: "staff",        label: "Staff",            hint: "Work Identity — fleet, department, position, manager", cap: "admin.staff" },
+  { key: "staff",        label: "Staff",            hint: "Work Identity — fleet, business unit, position, manager", cap: "admin.staff" },
   { key: "locations",    label: "Fleets",           hint: "Manage locations / venues and their captain",         cap: "admin.staff" },
   { key: "holdings",     label: "Legacy Registry",  hint: "Founders, Partners, Investors — independent of current workplace", cap: "admin.legacy" },
   { key: "grades",       label: "Grades",           hint: "Define A/B/C/D rules and weights",          cap: "admin.grades" },
