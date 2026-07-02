@@ -245,7 +245,14 @@ function StaffModule() {
                   <td className="py-2 pr-3 text-muted-foreground">{s.employee_code ?? "—"}</td>
                   <td className="py-2 pr-3 text-muted-foreground">{s.role}</td>
                   <td className="py-2 pr-3 text-muted-foreground capitalize">
-                    {s.role_family}
+                    {s.primary_class ? (
+                      <div>
+                        <span className="text-foreground">{s.primary_class}</span>
+                        {s.primary_role && <span className="text-muted-foreground"> · {s.primary_role}</span>}
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground/70">— unassigned —</span>
+                    )}
                     {(s.career_path || s.shipbuilder_path) && (
                       <div className="text-[10px] text-muted-foreground/80">
                         {s.career_path && <span>C: {s.career_path}</span>}
@@ -254,6 +261,7 @@ function StaffModule() {
                       </div>
                     )}
                   </td>
+                  <td className="py-2 pr-3 text-muted-foreground capitalize">{s.current_rank_key ?? s.rank_key ?? "bronze"}</td>
                   <td className="py-2 pr-3 text-muted-foreground">{locations.find((l: any) => l.id === s.location_id)?.name ?? <span className="text-amber-300/80">— Unassigned —</span>}</td>
                   <td className="py-2 pr-3 text-muted-foreground">{staff.find((x: any) => x.id === s.manager_id)?.name ?? "—"}</td>
                   <td className="py-2 pr-3 text-muted-foreground">{s.join_date ?? "—"}</td>
