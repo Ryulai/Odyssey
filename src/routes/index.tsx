@@ -39,7 +39,10 @@ function Dashboard() {
           <LinkedHome d={data} />
         )}
         <footer className="mt-12 border-t border-border pt-6 text-center text-xs text-muted-foreground">
-          The Odyssey Guide · Chart Your Journey. Forge Your Legacy.
+          <div>The Odyssey Guide · Chart Your Journey. Forge Your Legacy.</div>
+          <div className="mt-2">
+            <Link to="/map" className="uppercase tracking-widest text-gold hover:underline">Odyssey Map →</Link>
+          </div>
         </footer>
       </div>
     </div>

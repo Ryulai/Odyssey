@@ -10,12 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SystemRouteImport } from './routes/system'
+import { Route as StatisticsRouteImport } from './routes/statistics'
 import { Route as SecondaryClassRouteImport } from './routes/secondary-class'
 import { Route as PromotionsRouteImport } from './routes/promotions'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PerformanceRouteImport } from './routes/performance'
+import { Route as OwnershipRouteImport } from './routes/ownership'
+import { Route as MentorshipRouteImport } from './routes/mentorship'
 import { Route as MapRouteImport } from './routes/map'
 import { Route as ManagerRouteImport } from './routes/manager'
+import { Route as JournalRouteImport } from './routes/journal'
+import { Route as InventoryRouteImport } from './routes/inventory'
 import { Route as FleetRouteImport } from './routes/fleet'
 import { Route as EvaluationsRouteImport } from './routes/evaluations'
 import { Route as CollectionsRouteImport } from './routes/collections'
@@ -24,13 +29,33 @@ import { Route as CareerRouteImport } from './routes/career'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppearanceRouteImport } from './routes/appearance'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SystemIndexRouteImport } from './routes/system.index'
 import { Route as CollectionsIndexRouteImport } from './routes/collections.index'
+import { Route as SystemSettingsRouteImport } from './routes/system.settings'
+import { Route as SystemPreferencesRouteImport } from './routes/system.preferences'
+import { Route as SystemNotificationsRouteImport } from './routes/system.notifications'
+import { Route as SystemGuildCollectionRouteImport } from './routes/system.guild-collection'
+import { Route as CollectionsTitlesRouteImport } from './routes/collections.titles'
+import { Route as CollectionsSeasonalRouteImport } from './routes/collections.seasonal'
+import { Route as CollectionsPortraitsRouteImport } from './routes/collections.portraits'
+import { Route as CollectionsFramesRouteImport } from './routes/collections.frames'
+import { Route as CollectionsFounderRouteImport } from './routes/collections.founder'
+import { Route as CollectionsEventsRouteImport } from './routes/collections.events'
+import { Route as CollectionsEmblemsRouteImport } from './routes/collections.emblems'
+import { Route as CollectionsEffectsRouteImport } from './routes/collections.effects'
+import { Route as CollectionsCosmeticsRouteImport } from './routes/collections.cosmetics'
+import { Route as CollectionsBackgroundsRouteImport } from './routes/collections.backgrounds'
 
 const SystemRoute = SystemRouteImport.update({
   id: '/system',
   path: '/system',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StatisticsRoute = StatisticsRouteImport.update({
+  id: '/statistics',
+  path: '/statistics',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SecondaryClassRoute = SecondaryClassRouteImport.update({
@@ -53,6 +78,16 @@ const PerformanceRoute = PerformanceRouteImport.update({
   path: '/performance',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OwnershipRoute = OwnershipRouteImport.update({
+  id: '/ownership',
+  path: '/ownership',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MentorshipRoute = MentorshipRouteImport.update({
+  id: '/mentorship',
+  path: '/mentorship',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MapRoute = MapRouteImport.update({
   id: '/map',
   path: '/map',
@@ -61,6 +96,16 @@ const MapRoute = MapRouteImport.update({
 const ManagerRoute = ManagerRouteImport.update({
   id: '/manager',
   path: '/manager',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JournalRoute = JournalRouteImport.update({
+  id: '/journal',
+  path: '/journal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InventoryRoute = InventoryRouteImport.update({
+  id: '/inventory',
+  path: '/inventory',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FleetRoute = FleetRouteImport.update({
@@ -103,6 +148,11 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AchievementsRoute = AchievementsRouteImport.update({
+  id: '/achievements',
+  path: '/achievements',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -118,9 +168,80 @@ const CollectionsIndexRoute = CollectionsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => CollectionsRoute,
 } as any)
+const SystemSettingsRoute = SystemSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => SystemRoute,
+} as any)
+const SystemPreferencesRoute = SystemPreferencesRouteImport.update({
+  id: '/preferences',
+  path: '/preferences',
+  getParentRoute: () => SystemRoute,
+} as any)
+const SystemNotificationsRoute = SystemNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => SystemRoute,
+} as any)
+const SystemGuildCollectionRoute = SystemGuildCollectionRouteImport.update({
+  id: '/guild-collection',
+  path: '/guild-collection',
+  getParentRoute: () => SystemRoute,
+} as any)
+const CollectionsTitlesRoute = CollectionsTitlesRouteImport.update({
+  id: '/titles',
+  path: '/titles',
+  getParentRoute: () => CollectionsRoute,
+} as any)
+const CollectionsSeasonalRoute = CollectionsSeasonalRouteImport.update({
+  id: '/seasonal',
+  path: '/seasonal',
+  getParentRoute: () => CollectionsRoute,
+} as any)
+const CollectionsPortraitsRoute = CollectionsPortraitsRouteImport.update({
+  id: '/portraits',
+  path: '/portraits',
+  getParentRoute: () => CollectionsRoute,
+} as any)
+const CollectionsFramesRoute = CollectionsFramesRouteImport.update({
+  id: '/frames',
+  path: '/frames',
+  getParentRoute: () => CollectionsRoute,
+} as any)
+const CollectionsFounderRoute = CollectionsFounderRouteImport.update({
+  id: '/founder',
+  path: '/founder',
+  getParentRoute: () => CollectionsRoute,
+} as any)
+const CollectionsEventsRoute = CollectionsEventsRouteImport.update({
+  id: '/events',
+  path: '/events',
+  getParentRoute: () => CollectionsRoute,
+} as any)
+const CollectionsEmblemsRoute = CollectionsEmblemsRouteImport.update({
+  id: '/emblems',
+  path: '/emblems',
+  getParentRoute: () => CollectionsRoute,
+} as any)
+const CollectionsEffectsRoute = CollectionsEffectsRouteImport.update({
+  id: '/effects',
+  path: '/effects',
+  getParentRoute: () => CollectionsRoute,
+} as any)
+const CollectionsCosmeticsRoute = CollectionsCosmeticsRouteImport.update({
+  id: '/cosmetics',
+  path: '/cosmetics',
+  getParentRoute: () => CollectionsRoute,
+} as any)
+const CollectionsBackgroundsRoute = CollectionsBackgroundsRouteImport.update({
+  id: '/backgrounds',
+  path: '/backgrounds',
+  getParentRoute: () => CollectionsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/achievements': typeof AchievementsRoute
   '/admin': typeof AdminRoute
   '/appearance': typeof AppearanceRoute
   '/auth': typeof AuthRoute
@@ -129,18 +250,38 @@ export interface FileRoutesByFullPath {
   '/collections': typeof CollectionsRouteWithChildren
   '/evaluations': typeof EvaluationsRoute
   '/fleet': typeof FleetRoute
+  '/inventory': typeof InventoryRoute
+  '/journal': typeof JournalRoute
   '/manager': typeof ManagerRoute
   '/map': typeof MapRoute
+  '/mentorship': typeof MentorshipRoute
+  '/ownership': typeof OwnershipRoute
   '/performance': typeof PerformanceRoute
   '/profile': typeof ProfileRoute
   '/promotions': typeof PromotionsRoute
   '/secondary-class': typeof SecondaryClassRoute
+  '/statistics': typeof StatisticsRoute
   '/system': typeof SystemRouteWithChildren
+  '/collections/backgrounds': typeof CollectionsBackgroundsRoute
+  '/collections/cosmetics': typeof CollectionsCosmeticsRoute
+  '/collections/effects': typeof CollectionsEffectsRoute
+  '/collections/emblems': typeof CollectionsEmblemsRoute
+  '/collections/events': typeof CollectionsEventsRoute
+  '/collections/founder': typeof CollectionsFounderRoute
+  '/collections/frames': typeof CollectionsFramesRoute
+  '/collections/portraits': typeof CollectionsPortraitsRoute
+  '/collections/seasonal': typeof CollectionsSeasonalRoute
+  '/collections/titles': typeof CollectionsTitlesRoute
+  '/system/guild-collection': typeof SystemGuildCollectionRoute
+  '/system/notifications': typeof SystemNotificationsRoute
+  '/system/preferences': typeof SystemPreferencesRoute
+  '/system/settings': typeof SystemSettingsRoute
   '/collections/': typeof CollectionsIndexRoute
   '/system/': typeof SystemIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/achievements': typeof AchievementsRoute
   '/admin': typeof AdminRoute
   '/appearance': typeof AppearanceRoute
   '/auth': typeof AuthRoute
@@ -148,18 +289,38 @@ export interface FileRoutesByTo {
   '/claims': typeof ClaimsRoute
   '/evaluations': typeof EvaluationsRoute
   '/fleet': typeof FleetRoute
+  '/inventory': typeof InventoryRoute
+  '/journal': typeof JournalRoute
   '/manager': typeof ManagerRoute
   '/map': typeof MapRoute
+  '/mentorship': typeof MentorshipRoute
+  '/ownership': typeof OwnershipRoute
   '/performance': typeof PerformanceRoute
   '/profile': typeof ProfileRoute
   '/promotions': typeof PromotionsRoute
   '/secondary-class': typeof SecondaryClassRoute
+  '/statistics': typeof StatisticsRoute
+  '/collections/backgrounds': typeof CollectionsBackgroundsRoute
+  '/collections/cosmetics': typeof CollectionsCosmeticsRoute
+  '/collections/effects': typeof CollectionsEffectsRoute
+  '/collections/emblems': typeof CollectionsEmblemsRoute
+  '/collections/events': typeof CollectionsEventsRoute
+  '/collections/founder': typeof CollectionsFounderRoute
+  '/collections/frames': typeof CollectionsFramesRoute
+  '/collections/portraits': typeof CollectionsPortraitsRoute
+  '/collections/seasonal': typeof CollectionsSeasonalRoute
+  '/collections/titles': typeof CollectionsTitlesRoute
+  '/system/guild-collection': typeof SystemGuildCollectionRoute
+  '/system/notifications': typeof SystemNotificationsRoute
+  '/system/preferences': typeof SystemPreferencesRoute
+  '/system/settings': typeof SystemSettingsRoute
   '/collections': typeof CollectionsIndexRoute
   '/system': typeof SystemIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/achievements': typeof AchievementsRoute
   '/admin': typeof AdminRoute
   '/appearance': typeof AppearanceRoute
   '/auth': typeof AuthRoute
@@ -168,13 +329,32 @@ export interface FileRoutesById {
   '/collections': typeof CollectionsRouteWithChildren
   '/evaluations': typeof EvaluationsRoute
   '/fleet': typeof FleetRoute
+  '/inventory': typeof InventoryRoute
+  '/journal': typeof JournalRoute
   '/manager': typeof ManagerRoute
   '/map': typeof MapRoute
+  '/mentorship': typeof MentorshipRoute
+  '/ownership': typeof OwnershipRoute
   '/performance': typeof PerformanceRoute
   '/profile': typeof ProfileRoute
   '/promotions': typeof PromotionsRoute
   '/secondary-class': typeof SecondaryClassRoute
+  '/statistics': typeof StatisticsRoute
   '/system': typeof SystemRouteWithChildren
+  '/collections/backgrounds': typeof CollectionsBackgroundsRoute
+  '/collections/cosmetics': typeof CollectionsCosmeticsRoute
+  '/collections/effects': typeof CollectionsEffectsRoute
+  '/collections/emblems': typeof CollectionsEmblemsRoute
+  '/collections/events': typeof CollectionsEventsRoute
+  '/collections/founder': typeof CollectionsFounderRoute
+  '/collections/frames': typeof CollectionsFramesRoute
+  '/collections/portraits': typeof CollectionsPortraitsRoute
+  '/collections/seasonal': typeof CollectionsSeasonalRoute
+  '/collections/titles': typeof CollectionsTitlesRoute
+  '/system/guild-collection': typeof SystemGuildCollectionRoute
+  '/system/notifications': typeof SystemNotificationsRoute
+  '/system/preferences': typeof SystemPreferencesRoute
+  '/system/settings': typeof SystemSettingsRoute
   '/collections/': typeof CollectionsIndexRoute
   '/system/': typeof SystemIndexRoute
 }
@@ -182,6 +362,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/achievements'
     | '/admin'
     | '/appearance'
     | '/auth'
@@ -190,18 +371,38 @@ export interface FileRouteTypes {
     | '/collections'
     | '/evaluations'
     | '/fleet'
+    | '/inventory'
+    | '/journal'
     | '/manager'
     | '/map'
+    | '/mentorship'
+    | '/ownership'
     | '/performance'
     | '/profile'
     | '/promotions'
     | '/secondary-class'
+    | '/statistics'
     | '/system'
+    | '/collections/backgrounds'
+    | '/collections/cosmetics'
+    | '/collections/effects'
+    | '/collections/emblems'
+    | '/collections/events'
+    | '/collections/founder'
+    | '/collections/frames'
+    | '/collections/portraits'
+    | '/collections/seasonal'
+    | '/collections/titles'
+    | '/system/guild-collection'
+    | '/system/notifications'
+    | '/system/preferences'
+    | '/system/settings'
     | '/collections/'
     | '/system/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/achievements'
     | '/admin'
     | '/appearance'
     | '/auth'
@@ -209,17 +410,37 @@ export interface FileRouteTypes {
     | '/claims'
     | '/evaluations'
     | '/fleet'
+    | '/inventory'
+    | '/journal'
     | '/manager'
     | '/map'
+    | '/mentorship'
+    | '/ownership'
     | '/performance'
     | '/profile'
     | '/promotions'
     | '/secondary-class'
+    | '/statistics'
+    | '/collections/backgrounds'
+    | '/collections/cosmetics'
+    | '/collections/effects'
+    | '/collections/emblems'
+    | '/collections/events'
+    | '/collections/founder'
+    | '/collections/frames'
+    | '/collections/portraits'
+    | '/collections/seasonal'
+    | '/collections/titles'
+    | '/system/guild-collection'
+    | '/system/notifications'
+    | '/system/preferences'
+    | '/system/settings'
     | '/collections'
     | '/system'
   id:
     | '__root__'
     | '/'
+    | '/achievements'
     | '/admin'
     | '/appearance'
     | '/auth'
@@ -228,19 +449,39 @@ export interface FileRouteTypes {
     | '/collections'
     | '/evaluations'
     | '/fleet'
+    | '/inventory'
+    | '/journal'
     | '/manager'
     | '/map'
+    | '/mentorship'
+    | '/ownership'
     | '/performance'
     | '/profile'
     | '/promotions'
     | '/secondary-class'
+    | '/statistics'
     | '/system'
+    | '/collections/backgrounds'
+    | '/collections/cosmetics'
+    | '/collections/effects'
+    | '/collections/emblems'
+    | '/collections/events'
+    | '/collections/founder'
+    | '/collections/frames'
+    | '/collections/portraits'
+    | '/collections/seasonal'
+    | '/collections/titles'
+    | '/system/guild-collection'
+    | '/system/notifications'
+    | '/system/preferences'
+    | '/system/settings'
     | '/collections/'
     | '/system/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AchievementsRoute: typeof AchievementsRoute
   AdminRoute: typeof AdminRoute
   AppearanceRoute: typeof AppearanceRoute
   AuthRoute: typeof AuthRoute
@@ -249,12 +490,17 @@ export interface RootRouteChildren {
   CollectionsRoute: typeof CollectionsRouteWithChildren
   EvaluationsRoute: typeof EvaluationsRoute
   FleetRoute: typeof FleetRoute
+  InventoryRoute: typeof InventoryRoute
+  JournalRoute: typeof JournalRoute
   ManagerRoute: typeof ManagerRoute
   MapRoute: typeof MapRoute
+  MentorshipRoute: typeof MentorshipRoute
+  OwnershipRoute: typeof OwnershipRoute
   PerformanceRoute: typeof PerformanceRoute
   ProfileRoute: typeof ProfileRoute
   PromotionsRoute: typeof PromotionsRoute
   SecondaryClassRoute: typeof SecondaryClassRoute
+  StatisticsRoute: typeof StatisticsRoute
   SystemRoute: typeof SystemRouteWithChildren
 }
 
@@ -265,6 +511,13 @@ declare module '@tanstack/react-router' {
       path: '/system'
       fullPath: '/system'
       preLoaderRoute: typeof SystemRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/statistics': {
+      id: '/statistics'
+      path: '/statistics'
+      fullPath: '/statistics'
+      preLoaderRoute: typeof StatisticsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/secondary-class': {
@@ -295,6 +548,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PerformanceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ownership': {
+      id: '/ownership'
+      path: '/ownership'
+      fullPath: '/ownership'
+      preLoaderRoute: typeof OwnershipRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mentorship': {
+      id: '/mentorship'
+      path: '/mentorship'
+      fullPath: '/mentorship'
+      preLoaderRoute: typeof MentorshipRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/map': {
       id: '/map'
       path: '/map'
@@ -307,6 +574,20 @@ declare module '@tanstack/react-router' {
       path: '/manager'
       fullPath: '/manager'
       preLoaderRoute: typeof ManagerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/journal': {
+      id: '/journal'
+      path: '/journal'
+      fullPath: '/journal'
+      preLoaderRoute: typeof JournalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/inventory': {
+      id: '/inventory'
+      path: '/inventory'
+      fullPath: '/inventory'
+      preLoaderRoute: typeof InventoryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/fleet': {
@@ -365,6 +646,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/achievements': {
+      id: '/achievements'
+      path: '/achievements'
+      fullPath: '/achievements'
+      preLoaderRoute: typeof AchievementsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -386,14 +674,132 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CollectionsIndexRouteImport
       parentRoute: typeof CollectionsRoute
     }
+    '/system/settings': {
+      id: '/system/settings'
+      path: '/settings'
+      fullPath: '/system/settings'
+      preLoaderRoute: typeof SystemSettingsRouteImport
+      parentRoute: typeof SystemRoute
+    }
+    '/system/preferences': {
+      id: '/system/preferences'
+      path: '/preferences'
+      fullPath: '/system/preferences'
+      preLoaderRoute: typeof SystemPreferencesRouteImport
+      parentRoute: typeof SystemRoute
+    }
+    '/system/notifications': {
+      id: '/system/notifications'
+      path: '/notifications'
+      fullPath: '/system/notifications'
+      preLoaderRoute: typeof SystemNotificationsRouteImport
+      parentRoute: typeof SystemRoute
+    }
+    '/system/guild-collection': {
+      id: '/system/guild-collection'
+      path: '/guild-collection'
+      fullPath: '/system/guild-collection'
+      preLoaderRoute: typeof SystemGuildCollectionRouteImport
+      parentRoute: typeof SystemRoute
+    }
+    '/collections/titles': {
+      id: '/collections/titles'
+      path: '/titles'
+      fullPath: '/collections/titles'
+      preLoaderRoute: typeof CollectionsTitlesRouteImport
+      parentRoute: typeof CollectionsRoute
+    }
+    '/collections/seasonal': {
+      id: '/collections/seasonal'
+      path: '/seasonal'
+      fullPath: '/collections/seasonal'
+      preLoaderRoute: typeof CollectionsSeasonalRouteImport
+      parentRoute: typeof CollectionsRoute
+    }
+    '/collections/portraits': {
+      id: '/collections/portraits'
+      path: '/portraits'
+      fullPath: '/collections/portraits'
+      preLoaderRoute: typeof CollectionsPortraitsRouteImport
+      parentRoute: typeof CollectionsRoute
+    }
+    '/collections/frames': {
+      id: '/collections/frames'
+      path: '/frames'
+      fullPath: '/collections/frames'
+      preLoaderRoute: typeof CollectionsFramesRouteImport
+      parentRoute: typeof CollectionsRoute
+    }
+    '/collections/founder': {
+      id: '/collections/founder'
+      path: '/founder'
+      fullPath: '/collections/founder'
+      preLoaderRoute: typeof CollectionsFounderRouteImport
+      parentRoute: typeof CollectionsRoute
+    }
+    '/collections/events': {
+      id: '/collections/events'
+      path: '/events'
+      fullPath: '/collections/events'
+      preLoaderRoute: typeof CollectionsEventsRouteImport
+      parentRoute: typeof CollectionsRoute
+    }
+    '/collections/emblems': {
+      id: '/collections/emblems'
+      path: '/emblems'
+      fullPath: '/collections/emblems'
+      preLoaderRoute: typeof CollectionsEmblemsRouteImport
+      parentRoute: typeof CollectionsRoute
+    }
+    '/collections/effects': {
+      id: '/collections/effects'
+      path: '/effects'
+      fullPath: '/collections/effects'
+      preLoaderRoute: typeof CollectionsEffectsRouteImport
+      parentRoute: typeof CollectionsRoute
+    }
+    '/collections/cosmetics': {
+      id: '/collections/cosmetics'
+      path: '/cosmetics'
+      fullPath: '/collections/cosmetics'
+      preLoaderRoute: typeof CollectionsCosmeticsRouteImport
+      parentRoute: typeof CollectionsRoute
+    }
+    '/collections/backgrounds': {
+      id: '/collections/backgrounds'
+      path: '/backgrounds'
+      fullPath: '/collections/backgrounds'
+      preLoaderRoute: typeof CollectionsBackgroundsRouteImport
+      parentRoute: typeof CollectionsRoute
+    }
   }
 }
 
 interface CollectionsRouteChildren {
+  CollectionsBackgroundsRoute: typeof CollectionsBackgroundsRoute
+  CollectionsCosmeticsRoute: typeof CollectionsCosmeticsRoute
+  CollectionsEffectsRoute: typeof CollectionsEffectsRoute
+  CollectionsEmblemsRoute: typeof CollectionsEmblemsRoute
+  CollectionsEventsRoute: typeof CollectionsEventsRoute
+  CollectionsFounderRoute: typeof CollectionsFounderRoute
+  CollectionsFramesRoute: typeof CollectionsFramesRoute
+  CollectionsPortraitsRoute: typeof CollectionsPortraitsRoute
+  CollectionsSeasonalRoute: typeof CollectionsSeasonalRoute
+  CollectionsTitlesRoute: typeof CollectionsTitlesRoute
   CollectionsIndexRoute: typeof CollectionsIndexRoute
 }
 
 const CollectionsRouteChildren: CollectionsRouteChildren = {
+  CollectionsBackgroundsRoute: CollectionsBackgroundsRoute,
+  CollectionsCosmeticsRoute: CollectionsCosmeticsRoute,
+  CollectionsEffectsRoute: CollectionsEffectsRoute,
+  CollectionsEmblemsRoute: CollectionsEmblemsRoute,
+  CollectionsEventsRoute: CollectionsEventsRoute,
+  CollectionsFounderRoute: CollectionsFounderRoute,
+  CollectionsFramesRoute: CollectionsFramesRoute,
+  CollectionsPortraitsRoute: CollectionsPortraitsRoute,
+  CollectionsSeasonalRoute: CollectionsSeasonalRoute,
+  CollectionsTitlesRoute: CollectionsTitlesRoute,
   CollectionsIndexRoute: CollectionsIndexRoute,
 }
 
@@ -402,10 +808,18 @@ const CollectionsRouteWithChildren = CollectionsRoute._addFileChildren(
 )
 
 interface SystemRouteChildren {
+  SystemGuildCollectionRoute: typeof SystemGuildCollectionRoute
+  SystemNotificationsRoute: typeof SystemNotificationsRoute
+  SystemPreferencesRoute: typeof SystemPreferencesRoute
+  SystemSettingsRoute: typeof SystemSettingsRoute
   SystemIndexRoute: typeof SystemIndexRoute
 }
 
 const SystemRouteChildren: SystemRouteChildren = {
+  SystemGuildCollectionRoute: SystemGuildCollectionRoute,
+  SystemNotificationsRoute: SystemNotificationsRoute,
+  SystemPreferencesRoute: SystemPreferencesRoute,
+  SystemSettingsRoute: SystemSettingsRoute,
   SystemIndexRoute: SystemIndexRoute,
 }
 
@@ -414,6 +828,7 @@ const SystemRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AchievementsRoute: AchievementsRoute,
   AdminRoute: AdminRoute,
   AppearanceRoute: AppearanceRoute,
   AuthRoute: AuthRoute,
@@ -422,12 +837,17 @@ const rootRouteChildren: RootRouteChildren = {
   CollectionsRoute: CollectionsRouteWithChildren,
   EvaluationsRoute: EvaluationsRoute,
   FleetRoute: FleetRoute,
+  InventoryRoute: InventoryRoute,
+  JournalRoute: JournalRoute,
   ManagerRoute: ManagerRoute,
   MapRoute: MapRoute,
+  MentorshipRoute: MentorshipRoute,
+  OwnershipRoute: OwnershipRoute,
   PerformanceRoute: PerformanceRoute,
   ProfileRoute: ProfileRoute,
   PromotionsRoute: PromotionsRoute,
   SecondaryClassRoute: SecondaryClassRoute,
+  StatisticsRoute: StatisticsRoute,
   SystemRoute: SystemRouteWithChildren,
 }
 export const routeTree = rootRouteImport

@@ -150,50 +150,56 @@ function CharacterSheet({ d, isShipbuilder = false }: { d: any; isShipbuilder?: 
       (rankKey ?? "").toLowerCase() as string] ?? "#8A8F98";
 
   return (
-    <section className="relative overflow-hidden rounded-lg bg-[#0A0F1E] px-6 py-16 sm:px-12 sm:py-24">
+    <section className="relative overflow-hidden rounded-lg bg-[#0A0F1E] px-5 py-8 sm:px-12 sm:py-14">
       {/* soft radial glow only */}
       <div
         className="pointer-events-none absolute inset-0 opacity-40"
         style={{ background: `radial-gradient(circle at 50% 12%, ${rankColor}22, transparent 60%)` }}
       />
 
-      {/* ─── HERO ─────────────────────────────────────────── */}
+      {/* ─── HERO — first mobile screen: Who am I? ──────── */}
       <div className="relative flex flex-col items-center text-center">
         <PortraitBadge
-          size={224}
+          size={168}
           rankColor={rankColor}
           rankGlow={`${rankColor}66`}
           initials={initials || "—"}
           isShipbuilder={isShipbuilder}
         />
 
-
-        <h1 className="mt-12 font-display text-5xl leading-none tracking-[0.12em] text-foreground sm:text-6xl">
+        <h1 className="mt-5 font-display text-4xl leading-none tracking-[0.12em] text-foreground sm:mt-7 sm:text-5xl">
           {s.name}
         </h1>
 
-        <div className="mt-8 text-[11px] uppercase tracking-[0.5em] text-foreground/70">
+        <div
+          className="mt-3 font-display text-2xl tracking-[0.18em] sm:text-3xl"
+          style={{ color: rankColor, textShadow: `0 0 18px ${rankColor}66`, fontFamily: "'Cinzel', serif" }}
+        >
+          {isShipbuilder ? "Beyond Rank" : rankName}
+        </div>
+
+        <div className="mt-3 text-[11px] uppercase tracking-[0.5em] text-foreground/70">
           {profession}
         </div>
 
-        <div className="mt-3 text-[11px] uppercase tracking-[0.5em] text-muted-foreground">
+        <div className="mt-1.5 text-[11px] uppercase tracking-[0.5em] text-muted-foreground">
           {guildLabel}
         </div>
 
         <div
-          className="mt-10 text-xl italic text-muted-foreground sm:text-2xl"
+          className="mt-4 text-lg italic text-muted-foreground sm:mt-5 sm:text-xl"
           style={{ fontFamily: '"Cormorant Garamond", serif' }}
         >
           "{motto}"
         </div>
       </div>
 
-      {/* ─── CHARACTER PROFILE ────────────────────────────── */}
-      <div className="relative mx-auto mt-28 max-w-2xl">
-        <div className="mb-10 text-center text-[10px] uppercase tracking-[0.55em] text-muted-foreground">
+      {/* ─── CHARACTER PROFILE — peek above fold ───────── */}
+      <div className="relative mx-auto mt-10 max-w-2xl sm:mt-14">
+        <div className="mb-5 text-center text-[10px] uppercase tracking-[0.55em] text-muted-foreground">
           Character Profile
         </div>
-        <div className="grid grid-cols-2 gap-x-16 gap-y-10 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-x-10 gap-y-5 sm:grid-cols-3 sm:gap-x-16 sm:gap-y-6">
           <Field label="Origin" value={origin} />
           <Field label="Class"  value={className || "—"} />
           <Field
@@ -205,11 +211,11 @@ function CharacterSheet({ d, isShipbuilder = false }: { d: any; isShipbuilder?: 
       </div>
 
       {/* ─── ACTIVE ASSIGNMENT ────────────────────────────── */}
-      <div className="relative mx-auto mt-24 max-w-2xl">
-        <div className="mb-10 text-center text-[10px] uppercase tracking-[0.55em] text-muted-foreground">
+      <div className="relative mx-auto mt-12 max-w-2xl sm:mt-14">
+        <div className="mb-5 text-center text-[10px] uppercase tracking-[0.55em] text-muted-foreground">
           Active Assignment
         </div>
-        <div className="grid grid-cols-2 gap-x-16 gap-y-10 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-x-10 gap-y-5 sm:grid-cols-3 sm:gap-x-16 sm:gap-y-6">
           <Field label="Business Unit" value={s.business_unit || "—"} />
           <Field label="Fleet"         value={s.location?.name ?? "—"} />
           {!isShipbuilder && (
@@ -220,11 +226,11 @@ function CharacterSheet({ d, isShipbuilder = false }: { d: any; isShipbuilder?: 
 
       {/* ─── LEGACY ──────────────────────────────────────── */}
       {!isShipbuilder && (
-        <div className="relative mx-auto mt-24 max-w-2xl">
-          <div className="mb-10 text-center text-[10px] uppercase tracking-[0.55em] text-muted-foreground">
+        <div className="relative mx-auto mt-12 max-w-2xl sm:mt-14">
+          <div className="mb-5 text-center text-[10px] uppercase tracking-[0.55em] text-muted-foreground">
             Legacy
           </div>
-          <div className="grid grid-cols-3 gap-x-12 sm:gap-x-20">
+          <div className="grid grid-cols-3 gap-x-10 sm:gap-x-20">
             <LegacyStat label="Stars" value={d.totals?.stars ?? 0} />
             <LegacyStat label="Moons" value={d.totals?.moons ?? 0} />
             <LegacyStat label="Suns"  value={d.totals?.suns ?? 0} />
@@ -234,7 +240,7 @@ function CharacterSheet({ d, isShipbuilder = false }: { d: any; isShipbuilder?: 
 
       {/* ─── FOOTER · Guild ID ───────────────────────────── */}
       {(s.guild_id || s.id) && (
-        <div className="relative mt-24 text-center text-[9px] uppercase tracking-[0.5em] text-muted-foreground/40">
+        <div className="relative mt-12 text-center text-[9px] uppercase tracking-[0.5em] text-muted-foreground/40 sm:mt-14">
           Guild ID · {s.guild_id ?? String(s.id).slice(0, 8)}
         </div>
       )}
