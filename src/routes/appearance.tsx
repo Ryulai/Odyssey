@@ -419,6 +419,14 @@ function PhotoUploader() {
             Reset to Default
           </button>
         </div>
+        {saved && (
+          <div
+            className="animate-fade-in inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-[10px] uppercase tracking-[0.3em]"
+            style={{ borderColor: "#D4A84B", color: "#D4A84B", background: "rgba(212,168,75,0.10)" }}
+          >
+            ✓ Portrait Saved — Live on Profile & Home
+          </div>
+        )}
       </div>
     </div>
   );
