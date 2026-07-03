@@ -261,6 +261,7 @@ function PhotoUploader() {
   const [src, setSrc] = useState<string | null>(null);
   const [zoom, setZoom] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [saved, setSaved] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ x: number; y: number } | null>(null);
@@ -272,6 +273,7 @@ function PhotoUploader() {
       setSrc(String(reader.result));
       setZoom(1);
       setOffset({ x: 0, y: 0 });
+      setSaved(false);
     };
     reader.readAsDataURL(file);
   };
@@ -279,6 +281,7 @@ function PhotoUploader() {
   const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (f) onPick(f);
+    e.target.value = ""; // allow re-picking same file
   };
 
   const onDown = (e: React.PointerEvent) => {
@@ -300,20 +303,21 @@ function PhotoUploader() {
     canvas.width = 512;
     canvas.height = 512;
     const ctx = canvas.getContext("2d")!;
-    // Fit image to stage using object-cover semantics, then apply zoom & offset
     const scale = Math.max(STAGE / img.width, STAGE / img.height) * zoom;
     const drawW = img.width * scale;
     const drawH = img.height * scale;
     const cx = STAGE / 2 + offset.x - drawW / 2;
     const cy = STAGE / 2 + offset.y - drawH / 2;
-    // Scale from 240px stage to 512px output
     const k = 512 / STAGE;
     ctx.fillStyle = "#0A0F1E";
     ctx.fillRect(0, 0, 512, 512);
     ctx.drawImage(img, cx * k, cy * k, drawW * k, drawH * k);
     const dataUrl = canvas.toDataURL("image/jpeg", 0.88);
     setPortrait({ kind: "photo", dataUrl });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2400);
   }, [src, zoom, offset]);
+
 
   return (
     <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
