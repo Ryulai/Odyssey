@@ -258,14 +258,6 @@ function Field({ label, value, valueStyle }: { label: string; value: string; val
   );
 }
 
-function PField({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
-  return (
-    <div>
-      <div className="text-[10px] uppercase tracking-[0.35em] text-muted-foreground">{label}</div>
-      <div className={`mt-1.5 text-sm ${accent ? "text-gold" : "text-foreground/90"}`}>{value}</div>
-    </div>
-  );
-}
 
 function LegacyStat({ label, value }: { label: string; value: number | string }) {
   return (
