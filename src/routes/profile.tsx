@@ -159,17 +159,14 @@ function CharacterSheet({ d, isShipbuilder = false }: { d: any; isShipbuilder?: 
 
       {/* ─── HERO ─────────────────────────────────────────── */}
       <div className="relative flex flex-col items-center text-center">
-        <div
-          className="flex h-44 w-44 items-center justify-center rounded-full sm:h-56 sm:w-56"
-          style={{
-            boxShadow: `0 0 80px -12px ${rankColor}66, inset 0 0 40px rgba(0,0,0,0.7), 0 0 0 1px ${rankColor}55`,
-            background: "radial-gradient(circle at 50% 40%, rgba(255,255,255,0.05), rgba(0,0,0,0.5))",
-          }}
-        >
-          <span className="font-display text-6xl tracking-[0.15em] text-foreground/85 sm:text-7xl">
-            {initials || "—"}
-          </span>
-        </div>
+        <PortraitBadge
+          size={224}
+          rankColor={rankColor}
+          rankGlow={`${rankColor}66`}
+          initials={initials || "—"}
+          isShipbuilder={isShipbuilder}
+        />
+
 
         <h1 className="mt-12 font-display text-5xl leading-none tracking-[0.12em] text-foreground sm:text-6xl">
           {s.name}
