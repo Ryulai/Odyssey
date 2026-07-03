@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SystemRouteImport } from './routes/system'
 import { Route as SecondaryClassRouteImport } from './routes/secondary-class'
 import { Route as PromotionsRouteImport } from './routes/promotions'
 import { Route as ProfileRouteImport } from './routes/profile'
@@ -17,13 +18,21 @@ import { Route as MapRouteImport } from './routes/map'
 import { Route as ManagerRouteImport } from './routes/manager'
 import { Route as FleetRouteImport } from './routes/fleet'
 import { Route as EvaluationsRouteImport } from './routes/evaluations'
+import { Route as CollectionsRouteImport } from './routes/collections'
 import { Route as ClaimsRouteImport } from './routes/claims'
 import { Route as CareerRouteImport } from './routes/career'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppearanceRouteImport } from './routes/appearance'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SystemIndexRouteImport } from './routes/system.index'
+import { Route as CollectionsIndexRouteImport } from './routes/collections.index'
 
+const SystemRoute = SystemRouteImport.update({
+  id: '/system',
+  path: '/system',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SecondaryClassRoute = SecondaryClassRouteImport.update({
   id: '/secondary-class',
   path: '/secondary-class',
@@ -64,6 +73,11 @@ const EvaluationsRoute = EvaluationsRouteImport.update({
   path: '/evaluations',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CollectionsRoute = CollectionsRouteImport.update({
+  id: '/collections',
+  path: '/collections',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ClaimsRoute = ClaimsRouteImport.update({
   id: '/claims',
   path: '/claims',
@@ -94,6 +108,16 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SystemIndexRoute = SystemIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SystemRoute,
+} as any)
+const CollectionsIndexRoute = CollectionsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CollectionsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -102,6 +126,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/career': typeof CareerRoute
   '/claims': typeof ClaimsRoute
+  '/collections': typeof CollectionsRouteWithChildren
   '/evaluations': typeof EvaluationsRoute
   '/fleet': typeof FleetRoute
   '/manager': typeof ManagerRoute
@@ -110,6 +135,9 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/promotions': typeof PromotionsRoute
   '/secondary-class': typeof SecondaryClassRoute
+  '/system': typeof SystemRouteWithChildren
+  '/collections/': typeof CollectionsIndexRoute
+  '/system/': typeof SystemIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -126,6 +154,8 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/promotions': typeof PromotionsRoute
   '/secondary-class': typeof SecondaryClassRoute
+  '/collections': typeof CollectionsIndexRoute
+  '/system': typeof SystemIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -135,6 +165,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/career': typeof CareerRoute
   '/claims': typeof ClaimsRoute
+  '/collections': typeof CollectionsRouteWithChildren
   '/evaluations': typeof EvaluationsRoute
   '/fleet': typeof FleetRoute
   '/manager': typeof ManagerRoute
@@ -143,6 +174,9 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/promotions': typeof PromotionsRoute
   '/secondary-class': typeof SecondaryClassRoute
+  '/system': typeof SystemRouteWithChildren
+  '/collections/': typeof CollectionsIndexRoute
+  '/system/': typeof SystemIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -153,6 +187,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/career'
     | '/claims'
+    | '/collections'
     | '/evaluations'
     | '/fleet'
     | '/manager'
@@ -161,6 +196,9 @@ export interface FileRouteTypes {
     | '/profile'
     | '/promotions'
     | '/secondary-class'
+    | '/system'
+    | '/collections/'
+    | '/system/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -177,6 +215,8 @@ export interface FileRouteTypes {
     | '/profile'
     | '/promotions'
     | '/secondary-class'
+    | '/collections'
+    | '/system'
   id:
     | '__root__'
     | '/'
@@ -185,6 +225,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/career'
     | '/claims'
+    | '/collections'
     | '/evaluations'
     | '/fleet'
     | '/manager'
@@ -193,6 +234,9 @@ export interface FileRouteTypes {
     | '/profile'
     | '/promotions'
     | '/secondary-class'
+    | '/system'
+    | '/collections/'
+    | '/system/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -202,6 +246,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CareerRoute: typeof CareerRoute
   ClaimsRoute: typeof ClaimsRoute
+  CollectionsRoute: typeof CollectionsRouteWithChildren
   EvaluationsRoute: typeof EvaluationsRoute
   FleetRoute: typeof FleetRoute
   ManagerRoute: typeof ManagerRoute
@@ -210,10 +255,18 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRoute
   PromotionsRoute: typeof PromotionsRoute
   SecondaryClassRoute: typeof SecondaryClassRoute
+  SystemRoute: typeof SystemRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/system': {
+      id: '/system'
+      path: '/system'
+      fullPath: '/system'
+      preLoaderRoute: typeof SystemRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/secondary-class': {
       id: '/secondary-class'
       path: '/secondary-class'
@@ -270,6 +323,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EvaluationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/collections': {
+      id: '/collections'
+      path: '/collections'
+      fullPath: '/collections'
+      preLoaderRoute: typeof CollectionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/claims': {
       id: '/claims'
       path: '/claims'
@@ -312,8 +372,45 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/system/': {
+      id: '/system/'
+      path: '/'
+      fullPath: '/system/'
+      preLoaderRoute: typeof SystemIndexRouteImport
+      parentRoute: typeof SystemRoute
+    }
+    '/collections/': {
+      id: '/collections/'
+      path: '/'
+      fullPath: '/collections/'
+      preLoaderRoute: typeof CollectionsIndexRouteImport
+      parentRoute: typeof CollectionsRoute
+    }
   }
 }
+
+interface CollectionsRouteChildren {
+  CollectionsIndexRoute: typeof CollectionsIndexRoute
+}
+
+const CollectionsRouteChildren: CollectionsRouteChildren = {
+  CollectionsIndexRoute: CollectionsIndexRoute,
+}
+
+const CollectionsRouteWithChildren = CollectionsRoute._addFileChildren(
+  CollectionsRouteChildren,
+)
+
+interface SystemRouteChildren {
+  SystemIndexRoute: typeof SystemIndexRoute
+}
+
+const SystemRouteChildren: SystemRouteChildren = {
+  SystemIndexRoute: SystemIndexRoute,
+}
+
+const SystemRouteWithChildren =
+  SystemRoute._addFileChildren(SystemRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -322,6 +419,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CareerRoute: CareerRoute,
   ClaimsRoute: ClaimsRoute,
+  CollectionsRoute: CollectionsRouteWithChildren,
   EvaluationsRoute: EvaluationsRoute,
   FleetRoute: FleetRoute,
   ManagerRoute: ManagerRoute,
@@ -330,6 +428,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRoute,
   PromotionsRoute: PromotionsRoute,
   SecondaryClassRoute: SecondaryClassRoute,
+  SystemRoute: SystemRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
