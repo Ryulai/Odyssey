@@ -5,6 +5,7 @@ import { AuthGate } from "@/components/auth-gate";
 import { getStaffDashboard } from "@/lib/workflow.functions";
 import { classLabel, roleLabel, rankIdentity, rankGlyph, rankLabel, factionFor } from "@/lib/rpg";
 import { GRADE_META, type Grade } from "@/lib/employee-data";
+import { PortraitBadge } from "@/components/portrait";
 
 export const Route = createFileRoute("/")({
   head: () => ({
