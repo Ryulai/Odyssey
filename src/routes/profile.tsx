@@ -235,12 +235,11 @@ function PField({ label, value, accent }: { label: string; value: string; accent
   );
 }
 
-function Stat({ label, value, icon }: { label: string; value: number; icon: string }) {
+function Stat({ label, value }: { label: string; value: number | string }) {
   return (
-    <div className="rounded-md border border-border bg-ink/40 p-3 text-center">
-      <div className="text-2xl">{icon}</div>
-      <div className="font-display text-xl text-gold">{value}</div>
-      <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
+    <div className="text-center">
+      <div className="font-display text-2xl tracking-[0.15em] text-gold">{value}</div>
+      <div className="mt-1 text-[10px] uppercase tracking-[0.35em] text-muted-foreground">{label}</div>
     </div>
   );
 }
