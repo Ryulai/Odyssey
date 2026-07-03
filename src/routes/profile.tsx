@@ -126,96 +126,120 @@ function CharacterSheet({ d, isShipbuilder = false }: { d: any; isShipbuilder?: 
   const latestGrade = d.grades?.[0]?.grade ?? "—";
   const rankKey = s.current_rank_key ?? s.rpg?.current_rank_key ?? s.rank?.key ?? null;
   const rankIdent = rankIdentity(rankKey);
-  const rankGly = rankGlyph(rankKey);
   const rankName = rankLabel(rankKey) || s.rank?.name || ev?.current_rank_name || "Unranked";
   const classKey = s.rpg?.primary_class ?? null;
   const roleKey  = s.rpg?.primary_role ?? null;
   const className = classLabel(classKey);
   const roleName = roleLabel(roleKey);
   const faction = factionFor(classKey);
-  const heroTitle = isShipbuilder
-    ? "⚓ Beyond Rank"
-    : `${rankGly ? rankGly + " " : ""}${rankName}${roleName ? " " + roleName : ""}`;
+
+  const origin = isShipbuilder
+    ? "The Shipbuilder"
+    : (d.legacy?.currentTitle?.name ?? "Wanderer");
+  const profession = (roleName || s.profession || s.job_title || "Adventurer").toUpperCase();
+  const guildLabel = (faction?.label ?? (className ? `${className} Guild` : "Free Guild")).toUpperCase();
+  const motto = isShipbuilder
+    ? "Charts the course. Builds the ship."
+    : (rankIdent || "The voyage begins.");
+  const initials = (s.name ?? "??")
+    .split(/\s+/).filter(Boolean).slice(0, 2).map((p: string) => p[0]?.toUpperCase()).join("");
+  const rankColor =
+    { bronze:"#B87333", silver:"#C8CDD4", gold:"#F5D07A", platinum:"#B8D4E3",
+      diamond:"#8FE3E8", mystical:"#C9A6FF", legend:"#F4E9C1" }[
+      (rankKey ?? "").toLowerCase() as string] ?? "#8A8F98";
+
   return (
-    <section className="rounded-md border border-gold/30 bg-gradient-to-br from-ink/60 to-ink/30 p-6">
-      <div>
-        {isShipbuilder && (
-          <div className="text-[10px] uppercase tracking-[0.3em] text-gold">The Shipbuilder</div>
-        )}
-        <div className="font-display text-lg text-foreground/80">{s.name}</div>
+    <section className="relative overflow-hidden rounded-lg border border-gold/20 bg-[#0A0F1E] px-6 py-12 sm:px-10 sm:py-16">
+      {/* soft radial glow only */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-40"
+        style={{ background: `radial-gradient(circle at 50% 18%, ${rankColor}22, transparent 55%)` }}
+      />
 
-        {/* Hero title = Rank + Class-role (e.g. "Bronze Hunter") */}
-        <div className="mt-1 font-display text-3xl leading-tight text-gold">
-          {heroTitle}
-        </div>
-        {!isShipbuilder && rankIdent && (
-          <div className="text-sm italic text-muted-foreground">"{rankIdent}"</div>
-        )}
-        {isShipbuilder && (
-          <div className="text-sm italic text-gold/80">Charts the course. Builds the ship.</div>
-        )}
-
-        {/* Faction (small badge) */}
-        {faction && !isShipbuilder && (
-          <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-gold/30 bg-gold/5 px-2.5 py-0.5 text-[10px] uppercase tracking-widest text-gold/90">
-            <span>{faction.glyph}</span><span>{faction.label}</span>
-          </div>
-        )}
-
-        {/* Ordered identity: Profession · Class · Rank · Business Unit · Fleet · Manager */}
-        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <PField label="Profession"    value={s.profession || s.job_title || roleName || "—"} />
-          <PField label="Class"         value={className || "—"} />
-          <PField label="Rank"          value={rankName} accent />
-          <PField label="Business Unit" value={s.business_unit || "—"} />
-          {s.location?.name && <PField label="Fleet" value={s.location.name} />}
-          {!isShipbuilder && <PField label="Manager" value={s.manager?.name ?? "Unassigned"} />}
+      <div className="relative flex flex-col items-center text-center">
+        {/* Portrait */}
+        <div
+          className="relative flex h-40 w-40 items-center justify-center rounded-full border sm:h-48 sm:w-48"
+          style={{
+            borderColor: `${rankColor}80`,
+            boxShadow: `0 0 60px -10px ${rankColor}55, inset 0 0 30px rgba(0,0,0,0.6)`,
+            background: "radial-gradient(circle at 50% 40%, rgba(255,255,255,0.04), rgba(0,0,0,0.4))",
+          }}
+        >
+          <span className="font-display text-5xl tracking-[0.15em] text-foreground/85 sm:text-6xl">
+            {initials || "—"}
+          </span>
         </div>
 
-        {(s.email || s.phone || s.branch) && (
-          <div className="mt-2 text-[11px] text-muted-foreground">
-            {s.email && <>{s.email}</>}
-            {s.branch && <> · Branch: <span className="text-foreground">{s.branch}</span></>}
-            {s.phone && <> · Phone: <span className="text-foreground">{s.phone}</span></>}
+        {/* Origin (small caps kicker) */}
+        <div className="mt-10 text-[11px] uppercase tracking-[0.5em] text-muted-foreground">
+          {origin}
+        </div>
+
+        {/* Player Name — hero */}
+        <h1 className="mt-4 font-display text-5xl leading-none tracking-[0.1em] text-foreground sm:text-6xl">
+          {s.name}
+        </h1>
+
+        {/* Profession • Guild */}
+        <div className="mt-6 text-[11px] uppercase tracking-[0.4em] text-foreground/70">
+          {profession} <span className="mx-2 text-muted-foreground/50">•</span> {guildLabel}
+        </div>
+
+        {/* Motto */}
+        <div
+          className="mt-6 text-lg italic text-muted-foreground sm:text-xl"
+          style={{ fontFamily: '"Cormorant Garamond", serif' }}
+        >
+          "{motto}"
+        </div>
+
+        {/* Rank line — no medal glyph */}
+        {!isShipbuilder && (
+          <div className="mt-10 flex items-center gap-4 text-[11px] uppercase tracking-[0.5em]">
+            <span className="h-px w-10 bg-border" />
+            <span style={{ color: rankColor }}>{rankName}</span>
+            <span className="h-px w-10 bg-border" />
           </div>
         )}
       </div>
 
+      {/* Assignment dossier — quiet, single row */}
+      <div className="relative mt-14 grid grid-cols-2 gap-x-10 gap-y-6 border-t border-border/40 pt-8 sm:grid-cols-3">
+        <PField label="Class"         value={className || "—"} />
+        <PField label="Business Unit" value={s.business_unit || "—"} />
+        <PField label="Fleet"         value={s.location?.name ?? "—"} />
+        {!isShipbuilder && <PField label="Manager" value={s.manager?.name ?? "Unassigned"} />}
+        {s.email && <PField label="Contact" value={s.email} />}
+        {s.status && <PField label="Status" value={String(s.status).replace(/^\w/, c => c.toUpperCase())} />}
+      </div>
+
       {!isShipbuilder && (
-        <>
-          <div className="mt-5 grid gap-3 sm:grid-cols-4">
-            <Stat label="Total Stars" value={d.totals?.stars ?? 0} icon="⭐" />
-            <Stat label="Moons" value={d.totals?.moons ?? 0} icon="🌙" />
-            <Stat label="Suns" value={d.totals?.suns ?? 0} icon="☀️" />
-            <div className="rounded-md border border-border bg-ink/40 p-3 text-center">
-              <div className="text-2xl">⚓</div>
-              <div className="font-display text-xl text-gold">{latestGrade}</div>
-              <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Current Grade</div>
-            </div>
-          </div>
-          <div className="mt-3 rounded-md border border-border bg-ink/30 px-3 py-2 text-xs text-muted-foreground">
-            Achievements: <span className="text-gold">{ev?.unique_achievements ?? 0}</span> unique records · Status: <span className="capitalize text-foreground">{s.status ?? "active"}</span>
-          </div>
-        </>
+        <div className="relative mt-10 grid gap-3 border-t border-border/40 pt-8 sm:grid-cols-4">
+          <Stat label="Stars"  value={d.totals?.stars ?? 0} />
+          <Stat label="Moons"  value={d.totals?.moons ?? 0} />
+          <Stat label="Suns"   value={d.totals?.suns ?? 0} />
+          <Stat label="Grade"  value={latestGrade as any} />
+        </div>
       )}
     </section>
   );
 }
+
 function PField({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
     <div>
-      <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
-      <div className={`text-sm ${accent ? "text-gold" : "text-foreground"}`}>{value}</div>
+      <div className="text-[10px] uppercase tracking-[0.35em] text-muted-foreground">{label}</div>
+      <div className={`mt-1.5 text-sm ${accent ? "text-gold" : "text-foreground/90"}`}>{value}</div>
     </div>
   );
 }
 
-function Stat({ label, value, icon }: { label: string; value: number; icon: string }) {
+function Stat({ label, value }: { label: string; value: number | string }) {
   return (
-    <div className="rounded-md border border-border bg-ink/40 p-3 text-center">
-      <div className="text-2xl">{icon}</div>
-      <div className="font-display text-xl text-gold">{value}</div>
-      <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
+    <div className="text-center">
+      <div className="font-display text-2xl tracking-[0.15em] text-gold">{value}</div>
+      <div className="mt-1 text-[10px] uppercase tracking-[0.35em] text-muted-foreground">{label}</div>
     </div>
   );
 }
