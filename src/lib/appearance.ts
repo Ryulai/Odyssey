@@ -64,23 +64,56 @@ export const LOCKED_COSMETICS: LockedCosmetic[] = [
 const KEY = "odyssey.appearance.v1";
 const DEFAULT: Portrait = { kind: "default" };
 
+// Cache the parsed snapshot so useSyncExternalStore sees a stable reference
+// until the underlying stored string actually changes. Returning a fresh
+// object every read causes React to loop ("Maximum update depth exceeded").
+let cachedRaw: string | null = null;
+let cachedSnapshot: Portrait = DEFAULT;
+
+function isValidPortrait(p: unknown): p is Portrait {
+  if (!p || typeof p !== "object" || !("kind" in p)) return false;
+  const kind = (p as { kind: unknown }).kind;
+  if (kind === "default") return true;
+  if (kind === "photo") return typeof (p as { dataUrl?: unknown }).dataUrl === "string";
+  if (kind === "avatar" || kind === "emblem") return typeof (p as { id?: unknown }).id === "string";
+  return false;
+}
+
 function read(): Portrait {
   if (typeof window === "undefined") return DEFAULT;
+  let raw: string | null = null;
   try {
-    const raw = window.localStorage.getItem(KEY);
-    if (!raw) return DEFAULT;
-    const p = JSON.parse(raw) as Portrait;
-    if (!p || typeof p !== "object" || !("kind" in p)) return DEFAULT;
-    return p;
+    raw = window.localStorage.getItem(KEY);
   } catch {
-    return DEFAULT;
+    return cachedSnapshot;
   }
+  if (raw === cachedRaw) return cachedSnapshot;
+  cachedRaw = raw;
+  if (!raw) {
+    cachedSnapshot = DEFAULT;
+    return cachedSnapshot;
+  }
+  try {
+    const parsed = JSON.parse(raw);
+    cachedSnapshot = isValidPortrait(parsed) ? parsed : DEFAULT;
+  } catch {
+    cachedSnapshot = DEFAULT;
+  }
+  return cachedSnapshot;
 }
 
 export function setPortrait(p: Portrait) {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(KEY, JSON.stringify(p));
-  window.dispatchEvent(new Event("odyssey:appearance"));
+  try {
+    const raw = JSON.stringify(p);
+    window.localStorage.setItem(KEY, raw);
+    // Prime the cache so the very next read returns the exact same reference.
+    cachedRaw = raw;
+    cachedSnapshot = p;
+    window.dispatchEvent(new Event("odyssey:appearance"));
+  } catch (err) {
+    console.warn("[appearance] failed to persist portrait", err);
+  }
 }
 
 export function resetPortrait() {
