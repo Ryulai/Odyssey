@@ -37,15 +37,15 @@ export function PortraitBadge({
 
   const shell = (
     <div
-      className={`group relative grid place-items-center overflow-hidden rounded-full border-2 transition-transform duration-300 ${linkTo ? "cursor-pointer hover:scale-[1.03]" : ""} ${className}`}
+      className={`group relative grid place-items-center overflow-hidden rounded-full border-2 transition-transform duration-300 ease-out ${linkTo ? "cursor-pointer hover:scale-[1.04] active:scale-[0.96]" : ""} ${className}`}
       style={style}
-      title={linkTo ? "Customize Character" : undefined}
+      title={linkTo ? "Customize Character Appearance" : undefined}
     >
       {inner}
       {linkTo && (
         <div
-          className="pointer-events-none absolute inset-0 grid place-items-center rounded-full opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-          style={{ background: "rgba(10,15,30,0.55)" }}
+          className="pointer-events-none absolute inset-0 grid place-items-center rounded-full opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100"
+          style={{ background: "rgba(10,15,30,0.6)" }}
         >
           <span
             className="text-[9px] uppercase tracking-[0.35em]"
@@ -59,7 +59,12 @@ export function PortraitBadge({
   );
 
   return linkTo ? (
-    <Link to={linkTo} aria-label="Customize character appearance">
+    <Link
+      to={linkTo}
+      aria-label="Customize character appearance"
+      className="inline-block rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0F1E]"
+      style={{ WebkitTapHighlightColor: "transparent", outlineColor: rankColor }}
+    >
       {shell}
     </Link>
   ) : (
