@@ -132,39 +132,25 @@ function LinkedHome({ d }: { d: any }) {
 
         {/* Header — portrait, identity, tagline */}
         <div className="relative flex flex-col items-center px-6 pb-6 pt-10">
-          {/* Portrait with soft outer glow */}
-          <div className="relative mb-6">
-            <div
-              className="grid h-28 w-28 place-items-center rounded-full border-2 sm:h-32 sm:w-32"
-              style={{
-                borderColor: rankColor,
-                background: "linear-gradient(to bottom, #1a1f35, #0A0F1E)",
-                boxShadow: `0 0 40px ${rankGlow}, 0 0 20px ${rankGlow}`,
-              }}
+          {/* Portrait */}
+          <div
+            className="grid h-28 w-28 place-items-center rounded-full border-2 sm:h-32 sm:w-32"
+            style={{
+              borderColor: rankColor,
+              background: "linear-gradient(to bottom, #1a1f35, #0A0F1E)",
+              boxShadow: `0 0 40px ${rankGlow}, 0 0 20px ${rankGlow}`,
+            }}
+          >
+            <span
+              className="text-3xl font-bold tracking-widest sm:text-4xl"
+              style={{ fontFamily: "'Cinzel', serif", color: rankColor }}
             >
-              <span
-                className="text-3xl font-bold tracking-widest sm:text-4xl"
-                style={{ fontFamily: "'Cinzel', serif", color: rankColor }}
-              >
-                {isShipbuilder ? "⚓" : initials}
-              </span>
-            </div>
-            {/* Rank plate */}
-            <div
-              className="absolute -bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap px-3 py-0.5"
-              style={{ background: rankColor }}
-            >
-              <span
-                className="text-[10px] font-bold uppercase tracking-[0.2em]"
-                style={{ color: "#0A0F1E", fontFamily: "'Inter', sans-serif" }}
-              >
-                {isShipbuilder ? "Beyond Rank" : rankName}
-              </span>
-            </div>
+              {isShipbuilder ? "⚓" : initials}
+            </span>
           </div>
 
           {/* Identity */}
-          <div className="mt-2 space-y-1 text-center">
+          <div className="mt-6 space-y-2 text-center">
             <p
               className="text-[10px] uppercase tracking-[0.3em]"
               style={{ color: "rgba(197,160,89,0.60)", fontFamily: "'Inter', sans-serif" }}
@@ -181,6 +167,16 @@ function LinkedHome({ d }: { d: any }) {
             >
               {s.name}
             </h1>
+            <p
+              className="text-sm font-semibold uppercase tracking-[0.2em]"
+              style={{
+                color: rankColor,
+                fontFamily: "'Cinzel', serif",
+                textShadow: `0 0 18px ${rankGlow}`,
+              }}
+            >
+              {isShipbuilder ? "Beyond Rank" : rankName}
+            </p>
             <p
               className="text-xs font-light uppercase tracking-[0.15em]"
               style={{ color: "#C5A059", fontFamily: "'Inter', sans-serif" }}
