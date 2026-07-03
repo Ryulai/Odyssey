@@ -133,22 +133,15 @@ function LinkedHome({ d }: { d: any }) {
 
         {/* Header — portrait, identity, tagline */}
         <div className="relative flex flex-col items-center px-6 pb-6 pt-10">
-          {/* Portrait */}
-          <div
-            className="grid h-28 w-28 place-items-center rounded-full border-2 sm:h-32 sm:w-32"
-            style={{
-              borderColor: rankColor,
-              background: "linear-gradient(to bottom, #1a1f35, #0A0F1E)",
-              boxShadow: `0 0 40px ${rankGlow}, 0 0 20px ${rankGlow}`,
-            }}
-          >
-            <span
-              className="text-3xl font-bold tracking-widest sm:text-4xl"
-              style={{ fontFamily: "'Cinzel', serif", color: rankColor }}
-            >
-              {isShipbuilder ? "⚓" : initials}
-            </span>
-          </div>
+          {/* Portrait — clickable → Character Appearance */}
+          <PortraitBadge
+            size={128}
+            rankColor={rankColor}
+            rankGlow={rankGlow}
+            initials={initials}
+            isShipbuilder={isShipbuilder}
+          />
+
 
           {/* Identity */}
           <div className="mt-6 space-y-2 text-center">
