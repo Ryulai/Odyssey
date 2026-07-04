@@ -210,14 +210,20 @@ function CharacterSheet({ d, isShipbuilder = false }: { d: any; isShipbuilder?: 
         </div>
       </div>
 
-        <div className="grid grid-cols-2 gap-x-10 gap-y-5 sm:grid-cols-3 sm:gap-x-16 sm:gap-y-6">
+      {/* ─── ACTIVE ASSIGNMENT ────────────────────────────── */}
+      <div className="relative mx-auto mt-6 max-w-2xl sm:mt-14">
+        <div className="mb-2 text-center text-[9px] uppercase tracking-[0.45em] text-muted-foreground sm:mb-5 sm:text-[10px] sm:tracking-[0.55em]">
+          Active Assignment
+        </div>
+        <div className="grid grid-cols-2 gap-x-3 gap-y-3 sm:grid-cols-3 sm:gap-x-16 sm:gap-y-6">
           <Field label="Business Unit" value={s.business_unit || "—"} />
-          <Field label="Fleet"         value={s.location?.name ?? "—"} />
+          <Field label="Fleet" value={s.location?.name ?? "—"} />
           {!isShipbuilder && (
             <Field label="Manager" value={s.manager?.name ?? "Unassigned"} />
           )}
         </div>
       </div>
+
 
       {/* ─── LEGACY ──────────────────────────────────────── */}
       {!isShipbuilder && (
