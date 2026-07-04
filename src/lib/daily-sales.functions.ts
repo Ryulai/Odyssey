@@ -11,6 +11,20 @@ export type DailySalesClaim = {
   remarks: string;
   status: string;
   created_at: string;
+  decision_notes: string;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+};
+
+export type DailySalesReviewRow = DailySalesClaim & {
+  staff: {
+    id: string;
+    name: string;
+    business_unit: string | null;
+    primary_class: string | null;
+    primary_role: string | null;
+  };
+  reviewer_name: string | null;
 };
 
 /** List the current user's own daily sales claim history, newest first. */
