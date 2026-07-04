@@ -73,17 +73,25 @@ function SubmitClaim({ userId }: { userId: string | null }) {
   const effectiveStaffId = staffId || myStaff?.id || "";
 
   function onPickFiles(list: FileList | null) {
-    if (!list) return;
+    console.log("[claims][upload] onPickFiles", { count: list?.length ?? 0 });
+    if (!list || !list.length) { setMsg("No file received from picker."); return; }
     const incoming = Array.from(list);
     const valid: File[] = [];
+    const errors: string[] = [];
     for (const f of incoming) {
-      if (!ALLOWED.has(f.type)) { setMsg(`Unsupported type: ${f.name}. Allowed: jpg, png, webp, pdf.`); continue; }
-      if (f.size > MAX_BYTES) { setMsg(`Too large (>10MB): ${f.name}`); continue; }
+      const mime = resolveMime(f);
+      console.log("[claims][upload] file", { name: f.name, size: f.size, type: f.type, resolved: mime });
+      if (!ALLOWED.has(mime)) { errors.push(`Unsupported: ${f.name} (${f.type || "unknown"})`); continue; }
+      if (f.size === 0) { errors.push(`Empty: ${f.name}`); continue; }
+      if (f.size > MAX_BYTES) { errors.push(`Too large (>10MB): ${f.name}`); continue; }
+      (f as any).__mime = mime;
       valid.push(f);
     }
     const merged = [...files, ...valid].slice(0, MAX_FILES);
-    if (files.length + valid.length > MAX_FILES) setMsg(`Maximum ${MAX_FILES} files.`);
+    if (files.length + valid.length > MAX_FILES) errors.push(`Maximum ${MAX_FILES} files.`);
     setFiles(merged);
+    if (errors.length) setMsg(errors.join(" · "));
+    else if (valid.length) setMsg(`${valid.length} file(s) selected.`);
   }
 
   const submit = useMutation({
@@ -91,9 +99,10 @@ function SubmitClaim({ userId }: { userId: string | null }) {
       const paths: string[] = [];
       if (userId && files.length) {
         for (const file of files) {
+          const mime = (file as any).__mime || resolveMime(file);
           const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
           const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safe}`;
-          const up = await supabase.storage.from("claim-evidence").upload(path, file, { upsert: false, contentType: file.type });
+          const up = await supabase.storage.from("claim-evidence").upload(path, file, { upsert: false, contentType: mime });
           if (up.error) throw up.error;
           paths.push(path);
         }
