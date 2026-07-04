@@ -150,6 +150,7 @@ function CharacterSheet({ d, isShipbuilder = false }: { d: any; isShipbuilder?: 
   const initials = (s.name ?? "??")
     .split(/\s+/).filter(Boolean).slice(0, 2).map((p: string) => p[0]?.toUpperCase()).join("");
   const rankColor =
+    PROTOTYPE_RANKS.find((r) => r.key === (rankKey ?? "").toLowerCase())?.color ??
     { bronze:"#B87333", silver:"#C8CDD4", gold:"#F5D07A", platinum:"#B8D4E3",
       diamond:"#8FE3E8", mystical:"#C9A6FF", legend:"#F4E9C1" }[
       (rankKey ?? "").toLowerCase() as string] ?? "#8A8F98";
