@@ -29,8 +29,21 @@ export const Route = createFileRoute("/daily-sales-claim")({
 const inputCls =
   "w-full rounded-md border border-border bg-ink/60 px-3 py-2 text-sm text-foreground focus:border-gold focus:outline-none";
 const MAX_BYTES = 10 * 1024 * 1024; // 10 MB / image
-const ACCEPT = "image/jpeg,image/png,image/webp,image/heic";
-const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp", "image/heic"]);
+const ACCEPT = "image/*,.heic,.heif";
+const EXT_MIME: Record<string, string> = {
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  webp: "image/webp",
+  heic: "image/heic",
+  heif: "image/heif",
+  gif: "image/gif",
+};
+function resolveImageMime(file: File): string | null {
+  if (file.type && file.type.startsWith("image/")) return file.type;
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+  return EXT_MIME[ext] ?? null;
+}
 
 function todayIso() {
   const d = new Date();
@@ -99,7 +112,7 @@ function SubmitDailySales() {
   const [remarks, setRemarks] = useState<string>("");
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
-  const [msg, setMsg] = useState<string | null>(null);
+  const [msg, setMsg] = useState<{ text: string; kind: "info" | "error" } | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -109,20 +122,26 @@ function SubmitDailySales() {
   }, [files]);
 
   function onPickFiles(list: FileList | null) {
-    if (!list) return;
+    if (!list || list.length === 0) return;
     const incoming = Array.from(list);
     const valid: File[] = [];
+    const errors: string[] = [];
     for (const f of incoming) {
-      if (!ALLOWED.has(f.type)) {
-        setMsg(`Unsupported image: ${f.name}. Allowed: jpg, png, webp, heic.`);
+      const mime = resolveImageMime(f);
+      if (!mime) {
+        errors.push(`Unsupported: ${f.name}`);
         continue;
       }
       if (f.size > MAX_BYTES) {
-        setMsg(`Too large (>10MB): ${f.name}`);
+        errors.push(`Too large (>10MB): ${f.name}`);
         continue;
       }
+      // Attach resolved mime for later upload
+      (f as any).__mime = mime;
       valid.push(f);
     }
+    if (errors.length) setMsg({ text: errors.join(" · "), kind: "error" });
+    else if (valid.length) setMsg(null);
     setFiles((prev) => [...prev, ...valid]);
   }
 
@@ -139,12 +158,13 @@ function SubmitDailySales() {
 
       const paths: string[] = [];
       for (const file of files) {
-        const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const mime = (file as any).__mime || resolveImageMime(file) || "application/octet-stream";
+        const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_") || "upload.bin";
         const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safe}`;
         const up = await supabase.storage
           .from("daily-sales-evidence")
-          .upload(path, file, { upsert: false, contentType: file.type });
-        if (up.error) throw up.error;
+          .upload(path, file, { upsert: false, contentType: mime });
+        if (up.error) throw new Error(`Upload failed (${file.name}): ${up.error.message}`);
         paths.push(path);
       }
 
@@ -163,9 +183,9 @@ function SubmitDailySales() {
       setRemarks("");
       setFiles([]);
       setSalesDate(todayIso());
-      setMsg("Submitted — Pending Review.");
+      setMsg({ text: "Submitted — Pending Review.", kind: "info" });
     },
-    onError: (e: any) => setMsg(e?.message ?? "Failed to submit."),
+    onError: (e: any) => setMsg({ text: e?.message ?? "Failed to submit.", kind: "error" }),
   });
 
   return (
@@ -268,7 +288,15 @@ function SubmitDailySales() {
         </label>
 
         {msg && (
-          <div className="rounded border border-gold/30 bg-gold/5 px-3 py-2 text-xs text-gold">{msg}</div>
+          <div
+            className={
+              msg.kind === "error"
+                ? "rounded border border-red-500/40 bg-red-500/5 px-3 py-2 text-xs text-red-200"
+                : "rounded border border-gold/30 bg-gold/5 px-3 py-2 text-xs text-gold"
+            }
+          >
+            {msg.text}
+          </div>
         )}
 
         <button
