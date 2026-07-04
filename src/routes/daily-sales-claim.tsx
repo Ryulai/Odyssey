@@ -261,18 +261,33 @@ function SubmitDailySales() {
           <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">
             Evidence — receipts, invoices, POS or sales screenshots (jpg / png / webp / heic, 10MB each)
           </span>
-          <input
-            type="file"
-            multiple
-            accept={ACCEPT}
-            onChange={(e) => {
-              console.log("[upload] input onChange fired. files=", e.target.files, "value=", e.target.value);
-              onPickFiles(e.target.files);
-              e.target.value = "";
-            }}
-            onClick={() => console.log("[upload] input onClick fired")}
-            className="block w-full text-xs text-muted-foreground file:mr-3 file:rounded file:border file:border-gold/40 file:bg-gold/10 file:px-3 file:py-1.5 file:text-[10px] file:font-display file:uppercase file:tracking-widest file:text-gold hover:file:bg-gold/20"
-          />
+          <label
+            className="inline-flex cursor-pointer items-center gap-2 rounded border border-gold/40 bg-gold/10 px-3 py-2 font-display text-[11px] uppercase tracking-widest text-gold hover:bg-gold/20"
+            onClick={() => pushStep("1. Picker opening (label tap)")}
+          >
+            <span>Choose Images</span>
+            <input
+              type="file"
+              multiple
+              accept={ACCEPT}
+              onClick={(e) => {
+                pushStep("1b. Input clicked");
+                (e.currentTarget as HTMLInputElement).value = "";
+              }}
+              onChange={(e) => {
+                pushStep(`2. Image selected (files=${e.target.files?.length ?? 0})`);
+                onPickFiles(e.target.files);
+              }}
+              className="hidden"
+            />
+          </label>
+          {steps.length > 0 && (
+            <ol className="mt-3 space-y-1 rounded border border-border/60 bg-black/40 p-2 text-[10px] text-muted-foreground">
+              {steps.map((s, i) => (
+                <li key={i} className="font-mono">{s}</li>
+              ))}
+            </ol>
+          )}
           {!!files.length && (
             <ul className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
               {files.map((f, i) => (
