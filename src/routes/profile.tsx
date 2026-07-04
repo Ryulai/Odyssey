@@ -150,7 +150,7 @@ function CharacterSheet({ d, isShipbuilder = false }: { d: any; isShipbuilder?: 
       (rankKey ?? "").toLowerCase() as string] ?? "#8A8F98";
 
   return (
-    <section className="relative overflow-hidden rounded-lg bg-[#0A0F1E] px-5 py-8 sm:px-12 sm:py-14">
+    <section className="relative overflow-hidden rounded-lg bg-[#0A0F1E] px-4 py-5 sm:px-12 sm:py-14">
       {/* soft radial glow only */}
       <div
         className="pointer-events-none absolute inset-0 opacity-40"
@@ -160,48 +160,48 @@ function CharacterSheet({ d, isShipbuilder = false }: { d: any; isShipbuilder?: 
       {/* ─── HERO — first mobile screen: Who am I? ──────── */}
       <div className="relative flex flex-col items-center text-center">
         <PortraitBadge
-          size={168}
+          size={112}
           rankColor={rankColor}
           rankGlow={`${rankColor}66`}
           initials={initials || "—"}
           isShipbuilder={isShipbuilder}
         />
 
-        <h1 className="mt-5 font-display text-4xl leading-none tracking-[0.12em] text-foreground sm:mt-7 sm:text-5xl">
+        <h1 className="mt-3 font-display text-2xl leading-none tracking-[0.12em] text-foreground sm:mt-7 sm:text-5xl">
           {s.name}
         </h1>
 
         <div
-          className="mt-3 font-display text-2xl tracking-[0.18em] sm:text-3xl"
+          className="mt-1.5 font-display text-lg tracking-[0.18em] sm:mt-3 sm:text-3xl"
           style={{ color: rankColor, textShadow: `0 0 18px ${rankColor}66`, fontFamily: "'Cinzel', serif" }}
         >
           {isShipbuilder ? "Beyond Rank" : rankName}
         </div>
 
-        <div className="mt-3 text-[11px] uppercase tracking-[0.5em] text-foreground/70">
-          {profession}
+        <div className="mt-1.5 text-[10px] uppercase tracking-[0.4em] text-foreground/70 sm:mt-3 sm:text-[11px] sm:tracking-[0.5em]">
+          {className || profession}
         </div>
 
-        <div className="mt-1.5 text-[11px] uppercase tracking-[0.5em] text-muted-foreground">
+        <div className="mt-1 text-[10px] uppercase tracking-[0.4em] text-muted-foreground sm:mt-1.5 sm:text-[11px] sm:tracking-[0.5em]">
           {guildLabel}
         </div>
 
         <div
-          className="mt-4 text-lg italic text-muted-foreground sm:mt-5 sm:text-xl"
+          className="mt-2 text-sm italic text-muted-foreground sm:mt-5 sm:text-xl"
           style={{ fontFamily: '"Cormorant Garamond", serif' }}
         >
           "{motto}"
         </div>
       </div>
 
-      {/* ─── CHARACTER PROFILE — peek above fold ───────── */}
-      <div className="relative mx-auto mt-10 max-w-2xl sm:mt-14">
-        <div className="mb-5 text-center text-[10px] uppercase tracking-[0.55em] text-muted-foreground">
+      {/* ─── CHARACTER PROFILE — above fold ───────── */}
+      <div className="relative mx-auto mt-4 max-w-2xl sm:mt-14">
+        <div className="mb-2 text-center text-[9px] uppercase tracking-[0.45em] text-muted-foreground sm:mb-5 sm:text-[10px] sm:tracking-[0.55em]">
           Character Profile
         </div>
-        <div className="grid grid-cols-2 gap-x-10 gap-y-5 sm:grid-cols-3 sm:gap-x-16 sm:gap-y-6">
-          <Field label="Origin" value={origin} />
-          <Field label="Class"  value={className || "—"} />
+        <div className="grid grid-cols-3 gap-x-3 gap-y-3 sm:gap-x-16 sm:gap-y-6">
+          <Field label="Profession" value={profession} />
+          <Field label="Class" value={className || "—"} />
           <Field
             label="Rank"
             value={isShipbuilder ? "Beyond Rank" : rankName}
@@ -210,11 +210,6 @@ function CharacterSheet({ d, isShipbuilder = false }: { d: any; isShipbuilder?: 
         </div>
       </div>
 
-      {/* ─── ACTIVE ASSIGNMENT ────────────────────────────── */}
-      <div className="relative mx-auto mt-12 max-w-2xl sm:mt-14">
-        <div className="mb-5 text-center text-[10px] uppercase tracking-[0.55em] text-muted-foreground">
-          Active Assignment
-        </div>
         <div className="grid grid-cols-2 gap-x-10 gap-y-5 sm:grid-cols-3 sm:gap-x-16 sm:gap-y-6">
           <Field label="Business Unit" value={s.business_unit || "—"} />
           <Field label="Fleet"         value={s.location?.name ?? "—"} />
