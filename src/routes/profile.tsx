@@ -5,6 +5,9 @@ import { getStaffDashboard } from "@/lib/workflow.functions";
 import { GRADE_META } from "@/lib/employee-data";
 import { classLabel, roleLabel, rankIdentity, rankGlyph, rankLabel, factionFor } from "@/lib/rpg";
 import { PortraitBadge } from "@/components/portrait";
+import { usePrototype } from "@/lib/prototype/use-prototype";
+import { overlayDashboard } from "@/lib/prototype/overlay";
+import { PROTOTYPE_RANKS } from "@/lib/prototype/ranks";
 
 
 
