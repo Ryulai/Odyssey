@@ -5,8 +5,9 @@ import type { PrototypeProfile, PrototypeState } from "./types";
 function getSnapshot(): PrototypeState {
   return getState();
 }
+const SERVER_SNAPSHOT: PrototypeState = { enabled: false, activeProfileId: null, profiles: [] };
 function getServerSnapshot(): PrototypeState {
-  return { enabled: false, activeProfileId: null, profiles: [] };
+  return SERVER_SNAPSHOT;
 }
 
 export function usePrototype() {

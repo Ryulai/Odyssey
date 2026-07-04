@@ -29,7 +29,7 @@ export const Route = createFileRoute("/daily-sales-claim")({
 const inputCls =
   "w-full rounded-md border border-border bg-ink/60 px-3 py-2 text-sm text-foreground focus:border-gold focus:outline-none";
 const MAX_BYTES = 10 * 1024 * 1024; // 10 MB / image
-const ACCEPT = "image/*,.heic,.heif";
+const ACCEPT = "image/*";
 const EXT_MIME: Record<string, string> = {
   jpg: "image/jpeg",
   jpeg: "image/jpeg",
@@ -114,6 +114,11 @@ function SubmitDailySales() {
   const [previews, setPreviews] = useState<string[]>([]);
   const [msg, setMsg] = useState<{ text: string; kind: "info" | "error" } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [steps, setSteps] = useState<string[]>([]);
+  const pushStep = (s: string) => {
+    console.log("[upload][step]", s);
+    setSteps((prev) => [...prev.slice(-9), `${new Date().toLocaleTimeString()} — ${s}`]);
+  };
 
   useEffect(() => {
     const urls = files.map((f) => URL.createObjectURL(f));
@@ -122,25 +127,19 @@ function SubmitDailySales() {
   }, [files]);
 
   function onPickFiles(list: FileList | null) {
-    console.log("[upload] onPickFiles called. list=", list, "length=", list?.length);
+    pushStep(`3. onChange fired (list length=${list?.length ?? 0})`);
     if (!list || list.length === 0) {
       setMsg({ text: "Picker returned no files (list empty).", kind: "error" });
       return;
     }
     const incoming = Array.from(list);
     incoming.forEach((f, i) => {
-      console.log(`[upload] file[${i}]`, {
-        name: f.name,
-        size: f.size,
-        type: f.type,
-        lastModified: f.lastModified,
-      });
+      pushStep(`4. File[${i}] name="${f.name}" size=${f.size} type="${f.type}"`);
     });
     const valid: File[] = [];
     const errors: string[] = [];
     for (const f of incoming) {
       const mime = resolveImageMime(f);
-      console.log("[upload] resolved mime for", f.name, "=", mime);
       if (!mime) {
         errors.push(`Unsupported: ${f.name} (type="${f.type}")`);
         continue;
@@ -156,7 +155,7 @@ function SubmitDailySales() {
       (f as any).__mime = mime;
       valid.push(f);
     }
-    console.log("[upload] valid count=", valid.length, "errors=", errors);
+    pushStep(`4b. Valid=${valid.length} Errors=${errors.length}`);
     if (errors.length) setMsg({ text: errors.join(" · "), kind: "error" });
     else if (valid.length) setMsg({ text: `Selected ${valid.length} file(s).`, kind: "info" });
     setFiles((prev) => [...prev, ...valid]);
@@ -179,16 +178,19 @@ function SubmitDailySales() {
         const mime = (file as any).__mime || resolveImageMime(file) || "application/octet-stream";
         const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_") || "upload.bin";
         const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safe}`;
-        console.log("[upload] uploading", { name: file.name, size: file.size, mime, path });
+        pushStep(`5. Upload started (${file.name} → ${path})`);
         const up = await supabase.storage
           .from("daily-sales-evidence")
           .upload(path, file, { upsert: false, contentType: mime });
-        console.log("[upload] upload result", up);
-        if (up.error) throw new Error(`Upload failed (${file.name}): ${up.error.message}`);
+        if (up.error) {
+          pushStep(`5x. Upload FAILED: ${up.error.message}`);
+          throw new Error(`Upload failed (${file.name}): ${up.error.message}`);
+        }
+        pushStep(`6. Upload completed (${file.name})`);
         paths.push(path);
       }
 
-      console.log("[upload] all uploaded, calling submitDailySales", paths);
+      pushStep(`7. Submitting claim record`);
       return submitDailySales({
         data: {
           sales_date: salesDate,
@@ -259,18 +261,33 @@ function SubmitDailySales() {
           <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">
             Evidence — receipts, invoices, POS or sales screenshots (jpg / png / webp / heic, 10MB each)
           </span>
-          <input
-            type="file"
-            multiple
-            accept={ACCEPT}
-            onChange={(e) => {
-              console.log("[upload] input onChange fired. files=", e.target.files, "value=", e.target.value);
-              onPickFiles(e.target.files);
-              e.target.value = "";
-            }}
-            onClick={() => console.log("[upload] input onClick fired")}
-            className="block w-full text-xs text-muted-foreground file:mr-3 file:rounded file:border file:border-gold/40 file:bg-gold/10 file:px-3 file:py-1.5 file:text-[10px] file:font-display file:uppercase file:tracking-widest file:text-gold hover:file:bg-gold/20"
-          />
+          <label
+            className="inline-flex cursor-pointer items-center gap-2 rounded border border-gold/40 bg-gold/10 px-3 py-2 font-display text-[11px] uppercase tracking-widest text-gold hover:bg-gold/20"
+            onClick={() => pushStep("1. Picker opening (label tap)")}
+          >
+            <span>Choose Images</span>
+            <input
+              type="file"
+              multiple
+              accept={ACCEPT}
+              onClick={(e) => {
+                pushStep("1b. Input clicked");
+                (e.currentTarget as HTMLInputElement).value = "";
+              }}
+              onChange={(e) => {
+                pushStep(`2. Image selected (files=${e.target.files?.length ?? 0})`);
+                onPickFiles(e.target.files);
+              }}
+              className="hidden"
+            />
+          </label>
+          {steps.length > 0 && (
+            <ol className="mt-3 space-y-1 rounded border border-border/60 bg-black/40 p-2 text-[10px] text-muted-foreground">
+              {steps.map((s, i) => (
+                <li key={i} className="font-mono">{s}</li>
+              ))}
+            </ol>
+          )}
           {!!files.length && (
             <ul className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
               {files.map((f, i) => (
