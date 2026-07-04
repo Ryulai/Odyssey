@@ -122,26 +122,43 @@ function SubmitDailySales() {
   }, [files]);
 
   function onPickFiles(list: FileList | null) {
-    if (!list || list.length === 0) return;
+    console.log("[upload] onPickFiles called. list=", list, "length=", list?.length);
+    if (!list || list.length === 0) {
+      setMsg({ text: "Picker returned no files (list empty).", kind: "error" });
+      return;
+    }
     const incoming = Array.from(list);
+    incoming.forEach((f, i) => {
+      console.log(`[upload] file[${i}]`, {
+        name: f.name,
+        size: f.size,
+        type: f.type,
+        lastModified: f.lastModified,
+      });
+    });
     const valid: File[] = [];
     const errors: string[] = [];
     for (const f of incoming) {
       const mime = resolveImageMime(f);
+      console.log("[upload] resolved mime for", f.name, "=", mime);
       if (!mime) {
-        errors.push(`Unsupported: ${f.name}`);
+        errors.push(`Unsupported: ${f.name} (type="${f.type}")`);
+        continue;
+      }
+      if (f.size === 0) {
+        errors.push(`Empty file (0 bytes): ${f.name}`);
         continue;
       }
       if (f.size > MAX_BYTES) {
         errors.push(`Too large (>10MB): ${f.name}`);
         continue;
       }
-      // Attach resolved mime for later upload
       (f as any).__mime = mime;
       valid.push(f);
     }
+    console.log("[upload] valid count=", valid.length, "errors=", errors);
     if (errors.length) setMsg({ text: errors.join(" · "), kind: "error" });
-    else if (valid.length) setMsg(null);
+    else if (valid.length) setMsg({ text: `Selected ${valid.length} file(s).`, kind: "info" });
     setFiles((prev) => [...prev, ...valid]);
   }
 
@@ -151,6 +168,7 @@ function SubmitDailySales() {
 
   const submit = useMutation({
     mutationFn: async () => {
+      console.log("[upload] submit mutation start. files.length=", files.length, "user=", user?.id);
       const amt = Number(amount);
       if (!Number.isFinite(amt) || amt < 0) throw new Error("Enter a valid sales amount.");
       if (!salesDate) throw new Error("Pick a date.");
@@ -161,13 +179,16 @@ function SubmitDailySales() {
         const mime = (file as any).__mime || resolveImageMime(file) || "application/octet-stream";
         const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_") || "upload.bin";
         const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safe}`;
+        console.log("[upload] uploading", { name: file.name, size: file.size, mime, path });
         const up = await supabase.storage
           .from("daily-sales-evidence")
           .upload(path, file, { upsert: false, contentType: mime });
+        console.log("[upload] upload result", up);
         if (up.error) throw new Error(`Upload failed (${file.name}): ${up.error.message}`);
         paths.push(path);
       }
 
+      console.log("[upload] all uploaded, calling submitDailySales", paths);
       return submitDailySales({
         data: {
           sales_date: salesDate,
@@ -178,6 +199,7 @@ function SubmitDailySales() {
       });
     },
     onSuccess: () => {
+      console.log("[upload] submit onSuccess");
       qc.invalidateQueries({ queryKey: ["daily-sales", "history"] });
       setAmount("");
       setRemarks("");
@@ -185,7 +207,10 @@ function SubmitDailySales() {
       setSalesDate(todayIso());
       setMsg({ text: "Submitted — Pending Review.", kind: "info" });
     },
-    onError: (e: any) => setMsg({ text: e?.message ?? "Failed to submit.", kind: "error" }),
+    onError: (e: any) => {
+      console.error("[upload] submit onError", e);
+      setMsg({ text: e?.message ?? "Failed to submit.", kind: "error" });
+    },
   });
 
   return (
@@ -239,9 +264,11 @@ function SubmitDailySales() {
             multiple
             accept={ACCEPT}
             onChange={(e) => {
+              console.log("[upload] input onChange fired. files=", e.target.files, "value=", e.target.value);
               onPickFiles(e.target.files);
               e.target.value = "";
             }}
+            onClick={() => console.log("[upload] input onClick fired")}
             className="block w-full text-xs text-muted-foreground file:mr-3 file:rounded file:border file:border-gold/40 file:bg-gold/10 file:px-3 file:py-1.5 file:text-[10px] file:font-display file:uppercase file:tracking-widest file:text-gold hover:file:bg-gold/20"
           />
           {!!files.length && (
