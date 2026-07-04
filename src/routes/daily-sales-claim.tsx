@@ -104,115 +104,110 @@ function DailySalesPage() {
   );
 }
 
+type UploadPhase = "idle" | "uploading" | "success" | "error";
+
+type Picked = {
+  id: string;
+  file: File;
+  previewUrl: string;
+  sizeKB: number;
+};
+
 function SubmitDailySales() {
   const qc = useQueryClient();
   const { user } = useAuth();
+
   const [salesDate, setSalesDate] = useState<string>(todayIso());
   const [amount, setAmount] = useState<string>("");
   const [remarks, setRemarks] = useState<string>("");
-  const [files, setFiles] = useState<File[]>([]);
-  const [previews, setPreviews] = useState<string[]>([]);
-  const [msg, setMsg] = useState<{ text: string; kind: "info" | "error" } | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [steps, setSteps] = useState<string[]>([]);
-  const pushStep = (s: string) => {
-    console.log("[upload][step]", s);
-    setSteps((prev) => [...prev.slice(-9), `${new Date().toLocaleTimeString()} — ${s}`]);
-  };
+  const [picked, setPicked] = useState<Picked[]>([]);
+  const [phase, setPhase] = useState<UploadPhase>("idle");
+  const [message, setMessage] = useState<string>("");
 
+  // Revoke preview URLs on unmount.
   useEffect(() => {
-    console.log(
-      "[upload][state] files stored in React state",
-      files.map((f) => ({ name: f.name, size: f.size, type: f.type, resolvedType: (f as any).__mime ?? resolveImageMime(f) })),
-    );
-    pushStep(`4c. React state stored ${files.length} file(s)`);
-    const urls = files.map((f) => {
-      const url = URL.createObjectURL(f);
-      console.log("[upload][preview] created object URL", { name: f.name, url });
-      return url;
-    });
-    setPreviews(urls);
-    return () => urls.forEach((u) => URL.revokeObjectURL(u));
-  }, [files]);
+    return () => picked.forEach((p) => URL.revokeObjectURL(p.previewUrl));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  useEffect(() => {
-    if (!previews.length) return;
-    console.log("[upload][preview] preview state updated", previews);
-    pushStep(`4d. Preview URL generated (${previews.length})`);
-  }, [previews]);
+  function handleNativeChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const list = e.target.files;
+    const count = list ? list.length : 0;
+    console.log("[uploader] native change fired. FileList length =", count);
 
-  function onPickFiles(list: FileList | null) {
-    console.log("[upload][change] handler called", { listLength: list?.length ?? 0, hasList: Boolean(list) });
-    pushStep(`3. onChange fired (list length=${list?.length ?? 0})`);
-    if (!list || list.length === 0) {
-      console.warn("[upload][change] e.target.files is empty or null");
-      setMsg({ text: "Picker returned no files (list empty).", kind: "error" });
+    if (!list || count === 0) {
+      setMessage("No file selected.");
       return;
     }
-    const incoming = Array.from(list);
-    incoming.forEach((f, i) => {
-      console.log("[upload][file] received", { index: i, name: f.name, size: f.size, type: f.type, lastModified: f.lastModified });
-      pushStep(`4. File[${i}] name="${f.name}" size=${f.size} type="${f.type}"`);
-    });
-    const valid: File[] = [];
-    const errors: string[] = [];
-    for (const f of incoming) {
-      const mime = resolveImageMime(f);
-      if (!mime) {
-        errors.push(`Unsupported: ${f.name} (type="${f.type}")`);
-        continue;
-      }
+
+    const next: Picked[] = [];
+    for (let i = 0; i < list.length; i++) {
+      const f = list.item(i);
+      if (!f) continue;
+      console.log("[uploader] file", i, { name: f.name, size: f.size, type: f.type });
       if (f.size === 0) {
-        errors.push(`Empty file (0 bytes): ${f.name}`);
+        setMessage(`Skipped empty file: ${f.name}`);
         continue;
       }
       if (f.size > MAX_BYTES) {
-        errors.push(`Too large (>10MB): ${f.name}`);
+        setMessage(`Skipped (>10MB): ${f.name}`);
         continue;
       }
-      (f as any).__mime = mime;
-      valid.push(f);
+      next.push({
+        id: `${Date.now()}-${i}-${Math.random().toString(36).slice(2, 8)}`,
+        file: f,
+        previewUrl: URL.createObjectURL(f),
+        sizeKB: Math.max(1, Math.round(f.size / 1024)),
+      });
     }
-    pushStep(`4b. Valid=${valid.length} Errors=${errors.length}`);
-    if (errors.length) setMsg({ text: errors.join(" · "), kind: "error" });
-    else if (valid.length) setMsg({ text: `Selected ${valid.length} file(s).`, kind: "info" });
-    setFiles((prev) => {
-      const next = [...prev, ...valid];
-      console.log("[upload][state] setFiles", { previousCount: prev.length, addedCount: valid.length, nextCount: next.length });
-      return next;
-    });
+
+    setPicked((prev) => [...prev, ...next]);
+    setPhase("idle");
+    if (next.length) {
+      setMessage(`${next.length} file(s) ready to upload.`);
+    }
   }
 
-  function removeAt(i: number) {
-    setFiles((prev) => prev.filter((_, j) => j !== i));
+  function removePicked(id: string) {
+    setPicked((prev) => {
+      const target = prev.find((p) => p.id === id);
+      if (target) URL.revokeObjectURL(target.previewUrl);
+      return prev.filter((p) => p.id !== id);
+    });
   }
 
   const submit = useMutation({
     mutationFn: async () => {
-      console.log("[upload] submit mutation start. files.length=", files.length, "user=", user?.id);
+      if (!user?.id) throw new Error("Not signed in.");
       const amt = Number(amount);
       if (!Number.isFinite(amt) || amt < 0) throw new Error("Enter a valid sales amount.");
       if (!salesDate) throw new Error("Pick a date.");
-      if (!user?.id) throw new Error("Not signed in.");
+      if (picked.length === 0) throw new Error("Attach at least one evidence image.");
+
+      setPhase("uploading");
+      setMessage(`Uploading 0 / ${picked.length}…`);
 
       const paths: string[] = [];
-      for (const file of files) {
-        const mime = (file as any).__mime || resolveImageMime(file) || "application/octet-stream";
-        const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_") || "upload.bin";
-        const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safe}`;
-        pushStep(`5. Upload started (${file.name} → ${path})`);
-        const up = await supabase.storage
+      for (let i = 0; i < picked.length; i++) {
+        const p = picked[i];
+        const safe = p.file.name.replace(/[^a-zA-Z0-9._-]/g, "_") || "image.jpg";
+        const path = `${user.id}/${Date.now()}-${i}-${safe}`;
+        console.log("[uploader] uploading", { path, size: p.file.size, type: p.file.type });
+        const res = await supabase.storage
           .from("daily-sales-evidence")
-          .upload(path, file, { upsert: false, contentType: mime });
-        if (up.error) {
-          pushStep(`5x. Upload FAILED: ${up.error.message}`);
-          throw new Error(`Upload failed (${file.name}): ${up.error.message}`);
+          .upload(path, p.file, {
+            upsert: false,
+            contentType: p.file.type || "application/octet-stream",
+          });
+        if (res.error) {
+          console.error("[uploader] upload error", res.error);
+          throw new Error(`Upload failed (${p.file.name}): ${res.error.message}`);
         }
-        pushStep(`6. Upload completed (${file.name})`);
         paths.push(path);
+        setMessage(`Uploading ${i + 1} / ${picked.length}…`);
       }
 
-      pushStep(`7. Submitting claim record`);
+      setMessage("Saving claim record…");
       return submitDailySales({
         data: {
           sales_date: salesDate,
@@ -223,19 +218,37 @@ function SubmitDailySales() {
       });
     },
     onSuccess: () => {
-      console.log("[upload] submit onSuccess");
       qc.invalidateQueries({ queryKey: ["daily-sales", "history"] });
+      picked.forEach((p) => URL.revokeObjectURL(p.previewUrl));
+      setPicked([]);
       setAmount("");
       setRemarks("");
-      setFiles([]);
       setSalesDate(todayIso());
-      setMsg({ text: "Submitted — Pending Review.", kind: "info" });
+      setPhase("success");
+      setMessage("Upload successful — claim submitted (Pending Review).");
     },
     onError: (e: any) => {
-      console.error("[upload] submit onError", e);
-      setMsg({ text: e?.message ?? "Failed to submit.", kind: "error" });
+      console.error("[uploader] submit onError", e);
+      setPhase("error");
+      setMessage(`Upload failed: ${e?.message ?? "Unknown error"}`);
     },
   });
+
+  const phaseBadge = (() => {
+    if (phase === "uploading")
+      return { text: "Uploading…", cls: "border-gold/50 bg-gold/10 text-gold" };
+    if (phase === "success")
+      return { text: "Upload successful", cls: "border-emerald-400/50 bg-emerald-400/10 text-emerald-200" };
+    if (phase === "error")
+      return { text: "Upload failed", cls: "border-red-500/50 bg-red-500/10 text-red-200" };
+    return {
+      text: picked.length === 0 ? "No file selected" : `${picked.length} file(s) ready`,
+      cls: "border-border bg-ink/60 text-muted-foreground",
+    };
+  })();
+
+  const canSubmit =
+    !!user?.id && !!salesDate && !!amount && picked.length > 0 && phase !== "uploading";
 
   return (
     <section className="rounded-md border border-border bg-ink/30 p-5">
@@ -244,9 +257,8 @@ function SubmitDailySales() {
         className="mt-4 space-y-4"
         onSubmit={(e) => {
           e.preventDefault();
-          setBusy(true);
-          setMsg(null);
-          submit.mutate(undefined, { onSettled: () => setBusy(false) });
+          setMessage("");
+          submit.mutate();
         }}
       >
         <div className="grid gap-4 sm:grid-cols-2">
@@ -279,79 +291,55 @@ function SubmitDailySales() {
           </label>
         </div>
 
-        <div>
-          <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">
-            Evidence — receipts, invoices, POS or sales screenshots (jpg / png / webp / heic, 10MB each)
-          </span>
-          <label
-            className="relative inline-flex cursor-pointer items-center gap-2 overflow-hidden rounded border border-gold/40 bg-gold/10 px-3 py-2 font-display text-[11px] uppercase tracking-widest text-gold hover:bg-gold/20"
-            onClick={() => pushStep("1. Picker opening (label tap)")}
-          >
-            <span>Choose Images</span>
+        {/* Native, visible, directly-clickable file input — no hidden input, no programmatic trigger. */}
+        <div className="space-y-3">
+          <div>
+            <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">
+              Evidence Images (jpg / png / webp / heic · max 10MB each)
+            </span>
             <input
               type="file"
+              accept="image/*"
               multiple
-              accept={ACCEPT}
-              onPointerDown={() => {
-                pushStep("1. File picker opened");
-              }}
-              onClick={(e) => {
-                console.log("[upload][click] file input clicked before picker", {
-                  currentFiles: e.currentTarget.files?.length ?? 0,
-                  valueLength: e.currentTarget.value.length,
-                });
-                pushStep("1b. Input clicked");
-                (e.currentTarget as HTMLInputElement).value = "";
-              }}
-              onChange={(e) => {
-                const list = e.currentTarget.files;
-                console.log("[upload][change] native onChange fired", {
-                  filesLength: list?.length ?? 0,
-                  firstFile: list?.[0]
-                    ? {
-                        name: list[0].name,
-                        size: list[0].size,
-                        type: list[0].type,
-                        lastModified: list[0].lastModified,
-                      }
-                    : null,
-                });
-                pushStep(`2. Image selected (files=${list?.length ?? 0})`);
-                onPickFiles(list);
-              }}
-              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+              onChange={handleNativeChange}
+              disabled={phase === "uploading"}
+              className="block w-full cursor-pointer rounded-md border border-gold/40 bg-ink/60 p-2 text-xs text-foreground file:mr-3 file:cursor-pointer file:rounded file:border-0 file:bg-gold/20 file:px-3 file:py-2 file:font-display file:text-[10px] file:uppercase file:tracking-widest file:text-gold hover:file:bg-gold/30"
             />
-          </label>
-          {steps.length > 0 && (
-            <ol className="mt-3 space-y-1 rounded border border-border/60 bg-black/40 p-2 text-[10px] text-muted-foreground">
-              {steps.map((s, i) => (
-                <li key={i} className="font-mono">{s}</li>
-              ))}
-            </ol>
-          )}
-          {!!files.length && (
-            <ul className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-              {files.map((f, i) => (
-                <li key={i} className="group relative overflow-hidden rounded-md border border-border bg-ink/40">
-                  <div className="aspect-square w-full">
-                    {previews[i] ? (
-                      <img src={previews[i]} alt={f.name} className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">
-                        {f.name}
-                      </div>
-                    )}
+          </div>
+
+          <div className={`rounded border px-3 py-2 text-[11px] uppercase tracking-widest ${phaseBadge.cls}`}>
+            {phaseBadge.text}
+          </div>
+
+          {picked.length > 0 && (
+            <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+              {picked.map((p) => (
+                <li
+                  key={p.id}
+                  className="overflow-hidden rounded-md border border-border bg-ink/40"
+                >
+                  <div className="aspect-square w-full bg-black/40">
+                    <img
+                      src={p.previewUrl}
+                      alt={p.file.name}
+                      className="h-full w-full object-cover"
+                    />
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => removeAt(i)}
-                    aria-label={`Remove ${f.name}`}
-                    className="absolute right-1 top-1 rounded-full border border-red-400/50 bg-black/60 px-2 py-0.5 text-[10px] text-red-200 opacity-90 hover:bg-red-500/30"
-                  >
-                    ✕
-                  </button>
-                  <div className="truncate border-t border-border/60 px-2 py-1 text-[10px] text-muted-foreground">
-                    {(f.size / 1024).toFixed(0)} KB
+                  <div className="px-2 py-1">
+                    <div className="truncate text-[11px] text-foreground" title={p.file.name}>
+                      {p.file.name}
+                    </div>
+                    <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                      <span>{p.sizeKB} KB</span>
+                      <button
+                        type="button"
+                        onClick={() => removePicked(p.id)}
+                        disabled={phase === "uploading"}
+                        className="rounded border border-red-400/40 px-1.5 py-0.5 text-red-200 hover:bg-red-500/20 disabled:opacity-40"
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </div>
                 </li>
               ))}
@@ -372,29 +360,32 @@ function SubmitDailySales() {
           />
         </label>
 
-        {msg && (
+        {message && (
           <div
             className={
-              msg.kind === "error"
+              phase === "error"
                 ? "rounded border border-red-500/40 bg-red-500/5 px-3 py-2 text-xs text-red-200"
+                : phase === "success"
+                ? "rounded border border-emerald-400/40 bg-emerald-400/10 px-3 py-2 text-xs text-emerald-200"
                 : "rounded border border-gold/30 bg-gold/5 px-3 py-2 text-xs text-gold"
             }
           >
-            {msg.text}
+            {message}
           </div>
         )}
 
         <button
           type="submit"
-          disabled={busy || !amount || !salesDate}
+          disabled={!canSubmit}
           className="w-full rounded-md border border-gold bg-gold/10 px-4 py-2 font-display text-xs uppercase tracking-widest text-gold hover:bg-gold/20 disabled:opacity-50"
         >
-          {busy ? "Submitting…" : "Submit Claim"}
+          {phase === "uploading" ? "Uploading…" : "Submit Claim"}
         </button>
       </form>
     </section>
   );
 }
+
 
 function StatusPill({ s }: { s: string }) {
   const label = s === "pending" ? "Pending Review" : s;
