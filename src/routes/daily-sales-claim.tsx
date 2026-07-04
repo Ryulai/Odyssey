@@ -127,25 +127,19 @@ function SubmitDailySales() {
   }, [files]);
 
   function onPickFiles(list: FileList | null) {
-    console.log("[upload] onPickFiles called. list=", list, "length=", list?.length);
+    pushStep(`3. onChange fired (list length=${list?.length ?? 0})`);
     if (!list || list.length === 0) {
       setMsg({ text: "Picker returned no files (list empty).", kind: "error" });
       return;
     }
     const incoming = Array.from(list);
     incoming.forEach((f, i) => {
-      console.log(`[upload] file[${i}]`, {
-        name: f.name,
-        size: f.size,
-        type: f.type,
-        lastModified: f.lastModified,
-      });
+      pushStep(`4. File[${i}] name="${f.name}" size=${f.size} type="${f.type}"`);
     });
     const valid: File[] = [];
     const errors: string[] = [];
     for (const f of incoming) {
       const mime = resolveImageMime(f);
-      console.log("[upload] resolved mime for", f.name, "=", mime);
       if (!mime) {
         errors.push(`Unsupported: ${f.name} (type="${f.type}")`);
         continue;
@@ -161,7 +155,7 @@ function SubmitDailySales() {
       (f as any).__mime = mime;
       valid.push(f);
     }
-    console.log("[upload] valid count=", valid.length, "errors=", errors);
+    pushStep(`4b. Valid=${valid.length} Errors=${errors.length}`);
     if (errors.length) setMsg({ text: errors.join(" · "), kind: "error" });
     else if (valid.length) setMsg({ text: `Selected ${valid.length} file(s).`, kind: "info" });
     setFiles((prev) => [...prev, ...valid]);
