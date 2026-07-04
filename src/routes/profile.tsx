@@ -254,10 +254,11 @@ function Field({ label, value, valueStyle }: { label: string; value: string; val
     <div className="text-center">
       <div className="text-[9px] uppercase tracking-[0.4em] text-muted-foreground/70">{label}</div>
       <div
-        className="mt-3 font-display text-lg tracking-[0.05em] text-foreground/95 sm:text-xl"
+        className="mt-1.5 font-display text-sm tracking-[0.05em] text-foreground/95 sm:mt-3 sm:text-xl"
         style={valueStyle}
       >
         {value}
+
       </div>
     </div>
   );
