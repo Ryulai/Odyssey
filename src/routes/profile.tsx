@@ -17,10 +17,12 @@ export const Route = createFileRoute("/profile")({
 });
 
 function ProfilePage() {
-  const { data, isLoading } = useQuery({
+  const { data: realData, isLoading } = useQuery({
     queryKey: ["dashboard", "me"],
     queryFn: () => getStaffDashboard({ data: {} }),
   });
+  const { active } = usePrototype();
+  const data = active ? overlayDashboard(realData ?? { staff: {}, totals: null, evaluation: null, records: [], grades: [], legacy: null, holdings: [], claims: { pending: 0, approved: 0, rejected: 0 } }, active) : realData;
 
   return (
     <div className="min-h-screen text-foreground">
@@ -33,8 +35,8 @@ function ProfilePage() {
           <Link to="/" className="rounded-md border border-border px-3 py-2 text-xs uppercase tracking-widest text-muted-foreground hover:border-gold/40 hover:text-gold">← Ledger</Link>
         </header>
 
-        {isLoading && <Skel />}
-        {!isLoading && !data?.staff && (
+        {isLoading && !active && <Skel />}
+        {!isLoading && !active && !data?.staff && (
           <div className="rounded-md border border-border bg-ink/30 p-6 text-sm text-muted-foreground">
             Your account isn't linked to a staff record yet. Ask a Director to add you in <Link to="/admin" className="text-gold underline">Admin → Staff</Link>.
           </div>
