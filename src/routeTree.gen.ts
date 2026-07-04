@@ -17,6 +17,7 @@ import { Route as PromotionsRouteImport } from './routes/promotions'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PerformanceRouteImport } from './routes/performance'
 import { Route as OwnershipRouteImport } from './routes/ownership'
+import { Route as ObjectivePerformanceRouteImport } from './routes/objective-performance'
 import { Route as MentorshipRouteImport } from './routes/mentorship'
 import { Route as MapRouteImport } from './routes/map'
 import { Route as ManagerRouteImport } from './routes/manager'
@@ -88,6 +89,11 @@ const PerformanceRoute = PerformanceRouteImport.update({
 const OwnershipRoute = OwnershipRouteImport.update({
   id: '/ownership',
   path: '/ownership',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ObjectivePerformanceRoute = ObjectivePerformanceRouteImport.update({
+  id: '/objective-performance',
+  path: '/objective-performance',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MentorshipRoute = MentorshipRouteImport.update({
@@ -268,6 +274,7 @@ export interface FileRoutesByFullPath {
   '/manager': typeof ManagerRoute
   '/map': typeof MapRoute
   '/mentorship': typeof MentorshipRoute
+  '/objective-performance': typeof ObjectivePerformanceRoute
   '/ownership': typeof OwnershipRoute
   '/performance': typeof PerformanceRoute
   '/profile': typeof ProfileRoute
@@ -309,6 +316,7 @@ export interface FileRoutesByTo {
   '/manager': typeof ManagerRoute
   '/map': typeof MapRoute
   '/mentorship': typeof MentorshipRoute
+  '/objective-performance': typeof ObjectivePerformanceRoute
   '/ownership': typeof OwnershipRoute
   '/performance': typeof PerformanceRoute
   '/profile': typeof ProfileRoute
@@ -351,6 +359,7 @@ export interface FileRoutesById {
   '/manager': typeof ManagerRoute
   '/map': typeof MapRoute
   '/mentorship': typeof MentorshipRoute
+  '/objective-performance': typeof ObjectivePerformanceRoute
   '/ownership': typeof OwnershipRoute
   '/performance': typeof PerformanceRoute
   '/profile': typeof ProfileRoute
@@ -395,6 +404,7 @@ export interface FileRouteTypes {
     | '/manager'
     | '/map'
     | '/mentorship'
+    | '/objective-performance'
     | '/ownership'
     | '/performance'
     | '/profile'
@@ -436,6 +446,7 @@ export interface FileRouteTypes {
     | '/manager'
     | '/map'
     | '/mentorship'
+    | '/objective-performance'
     | '/ownership'
     | '/performance'
     | '/profile'
@@ -477,6 +488,7 @@ export interface FileRouteTypes {
     | '/manager'
     | '/map'
     | '/mentorship'
+    | '/objective-performance'
     | '/ownership'
     | '/performance'
     | '/profile'
@@ -520,6 +532,7 @@ export interface RootRouteChildren {
   ManagerRoute: typeof ManagerRoute
   MapRoute: typeof MapRoute
   MentorshipRoute: typeof MentorshipRoute
+  ObjectivePerformanceRoute: typeof ObjectivePerformanceRoute
   OwnershipRoute: typeof OwnershipRoute
   PerformanceRoute: typeof PerformanceRoute
   ProfileRoute: typeof ProfileRoute
@@ -586,6 +599,13 @@ declare module '@tanstack/react-router' {
       path: '/ownership'
       fullPath: '/ownership'
       preLoaderRoute: typeof OwnershipRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/objective-performance': {
+      id: '/objective-performance'
+      path: '/objective-performance'
+      fullPath: '/objective-performance'
+      preLoaderRoute: typeof ObjectivePerformanceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mentorship': {
@@ -883,6 +903,7 @@ const rootRouteChildren: RootRouteChildren = {
   ManagerRoute: ManagerRoute,
   MapRoute: MapRoute,
   MentorshipRoute: MentorshipRoute,
+  ObjectivePerformanceRoute: ObjectivePerformanceRoute,
   OwnershipRoute: OwnershipRoute,
   PerformanceRoute: PerformanceRoute,
   ProfileRoute: ProfileRoute,
