@@ -495,6 +495,44 @@ export type Database = {
           },
         ]
       }
+      objective_targets: {
+        Row: {
+          created_at: string
+          id: string
+          month: string
+          objective_type: string
+          staff_id: string
+          target_amount: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          month: string
+          objective_type: string
+          staff_id: string
+          target_amount: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          month?: string
+          objective_type?: string
+          staff_id?: string
+          target_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "objective_targets_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar: string | null
