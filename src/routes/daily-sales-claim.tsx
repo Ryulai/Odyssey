@@ -29,7 +29,7 @@ export const Route = createFileRoute("/daily-sales-claim")({
 const inputCls =
   "w-full rounded-md border border-border bg-ink/60 px-3 py-2 text-sm text-foreground focus:border-gold focus:outline-none";
 const MAX_BYTES = 10 * 1024 * 1024; // 10 MB / image
-const ACCEPT = "image/*,.heic,.heif";
+const ACCEPT = "image/*";
 const EXT_MIME: Record<string, string> = {
   jpg: "image/jpeg",
   jpeg: "image/jpeg",
