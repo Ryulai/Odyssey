@@ -151,8 +151,14 @@ function SubmitClaim({ userId }: { userId: string | null }) {
           <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">
             Voyage Proof Files — jpg, png, webp, pdf · up to {MAX_FILES}, 10MB each
           </span>
-          <input type="file" multiple accept={ACCEPT} onChange={e => { onPickFiles(e.target.files); e.target.value = ""; }}
-            className="block w-full text-xs text-muted-foreground file:mr-3 file:rounded file:border file:border-gold/40 file:bg-gold/10 file:px-3 file:py-1.5 file:text-[10px] file:font-display file:uppercase file:tracking-widest file:text-gold hover:file:bg-gold/20" />
+          <input
+            type="file"
+            multiple
+            accept={ACCEPT}
+            onClick={(e) => { (e.currentTarget as HTMLInputElement).value = ""; }}
+            onChange={(e) => { console.log("[claims][upload] native onChange", e.currentTarget.files?.length ?? 0); onPickFiles(e.currentTarget.files); }}
+            className="block w-full text-xs text-muted-foreground file:mr-3 file:rounded file:border file:border-gold/40 file:bg-gold/10 file:px-3 file:py-1.5 file:text-[10px] file:font-display file:uppercase file:tracking-widest file:text-gold hover:file:bg-gold/20"
+          />
           {!!files.length && (
             <ul className="mt-2 space-y-1">
               {files.map((f, i) => (
