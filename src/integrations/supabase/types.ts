@@ -177,6 +177,50 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_sales_claims: {
+        Row: {
+          created_at: string
+          evidence_files: string[]
+          id: string
+          remarks: string
+          sales_date: string
+          staff_id: string
+          status: string
+          submitted_by: string
+          total_amount: number
+        }
+        Insert: {
+          created_at?: string
+          evidence_files?: string[]
+          id?: string
+          remarks?: string
+          sales_date?: string
+          staff_id: string
+          status?: string
+          submitted_by: string
+          total_amount: number
+        }
+        Update: {
+          created_at?: string
+          evidence_files?: string[]
+          id?: string
+          remarks?: string
+          sales_date?: string
+          staff_id?: string
+          status?: string
+          submitted_by?: string
+          total_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_sales_claims_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       grade_rules: {
         Row: {
           bonus_pct: number
