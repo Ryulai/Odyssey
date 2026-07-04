@@ -178,16 +178,19 @@ function SubmitDailySales() {
         const mime = (file as any).__mime || resolveImageMime(file) || "application/octet-stream";
         const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_") || "upload.bin";
         const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safe}`;
-        console.log("[upload] uploading", { name: file.name, size: file.size, mime, path });
+        pushStep(`5. Upload started (${file.name} → ${path})`);
         const up = await supabase.storage
           .from("daily-sales-evidence")
           .upload(path, file, { upsert: false, contentType: mime });
-        console.log("[upload] upload result", up);
-        if (up.error) throw new Error(`Upload failed (${file.name}): ${up.error.message}`);
+        if (up.error) {
+          pushStep(`5x. Upload FAILED: ${up.error.message}`);
+          throw new Error(`Upload failed (${file.name}): ${up.error.message}`);
+        }
+        pushStep(`6. Upload completed (${file.name})`);
         paths.push(path);
       }
 
-      console.log("[upload] all uploaded, calling submitDailySales", paths);
+      pushStep(`7. Submitting claim record`);
       return submitDailySales({
         data: {
           sales_date: salesDate,
