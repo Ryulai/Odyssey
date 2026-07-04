@@ -121,19 +121,37 @@ function SubmitDailySales() {
   };
 
   useEffect(() => {
-    const urls = files.map((f) => URL.createObjectURL(f));
+    console.log(
+      "[upload][state] files stored in React state",
+      files.map((f) => ({ name: f.name, size: f.size, type: f.type, resolvedType: (f as any).__mime ?? resolveImageMime(f) })),
+    );
+    pushStep(`4c. React state stored ${files.length} file(s)`);
+    const urls = files.map((f) => {
+      const url = URL.createObjectURL(f);
+      console.log("[upload][preview] created object URL", { name: f.name, url });
+      return url;
+    });
     setPreviews(urls);
     return () => urls.forEach((u) => URL.revokeObjectURL(u));
   }, [files]);
 
+  useEffect(() => {
+    if (!previews.length) return;
+    console.log("[upload][preview] preview state updated", previews);
+    pushStep(`4d. Preview URL generated (${previews.length})`);
+  }, [previews]);
+
   function onPickFiles(list: FileList | null) {
+    console.log("[upload][change] handler called", { listLength: list?.length ?? 0, hasList: Boolean(list) });
     pushStep(`3. onChange fired (list length=${list?.length ?? 0})`);
     if (!list || list.length === 0) {
+      console.warn("[upload][change] e.target.files is empty or null");
       setMsg({ text: "Picker returned no files (list empty).", kind: "error" });
       return;
     }
     const incoming = Array.from(list);
     incoming.forEach((f, i) => {
+      console.log("[upload][file] received", { index: i, name: f.name, size: f.size, type: f.type, lastModified: f.lastModified });
       pushStep(`4. File[${i}] name="${f.name}" size=${f.size} type="${f.type}"`);
     });
     const valid: File[] = [];
@@ -158,7 +176,11 @@ function SubmitDailySales() {
     pushStep(`4b. Valid=${valid.length} Errors=${errors.length}`);
     if (errors.length) setMsg({ text: errors.join(" · "), kind: "error" });
     else if (valid.length) setMsg({ text: `Selected ${valid.length} file(s).`, kind: "info" });
-    setFiles((prev) => [...prev, ...valid]);
+    setFiles((prev) => {
+      const next = [...prev, ...valid];
+      console.log("[upload][state] setFiles", { previousCount: prev.length, addedCount: valid.length, nextCount: next.length });
+      return next;
+    });
   }
 
   function removeAt(i: number) {
@@ -270,15 +292,34 @@ function SubmitDailySales() {
               type="file"
               multiple
               accept={ACCEPT}
+              onPointerDown={() => {
+                pushStep("1. File picker opened");
+              }}
               onClick={(e) => {
+                console.log("[upload][click] file input clicked before picker", {
+                  currentFiles: e.currentTarget.files?.length ?? 0,
+                  valueLength: e.currentTarget.value.length,
+                });
                 pushStep("1b. Input clicked");
                 (e.currentTarget as HTMLInputElement).value = "";
               }}
               onChange={(e) => {
-                pushStep(`2. Image selected (files=${e.target.files?.length ?? 0})`);
-                onPickFiles(e.target.files);
+                const list = e.currentTarget.files;
+                console.log("[upload][change] native onChange fired", {
+                  filesLength: list?.length ?? 0,
+                  firstFile: list?.[0]
+                    ? {
+                        name: list[0].name,
+                        size: list[0].size,
+                        type: list[0].type,
+                        lastModified: list[0].lastModified,
+                      }
+                    : null,
+                });
+                pushStep(`2. Image selected (files=${list?.length ?? 0})`);
+                onPickFiles(list);
               }}
-              className="hidden"
+              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
             />
           </label>
           {steps.length > 0 && (
