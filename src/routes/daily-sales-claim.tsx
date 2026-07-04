@@ -183,9 +183,9 @@ function SubmitDailySales() {
       setRemarks("");
       setFiles([]);
       setSalesDate(todayIso());
-      setMsg("Submitted — Pending Review.");
+      setMsg({ text: "Submitted — Pending Review.", kind: "info" });
     },
-    onError: (e: any) => setMsg(e?.message ?? "Failed to submit."),
+    onError: (e: any) => setMsg({ text: e?.message ?? "Failed to submit.", kind: "error" }),
   });
 
   return (
