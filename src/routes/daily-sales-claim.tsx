@@ -284,7 +284,7 @@ function SubmitDailySales() {
             Evidence — receipts, invoices, POS or sales screenshots (jpg / png / webp / heic, 10MB each)
           </span>
           <label
-            className="inline-flex cursor-pointer items-center gap-2 rounded border border-gold/40 bg-gold/10 px-3 py-2 font-display text-[11px] uppercase tracking-widest text-gold hover:bg-gold/20"
+            className="relative inline-flex cursor-pointer items-center gap-2 overflow-hidden rounded border border-gold/40 bg-gold/10 px-3 py-2 font-display text-[11px] uppercase tracking-widest text-gold hover:bg-gold/20"
             onClick={() => pushStep("1. Picker opening (label tap)")}
           >
             <span>Choose Images</span>
