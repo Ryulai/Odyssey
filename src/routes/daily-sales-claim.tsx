@@ -158,12 +158,13 @@ function SubmitDailySales() {
 
       const paths: string[] = [];
       for (const file of files) {
-        const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const mime = (file as any).__mime || resolveImageMime(file) || "application/octet-stream";
+        const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_") || "upload.bin";
         const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safe}`;
         const up = await supabase.storage
           .from("daily-sales-evidence")
-          .upload(path, file, { upsert: false, contentType: file.type });
-        if (up.error) throw up.error;
+          .upload(path, file, { upsert: false, contentType: mime });
+        if (up.error) throw new Error(`Upload failed (${file.name}): ${up.error.message}`);
         paths.push(path);
       }
 
