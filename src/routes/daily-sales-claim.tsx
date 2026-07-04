@@ -140,7 +140,7 @@ function SubmitDailySales() {
       (f as any).__mime = mime;
       valid.push(f);
     }
-    if (errors.length) setMsg(errors.join(" · "));
+    if (errors.length) setMsg({ text: errors.join(" · "), kind: "error" });
     else if (valid.length) setMsg(null);
     setFiles((prev) => [...prev, ...valid]);
   }
