@@ -122,20 +122,26 @@ function SubmitDailySales() {
   }, [files]);
 
   function onPickFiles(list: FileList | null) {
-    if (!list) return;
+    if (!list || list.length === 0) return;
     const incoming = Array.from(list);
     const valid: File[] = [];
+    const errors: string[] = [];
     for (const f of incoming) {
-      if (!ALLOWED.has(f.type)) {
-        setMsg(`Unsupported image: ${f.name}. Allowed: jpg, png, webp, heic.`);
+      const mime = resolveImageMime(f);
+      if (!mime) {
+        errors.push(`Unsupported: ${f.name}`);
         continue;
       }
       if (f.size > MAX_BYTES) {
-        setMsg(`Too large (>10MB): ${f.name}`);
+        errors.push(`Too large (>10MB): ${f.name}`);
         continue;
       }
+      // Attach resolved mime for later upload
+      (f as any).__mime = mime;
       valid.push(f);
     }
+    if (errors.length) setMsg(errors.join(" · "));
+    else if (valid.length) setMsg(null);
     setFiles((prev) => [...prev, ...valid]);
   }
 
