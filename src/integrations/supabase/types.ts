@@ -180,9 +180,12 @@ export type Database = {
       daily_sales_claims: {
         Row: {
           created_at: string
+          decision_notes: string
           evidence_files: string[]
           id: string
           remarks: string
+          reviewed_at: string | null
+          reviewed_by: string | null
           sales_date: string
           staff_id: string
           status: string
@@ -191,9 +194,12 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          decision_notes?: string
           evidence_files?: string[]
           id?: string
           remarks?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           sales_date?: string
           staff_id: string
           status?: string
@@ -202,9 +208,12 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          decision_notes?: string
           evidence_files?: string[]
           id?: string
           remarks?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           sales_date?: string
           staff_id?: string
           status?: string
