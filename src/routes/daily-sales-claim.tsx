@@ -114,6 +114,11 @@ function SubmitDailySales() {
   const [previews, setPreviews] = useState<string[]>([]);
   const [msg, setMsg] = useState<{ text: string; kind: "info" | "error" } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [steps, setSteps] = useState<string[]>([]);
+  const pushStep = (s: string) => {
+    console.log("[upload][step]", s);
+    setSteps((prev) => [...prev.slice(-9), `${new Date().toLocaleTimeString()} — ${s}`]);
+  };
 
   useEffect(() => {
     const urls = files.map((f) => URL.createObjectURL(f));
