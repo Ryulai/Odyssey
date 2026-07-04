@@ -256,9 +256,11 @@ function SubmitDailySales() {
             multiple
             accept={ACCEPT}
             onChange={(e) => {
+              console.log("[upload] input onChange fired. files=", e.target.files, "value=", e.target.value);
               onPickFiles(e.target.files);
               e.target.value = "";
             }}
+            onClick={() => console.log("[upload] input onClick fired")}
             className="block w-full text-xs text-muted-foreground file:mr-3 file:rounded file:border file:border-gold/40 file:bg-gold/10 file:px-3 file:py-1.5 file:text-[10px] file:font-display file:uppercase file:tracking-widest file:text-gold hover:file:bg-gold/20"
           />
           {!!files.length && (
