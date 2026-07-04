@@ -29,8 +29,21 @@ export const Route = createFileRoute("/daily-sales-claim")({
 const inputCls =
   "w-full rounded-md border border-border bg-ink/60 px-3 py-2 text-sm text-foreground focus:border-gold focus:outline-none";
 const MAX_BYTES = 10 * 1024 * 1024; // 10 MB / image
-const ACCEPT = "image/jpeg,image/png,image/webp,image/heic";
-const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp", "image/heic"]);
+const ACCEPT = "image/*,.heic,.heif";
+const EXT_MIME: Record<string, string> = {
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  webp: "image/webp",
+  heic: "image/heic",
+  heif: "image/heif",
+  gif: "image/gif",
+};
+function resolveImageMime(file: File): string | null {
+  if (file.type && file.type.startsWith("image/")) return file.type;
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+  return EXT_MIME[ext] ?? null;
+}
 
 function todayIso() {
   const d = new Date();
