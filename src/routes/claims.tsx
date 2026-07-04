@@ -15,8 +15,17 @@ export const Route = createFileRoute("/claims")({
 const inputCls = "w-full rounded-md border border-border bg-ink/60 px-3 py-2 text-sm text-foreground focus:border-gold focus:outline-none";
 const MAX_FILES = 10;
 const MAX_BYTES = 10 * 1024 * 1024; // 10 MB / file
-const ACCEPT = "image/jpeg,image/png,image/webp,application/pdf";
-const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf"]);
+const ACCEPT = "image/*,application/pdf,.jpg,.jpeg,.png,.webp,.pdf,.heic,.heif";
+const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif", "application/pdf"]);
+const EXT_MIME: Record<string, string> = {
+  jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp",
+  heic: "image/heic", heif: "image/heif", pdf: "application/pdf",
+};
+function resolveMime(f: File): string {
+  if (f.type && ALLOWED.has(f.type)) return f.type;
+  const ext = (f.name.split(".").pop() ?? "").toLowerCase();
+  return EXT_MIME[ext] ?? f.type ?? "";
+}
 
 function ClaimsPage() {
   const { user } = useAuth();
@@ -64,17 +73,25 @@ function SubmitClaim({ userId }: { userId: string | null }) {
   const effectiveStaffId = staffId || myStaff?.id || "";
 
   function onPickFiles(list: FileList | null) {
-    if (!list) return;
+    console.log("[claims][upload] onPickFiles", { count: list?.length ?? 0 });
+    if (!list || !list.length) { setMsg("No file received from picker."); return; }
     const incoming = Array.from(list);
     const valid: File[] = [];
+    const errors: string[] = [];
     for (const f of incoming) {
-      if (!ALLOWED.has(f.type)) { setMsg(`Unsupported type: ${f.name}. Allowed: jpg, png, webp, pdf.`); continue; }
-      if (f.size > MAX_BYTES) { setMsg(`Too large (>10MB): ${f.name}`); continue; }
+      const mime = resolveMime(f);
+      console.log("[claims][upload] file", { name: f.name, size: f.size, type: f.type, resolved: mime });
+      if (!ALLOWED.has(mime)) { errors.push(`Unsupported: ${f.name} (${f.type || "unknown"})`); continue; }
+      if (f.size === 0) { errors.push(`Empty: ${f.name}`); continue; }
+      if (f.size > MAX_BYTES) { errors.push(`Too large (>10MB): ${f.name}`); continue; }
+      (f as any).__mime = mime;
       valid.push(f);
     }
     const merged = [...files, ...valid].slice(0, MAX_FILES);
-    if (files.length + valid.length > MAX_FILES) setMsg(`Maximum ${MAX_FILES} files.`);
+    if (files.length + valid.length > MAX_FILES) errors.push(`Maximum ${MAX_FILES} files.`);
     setFiles(merged);
+    if (errors.length) setMsg(errors.join(" · "));
+    else if (valid.length) setMsg(`${valid.length} file(s) selected.`);
   }
 
   const submit = useMutation({
@@ -82,9 +99,10 @@ function SubmitClaim({ userId }: { userId: string | null }) {
       const paths: string[] = [];
       if (userId && files.length) {
         for (const file of files) {
+          const mime = (file as any).__mime || resolveMime(file);
           const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
           const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safe}`;
-          const up = await supabase.storage.from("claim-evidence").upload(path, file, { upsert: false, contentType: file.type });
+          const up = await supabase.storage.from("claim-evidence").upload(path, file, { upsert: false, contentType: mime });
           if (up.error) throw up.error;
           paths.push(path);
         }
@@ -133,8 +151,14 @@ function SubmitClaim({ userId }: { userId: string | null }) {
           <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">
             Voyage Proof Files — jpg, png, webp, pdf · up to {MAX_FILES}, 10MB each
           </span>
-          <input type="file" multiple accept={ACCEPT} onChange={e => { onPickFiles(e.target.files); e.target.value = ""; }}
-            className="block w-full text-xs text-muted-foreground file:mr-3 file:rounded file:border file:border-gold/40 file:bg-gold/10 file:px-3 file:py-1.5 file:text-[10px] file:font-display file:uppercase file:tracking-widest file:text-gold hover:file:bg-gold/20" />
+          <input
+            type="file"
+            multiple
+            accept={ACCEPT}
+            onClick={(e) => { (e.currentTarget as HTMLInputElement).value = ""; }}
+            onChange={(e) => { console.log("[claims][upload] native onChange", e.currentTarget.files?.length ?? 0); onPickFiles(e.currentTarget.files); }}
+            className="block w-full text-xs text-muted-foreground file:mr-3 file:rounded file:border file:border-gold/40 file:bg-gold/10 file:px-3 file:py-1.5 file:text-[10px] file:font-display file:uppercase file:tracking-widest file:text-gold hover:file:bg-gold/20"
+          />
           {!!files.length && (
             <ul className="mt-2 space-y-1">
               {files.map((f, i) => (
