@@ -168,6 +168,7 @@ function SubmitDailySales() {
 
   const submit = useMutation({
     mutationFn: async () => {
+      console.log("[upload] submit mutation start. files.length=", files.length, "user=", user?.id);
       const amt = Number(amount);
       if (!Number.isFinite(amt) || amt < 0) throw new Error("Enter a valid sales amount.");
       if (!salesDate) throw new Error("Pick a date.");
@@ -178,13 +179,16 @@ function SubmitDailySales() {
         const mime = (file as any).__mime || resolveImageMime(file) || "application/octet-stream";
         const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_") || "upload.bin";
         const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safe}`;
+        console.log("[upload] uploading", { name: file.name, size: file.size, mime, path });
         const up = await supabase.storage
           .from("daily-sales-evidence")
           .upload(path, file, { upsert: false, contentType: mime });
+        console.log("[upload] upload result", up);
         if (up.error) throw new Error(`Upload failed (${file.name}): ${up.error.message}`);
         paths.push(path);
       }
 
+      console.log("[upload] all uploaded, calling submitDailySales", paths);
       return submitDailySales({
         data: {
           sales_date: salesDate,
@@ -195,6 +199,7 @@ function SubmitDailySales() {
       });
     },
     onSuccess: () => {
+      console.log("[upload] submit onSuccess");
       qc.invalidateQueries({ queryKey: ["daily-sales", "history"] });
       setAmount("");
       setRemarks("");
@@ -202,7 +207,10 @@ function SubmitDailySales() {
       setSalesDate(todayIso());
       setMsg({ text: "Submitted — Pending Review.", kind: "info" });
     },
-    onError: (e: any) => setMsg({ text: e?.message ?? "Failed to submit.", kind: "error" }),
+    onError: (e: any) => {
+      console.error("[upload] submit onError", e);
+      setMsg({ text: e?.message ?? "Failed to submit.", kind: "error" });
+    },
   });
 
   return (
