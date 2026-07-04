@@ -1,5 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AuthGate } from "@/components/auth-gate";
+import { usePrototype } from "@/lib/prototype/use-prototype";
+import { prototypeRank, PROTOTYPE_RANKS } from "@/lib/prototype/ranks";
+import type { PrototypeSecondary } from "@/lib/prototype/types";
 
 export const Route = createFileRoute("/secondary-class")({
   head: () => ({
@@ -11,15 +14,16 @@ export const Route = createFileRoute("/secondary-class")({
   component: () => <AuthGate><SecondaryClassPage /></AuthGate>,
 });
 
-// ─── Placeholder data (System 3) ───────────────────────────────────
-const SECONDARY = {
+const REAL_STATE = {
   unlocked: false,
   unlockRank: "Gold",
-  chosenClass: null as string | null,
-  chosenRole: null as string | null,
 };
 
 function SecondaryClassPage() {
+  const { enabled, active } = usePrototype();
+  const prototypeUnlocked = enabled && !!active;
+  const secondaries: PrototypeSecondary[] = active?.secondaries ?? [];
+
   return (
     <div className="min-h-screen text-foreground">
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
@@ -53,13 +57,34 @@ function SecondaryClassPage() {
             and its own records. It follows exactly the same systems as your main Class while remaining completely independent.
           </p>
           <p className="mt-3 text-xs italic text-muted-foreground">
-            Example: Class · Vanguard  |  Secondary Class · Battle Mage. Both have their own rank,
-            grade, promotions, and records. Future versions will support multiple Secondary Classes.
+            Prototype accounts may equip any number of Secondary Classes for demonstration.
           </p>
         </section>
 
-        {/* Locked / Unlocked state */}
-        {!SECONDARY.unlocked ? (
+        {/* Prototype: show secondaries */}
+        {prototypeUnlocked ? (
+          <section className="mt-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="font-display text-sm uppercase tracking-widest text-amber-200">
+                ⚡ Prototype · Active Secondary Classes
+              </div>
+              <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                {secondaries.length} equipped
+              </div>
+            </div>
+            {secondaries.length === 0 ? (
+              <div className="rounded-xl border border-border bg-ink/30 p-8 text-center text-xs text-muted-foreground">
+                No Secondary Classes on this demo profile. Add some in the Prototype panel.
+              </div>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2">
+                {secondaries.map((sec) => (
+                  <SecondaryCard key={sec.id} sec={sec} />
+                ))}
+              </div>
+            )}
+          </section>
+        ) : !REAL_STATE.unlocked ? (
           <section className="mt-6 rounded-xl border border-border bg-ink/30 p-10 text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border-2 border-dashed border-gold/40 bg-ink/60 text-2xl">
               🔒
@@ -67,7 +92,7 @@ function SecondaryClassPage() {
             <div className="mt-5 font-display text-xl text-gold">Locked</div>
             <p className="mt-2 text-sm text-muted-foreground">
               Your Secondary Class unlocks at{" "}
-              <span className="text-gold">{SECONDARY.unlockRank}</span> Rank in your Class.
+              <span className="text-gold">{REAL_STATE.unlockRank}</span> Rank in your Class.
             </p>
             <p className="mt-1 text-[11px] italic text-muted-foreground">
               Every great adventurer first masters one Class before walking another path.
@@ -97,16 +122,52 @@ function SecondaryClassPage() {
             <div className="font-display text-sm uppercase tracking-widest text-gold">
               Secondary Class Active
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">
-              Placeholder — Performance & Ranking panels for this slot will appear here once
-              independent records begin accruing.
-            </p>
           </section>
         )}
 
         <div className="mt-8 text-center text-[10px] uppercase tracking-widest text-muted-foreground">
           System 3 · Architecture reserved · UI expands after unlock
         </div>
+      </div>
+    </div>
+  );
+}
+
+function SecondaryCard({ sec }: { sec: PrototypeSecondary }) {
+  const rank = prototypeRank(sec.rankKey) ?? PROTOTYPE_RANKS[0];
+  return (
+    <div
+      className="rounded-xl border bg-ink/40 p-5"
+      style={{ borderColor: `${rank.color}55` }}
+    >
+      <div className="flex items-baseline justify-between">
+        <div>
+          <div className="font-display text-lg text-foreground">{sec.className}</div>
+          {sec.role && (
+            <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">{sec.role}</div>
+          )}
+        </div>
+        <div
+          className="font-display text-xs uppercase tracking-widest"
+          style={{ color: rank.color, textShadow: `0 0 10px ${rank.color}66` }}
+        >
+          {rank.glyph} {rank.label}
+        </div>
+      </div>
+      <div className="mt-4">
+        <div className="mb-1 flex items-center justify-between text-[10px] uppercase tracking-widest text-muted-foreground">
+          <span>Progress</span>
+          <span>{sec.progress}%</span>
+        </div>
+        <div className="h-1.5 overflow-hidden rounded bg-ink/60">
+          <div
+            className="h-full rounded"
+            style={{ width: `${sec.progress}%`, background: rank.color }}
+          />
+        </div>
+      </div>
+      <div className="mt-3 text-[10px] italic text-muted-foreground">
+        Independent Rank · Independent Performance · Independent Records
       </div>
     </div>
   );

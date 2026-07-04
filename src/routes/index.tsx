@@ -6,6 +6,8 @@ import { getStaffDashboard } from "@/lib/workflow.functions";
 import { classLabel, roleLabel, rankIdentity, rankGlyph, rankLabel, factionFor } from "@/lib/rpg";
 import { GRADE_META, type Grade } from "@/lib/employee-data";
 import { PortraitBadge } from "@/components/portrait";
+import { usePrototype } from "@/lib/prototype/use-prototype";
+import { overlayDashboard } from "@/lib/prototype/overlay";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -20,16 +22,18 @@ export const Route = createFileRoute("/")({
 });
 
 function Dashboard() {
-  const { data, isLoading } = useQuery({
+  const { data: realData, isLoading } = useQuery({
     queryKey: ["dashboard", "me", "home"],
     queryFn: () => getStaffDashboard({ data: {} }),
   });
+  const { active } = usePrototype();
+  const data = active ? overlayDashboard(realData ?? { staff: {}, totals: null, evaluation: null, records: [], grades: [], legacy: null, holdings: [], claims: { pending: 0, approved: 0, rejected: 0 } }, active) : realData;
 
   return (
     <div className="min-h-screen text-foreground">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         <OdysseyHeader />
-        {isLoading ? (
+        {isLoading && !active ? (
           <div className="rounded-md border border-border bg-ink/30 p-12 text-center text-xs uppercase tracking-widest text-muted-foreground">
             Charting your course…
           </div>

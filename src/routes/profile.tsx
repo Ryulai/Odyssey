@@ -5,6 +5,9 @@ import { getStaffDashboard } from "@/lib/workflow.functions";
 import { GRADE_META } from "@/lib/employee-data";
 import { classLabel, roleLabel, rankIdentity, rankGlyph, rankLabel, factionFor } from "@/lib/rpg";
 import { PortraitBadge } from "@/components/portrait";
+import { usePrototype } from "@/lib/prototype/use-prototype";
+import { overlayDashboard } from "@/lib/prototype/overlay";
+import { PROTOTYPE_RANKS } from "@/lib/prototype/ranks";
 
 
 
@@ -14,10 +17,12 @@ export const Route = createFileRoute("/profile")({
 });
 
 function ProfilePage() {
-  const { data, isLoading } = useQuery({
+  const { data: realData, isLoading } = useQuery({
     queryKey: ["dashboard", "me"],
     queryFn: () => getStaffDashboard({ data: {} }),
   });
+  const { active } = usePrototype();
+  const data = active ? overlayDashboard(realData ?? { staff: {}, totals: null, evaluation: null, records: [], grades: [], legacy: null, holdings: [], claims: { pending: 0, approved: 0, rejected: 0 } }, active) : realData;
 
   return (
     <div className="min-h-screen text-foreground">
@@ -30,8 +35,8 @@ function ProfilePage() {
           <Link to="/" className="rounded-md border border-border px-3 py-2 text-xs uppercase tracking-widest text-muted-foreground hover:border-gold/40 hover:text-gold">← Ledger</Link>
         </header>
 
-        {isLoading && <Skel />}
-        {!isLoading && !data?.staff && (
+        {isLoading && !active && <Skel />}
+        {!isLoading && !active && !data?.staff && (
           <div className="rounded-md border border-border bg-ink/30 p-6 text-sm text-muted-foreground">
             Your account isn't linked to a staff record yet. Ask a Director to add you in <Link to="/admin" className="text-gold underline">Admin → Staff</Link>.
           </div>
@@ -145,6 +150,7 @@ function CharacterSheet({ d, isShipbuilder = false }: { d: any; isShipbuilder?: 
   const initials = (s.name ?? "??")
     .split(/\s+/).filter(Boolean).slice(0, 2).map((p: string) => p[0]?.toUpperCase()).join("");
   const rankColor =
+    PROTOTYPE_RANKS.find((r) => r.key === (rankKey ?? "").toLowerCase())?.color ??
     { bronze:"#B87333", silver:"#C8CDD4", gold:"#F5D07A", platinum:"#B8D4E3",
       diamond:"#8FE3E8", mystical:"#C9A6FF", legend:"#F4E9C1" }[
       (rankKey ?? "").toLowerCase() as string] ?? "#8A8F98";
