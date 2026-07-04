@@ -112,7 +112,7 @@ function SubmitDailySales() {
   const [remarks, setRemarks] = useState<string>("");
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
-  const [msg, setMsg] = useState<string | null>(null);
+  const [msg, setMsg] = useState<{ text: string; kind: "info" | "error" } | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
