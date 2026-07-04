@@ -121,3 +121,99 @@ export const getMyHunterStatus = createServerFn({ method: "GET" })
       isHunter: data?.role_family === "hunter",
     };
   });
+
+async function ensureReviewer(context: { supabase: any; userId: string }) {
+  const [mgr, dir] = await Promise.all([
+    context.supabase.rpc("has_role", { _user_id: context.userId, _role: "manager" }),
+    context.supabase.rpc("has_role", { _user_id: context.userId, _role: "director" }),
+  ]);
+  if (mgr.error) throw new Error(mgr.error.message);
+  if (dir.error) throw new Error(dir.error.message);
+  if (!mgr.data && !dir.data) throw new Error("Only Captains, Managers or Admin can review Daily Sales.");
+}
+
+/** List every Daily Sales Claim for the review dashboard. Managers/Directors only. */
+export const listSalesForReview = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { status?: "pending" | "approved" | "rejected" | "all" }) => d)
+  .handler(async ({ context, data }) => {
+    await ensureReviewer(context);
+    let q = context.supabase
+      .from("daily_sales_claims")
+      .select("*, staff:staff(id, name, business_unit, rpg:rpg_identity(primary_class, primary_role))")
+      .order("created_at", { ascending: false });
+    if (data?.status && data.status !== "all") q = q.eq("status", data.status);
+
+    const { data: rows, error } = await q;
+    if (error) throw new Error(error.message);
+
+    // Resolve reviewer display names via profiles.
+    const reviewerIds = Array.from(
+      new Set((rows ?? []).map((r: any) => r.reviewed_by).filter(Boolean)),
+    ) as string[];
+    let reviewerMap: Record<string, string> = {};
+    if (reviewerIds.length) {
+      const p = await context.supabase
+        .from("profiles")
+        .select("id, full_name, email")
+        .in("id", reviewerIds);
+      if (p.error) throw new Error(p.error.message);
+      reviewerMap = Object.fromEntries(
+        (p.data ?? []).map((r: any) => [r.id, r.full_name || r.email || "Reviewer"]),
+      );
+    }
+
+    return (rows ?? []).map((r: any) => ({
+      ...r,
+      staff: {
+        id: r.staff?.id ?? r.staff_id,
+        name: r.staff?.name ?? "Unknown",
+        business_unit: r.staff?.business_unit ?? null,
+        primary_class: r.staff?.rpg?.primary_class ?? null,
+        primary_role: r.staff?.rpg?.primary_role ?? null,
+      },
+      reviewer_name: r.reviewed_by ? reviewerMap[r.reviewed_by] ?? null : null,
+    })) as DailySalesReviewRow[];
+  });
+
+/** Signed URLs for reviewer viewing (30 min). Managers/Directors only. */
+export const signSalesEvidenceForReview = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { paths: string[] }) => d)
+  .handler(async ({ context, data }) => {
+    await ensureReviewer(context);
+    const paths = (data.paths ?? []).filter(Boolean);
+    const out: Record<string, string> = {};
+    for (const p of paths) {
+      const { data: signed } = await context.supabase.storage
+        .from("daily-sales-evidence")
+        .createSignedUrl(p, 60 * 30);
+      if (signed?.signedUrl) out[p] = signed.signedUrl;
+    }
+    return out;
+  });
+
+/** Decide (approve/reject) a Daily Sales Claim. Managers/Directors only. */
+export const decideDailySales = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string; decision: "approved" | "rejected"; decision_notes?: string }) => d)
+  .handler(async ({ context, data }) => {
+    await ensureReviewer(context);
+    if (data.decision === "rejected" && !(data.decision_notes ?? "").trim()) {
+      throw new Error("A rejection reason is required.");
+    }
+    const { data: row, error } = await context.supabase
+      .from("daily_sales_claims")
+      .update({
+        status: data.decision,
+        decision_notes: data.decision_notes ?? "",
+        reviewed_by: context.userId,
+        reviewed_at: new Date().toISOString(),
+      })
+      .eq("id", data.id)
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
+    return row;
+  });
+
