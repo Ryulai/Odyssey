@@ -15,8 +15,17 @@ export const Route = createFileRoute("/claims")({
 const inputCls = "w-full rounded-md border border-border bg-ink/60 px-3 py-2 text-sm text-foreground focus:border-gold focus:outline-none";
 const MAX_FILES = 10;
 const MAX_BYTES = 10 * 1024 * 1024; // 10 MB / file
-const ACCEPT = "image/jpeg,image/png,image/webp,application/pdf";
-const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf"]);
+const ACCEPT = "image/*,application/pdf,.jpg,.jpeg,.png,.webp,.pdf,.heic,.heif";
+const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif", "application/pdf"]);
+const EXT_MIME: Record<string, string> = {
+  jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp",
+  heic: "image/heic", heif: "image/heif", pdf: "application/pdf",
+};
+function resolveMime(f: File): string {
+  if (f.type && ALLOWED.has(f.type)) return f.type;
+  const ext = (f.name.split(".").pop() ?? "").toLowerCase();
+  return EXT_MIME[ext] ?? f.type ?? "";
+}
 
 function ClaimsPage() {
   const { user } = useAuth();
