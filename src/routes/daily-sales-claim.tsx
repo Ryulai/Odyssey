@@ -122,26 +122,43 @@ function SubmitDailySales() {
   }, [files]);
 
   function onPickFiles(list: FileList | null) {
-    if (!list || list.length === 0) return;
+    console.log("[upload] onPickFiles called. list=", list, "length=", list?.length);
+    if (!list || list.length === 0) {
+      setMsg({ text: "Picker returned no files (list empty).", kind: "error" });
+      return;
+    }
     const incoming = Array.from(list);
+    incoming.forEach((f, i) => {
+      console.log(`[upload] file[${i}]`, {
+        name: f.name,
+        size: f.size,
+        type: f.type,
+        lastModified: f.lastModified,
+      });
+    });
     const valid: File[] = [];
     const errors: string[] = [];
     for (const f of incoming) {
       const mime = resolveImageMime(f);
+      console.log("[upload] resolved mime for", f.name, "=", mime);
       if (!mime) {
-        errors.push(`Unsupported: ${f.name}`);
+        errors.push(`Unsupported: ${f.name} (type="${f.type}")`);
+        continue;
+      }
+      if (f.size === 0) {
+        errors.push(`Empty file (0 bytes): ${f.name}`);
         continue;
       }
       if (f.size > MAX_BYTES) {
         errors.push(`Too large (>10MB): ${f.name}`);
         continue;
       }
-      // Attach resolved mime for later upload
       (f as any).__mime = mime;
       valid.push(f);
     }
+    console.log("[upload] valid count=", valid.length, "errors=", errors);
     if (errors.length) setMsg({ text: errors.join(" · "), kind: "error" });
-    else if (valid.length) setMsg(null);
+    else if (valid.length) setMsg({ text: `Selected ${valid.length} file(s).`, kind: "info" });
     setFiles((prev) => [...prev, ...valid]);
   }
 
