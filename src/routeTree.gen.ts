@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SystemRouteImport } from './routes/system'
 import { Route as StatisticsRouteImport } from './routes/statistics'
 import { Route as SecondaryClassRouteImport } from './routes/secondary-class'
+import { Route as SalesReviewRouteImport } from './routes/sales-review'
 import { Route as PromotionsRouteImport } from './routes/promotions'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PerformanceRouteImport } from './routes/performance'
@@ -62,6 +63,11 @@ const StatisticsRoute = StatisticsRouteImport.update({
 const SecondaryClassRoute = SecondaryClassRouteImport.update({
   id: '/secondary-class',
   path: '/secondary-class',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SalesReviewRoute = SalesReviewRouteImport.update({
+  id: '/sales-review',
+  path: '/sales-review',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PromotionsRoute = PromotionsRouteImport.update({
@@ -266,6 +272,7 @@ export interface FileRoutesByFullPath {
   '/performance': typeof PerformanceRoute
   '/profile': typeof ProfileRoute
   '/promotions': typeof PromotionsRoute
+  '/sales-review': typeof SalesReviewRoute
   '/secondary-class': typeof SecondaryClassRoute
   '/statistics': typeof StatisticsRoute
   '/system': typeof SystemRouteWithChildren
@@ -306,6 +313,7 @@ export interface FileRoutesByTo {
   '/performance': typeof PerformanceRoute
   '/profile': typeof ProfileRoute
   '/promotions': typeof PromotionsRoute
+  '/sales-review': typeof SalesReviewRoute
   '/secondary-class': typeof SecondaryClassRoute
   '/statistics': typeof StatisticsRoute
   '/collections/backgrounds': typeof CollectionsBackgroundsRoute
@@ -347,6 +355,7 @@ export interface FileRoutesById {
   '/performance': typeof PerformanceRoute
   '/profile': typeof ProfileRoute
   '/promotions': typeof PromotionsRoute
+  '/sales-review': typeof SalesReviewRoute
   '/secondary-class': typeof SecondaryClassRoute
   '/statistics': typeof StatisticsRoute
   '/system': typeof SystemRouteWithChildren
@@ -390,6 +399,7 @@ export interface FileRouteTypes {
     | '/performance'
     | '/profile'
     | '/promotions'
+    | '/sales-review'
     | '/secondary-class'
     | '/statistics'
     | '/system'
@@ -430,6 +440,7 @@ export interface FileRouteTypes {
     | '/performance'
     | '/profile'
     | '/promotions'
+    | '/sales-review'
     | '/secondary-class'
     | '/statistics'
     | '/collections/backgrounds'
@@ -470,6 +481,7 @@ export interface FileRouteTypes {
     | '/performance'
     | '/profile'
     | '/promotions'
+    | '/sales-review'
     | '/secondary-class'
     | '/statistics'
     | '/system'
@@ -512,6 +524,7 @@ export interface RootRouteChildren {
   PerformanceRoute: typeof PerformanceRoute
   ProfileRoute: typeof ProfileRoute
   PromotionsRoute: typeof PromotionsRoute
+  SalesReviewRoute: typeof SalesReviewRoute
   SecondaryClassRoute: typeof SecondaryClassRoute
   StatisticsRoute: typeof StatisticsRoute
   SystemRoute: typeof SystemRouteWithChildren
@@ -538,6 +551,13 @@ declare module '@tanstack/react-router' {
       path: '/secondary-class'
       fullPath: '/secondary-class'
       preLoaderRoute: typeof SecondaryClassRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sales-review': {
+      id: '/sales-review'
+      path: '/sales-review'
+      fullPath: '/sales-review'
+      preLoaderRoute: typeof SalesReviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/promotions': {
@@ -867,6 +887,7 @@ const rootRouteChildren: RootRouteChildren = {
   PerformanceRoute: PerformanceRoute,
   ProfileRoute: ProfileRoute,
   PromotionsRoute: PromotionsRoute,
+  SalesReviewRoute: SalesReviewRoute,
   SecondaryClassRoute: SecondaryClassRoute,
   StatisticsRoute: StatisticsRoute,
   SystemRoute: SystemRouteWithChildren,
