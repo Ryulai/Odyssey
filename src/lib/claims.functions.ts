@@ -87,3 +87,28 @@ export const listMyRecords = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     return data ?? [];
   });
+
+// 🧪 Minimal insert probe — inserts the smallest possible achievement_claims row
+// to isolate which field/constraint is causing failures on Harbor Records.
+export const testMinimalClaimInsert = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    // Need a staff row + an achievement row (both NOT NULL FKs). Pick the first.
+    const staff = await context.supabase.from("staff").select("id").limit(1).maybeSingle();
+    if (staff.error) return { ok: false, step: "select staff", error: staff.error };
+    if (!staff.data) return { ok: false, step: "select staff", error: { message: "no staff row visible" } };
+
+    const ach = await context.supabase.from("achievements").select("id").limit(1).maybeSingle();
+    if (ach.error) return { ok: false, step: "select achievements", error: ach.error };
+    if (!ach.data) return { ok: false, step: "select achievements", error: { message: "no achievements row visible" } };
+
+    const payload = {
+      staff_id: staff.data.id,
+      achievement_id: ach.data.id,
+      submitted_by: context.userId,
+    };
+
+    const ins = await context.supabase.from("achievement_claims").insert(payload).select().single();
+    if (ins.error) return { ok: false, step: "insert achievement_claims", payload, error: ins.error };
+    return { ok: true, payload, row: ins.data };
+  });
