@@ -185,23 +185,44 @@ function normaliseClassKey(v: string | null | undefined): string {
   return (v ?? "").toString().trim().toLowerCase().replace(/\s+/g, "_");
 }
 
-function resolveTemplate(staff: any): {
-  template: ReviewTemplate | null;
-  className: string | null;
-} {
-  const roleKey = normaliseClassKey(staff?.primary_role);
-  const classKey = normaliseClassKey(staff?.primary_class);
-  const candidates = [roleKey, classKey].filter(Boolean);
-  for (const k of candidates) {
-    if (TEMPLATES[k]) return { template: TEMPLATES[k], className: TEMPLATES[k].className };
+/**
+ * Resolve the review template from the employee's stored Class.
+ *
+ * SOURCE OF TRUTH: `staff.primary_role` (the specialization: hunter, sniper,
+ * alchemist, vanguard, mage subclasses, ...). This is the field that
+ * corresponds to what the business calls "Class" (Hunter, Vanguard, Mage, ...).
+ *
+ * `primary_class` is the parent guild (ranger / warrior / mage / guardian)
+ * and MUST NOT be used to pick a review template — a Hunter's parent guild
+ * is "ranger", which would incorrectly load the Ranger template.
+ *
+ * No fallback, no guessing. If the field is missing we return an explicit
+ * error so the manager sees exactly what's wrong instead of silently
+ * loading the wrong Class's form.
+ */
+type ResolveResult =
+  | { status: "ok";      template: ReviewTemplate; className: string; classKey: string }
+  | { status: "pending"; template: null;           className: string; classKey: string }
+  | { status: "missing"; template: null;           className: null;   classKey: null };
+
+function resolveTemplate(staff: any): ResolveResult {
+  const classKey = normaliseClassKey(staff?.primary_role);
+  if (!classKey) {
+    return { status: "missing", template: null, className: null, classKey: null };
   }
-  for (const k of candidates) {
-    if (KNOWN_CLASSES_WITHOUT_TEMPLATE[k]) {
-      return { template: null, className: KNOWN_CLASSES_WITHOUT_TEMPLATE[k] };
-    }
+  if (TEMPLATES[classKey]) {
+    const t = TEMPLATES[classKey];
+    return { status: "ok", template: t, className: t.className, classKey };
   }
-  return { template: null, className: candidates[0] ? candidates[0] : null };
+  const known = KNOWN_CLASSES_WITHOUT_TEMPLATE[classKey];
+  return {
+    status: "pending",
+    template: null,
+    className: known ?? classKey.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+    classKey,
+  };
 }
+
 
 
 // -------------------------------------------------------------------
