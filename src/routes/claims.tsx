@@ -60,6 +60,51 @@ function ClaimsPage() {
   );
 }
 
+function MinimalInsertTest() {
+  const [result, setResult] = useState<any>(null);
+  const [running, setRunning] = useState(false);
+
+  async function run() {
+    setRunning(true);
+    setResult(null);
+    try {
+      const r = await testMinimalClaimInsert();
+      console.log("[minimal-claim-test]", r);
+      setResult(r);
+    } catch (e: any) {
+      console.error("[minimal-claim-test] threw", e);
+      setResult({ ok: false, step: "threw", error: { message: e?.message ?? String(e) } });
+    } finally {
+      setRunning(false);
+    }
+  }
+
+  return (
+    <section className="mb-6 rounded-md border border-red-500/40 bg-red-500/5 p-5">
+      <h2 className="font-display text-sm uppercase tracking-[0.25em] text-red-200">
+        🧪 Minimal Insert Test
+      </h2>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Inserts the smallest possible row into <code>achievement_claims</code> (staff_id + achievement_id + submitted_by).
+        All other columns fall back to DB defaults. Use this to isolate which field breaks the Harbor Records submission.
+      </p>
+      <button
+        type="button"
+        onClick={run}
+        disabled={running}
+        className="mt-3 rounded-md border border-red-400 bg-red-500/10 px-4 py-2 font-display text-[11px] uppercase tracking-widest text-red-100 hover:bg-red-500/20 disabled:opacity-50"
+      >
+        {running ? "Running…" : "Run Minimal Insert"}
+      </button>
+      {result && (
+        <pre className="mt-3 overflow-x-auto rounded border border-border bg-black/50 p-3 text-[11px] text-foreground">
+{JSON.stringify(result, null, 2)}
+        </pre>
+      )}
+    </section>
+  );
+}
+
 function SubmitClaim({ userId }: { userId: string | null }) {
   const qc = useQueryClient();
   const { data: staff = [] } = useQuery({ queryKey: ["staff"], queryFn: () => listStaff() });
