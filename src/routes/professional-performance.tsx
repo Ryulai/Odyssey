@@ -700,20 +700,27 @@ function CategoryCard({
 // Result panel — revealed only after Submit
 // -------------------------------------------------------------------
 
-function ResultPanel({ result }: { result: Submitted }) {
+function ResultPanel({ result, hasSalesKPI }: { result: Submitted; hasSalesKPI: boolean }) {
   const g = gradeFor(result.finalScore);
-  const targetPct = Math.round((result.salesAmount / result.salesTarget) * 100);
+  const targetPct = hasSalesKPI && result.salesTarget
+    ? Math.round((result.salesAmount / result.salesTarget) * 100)
+    : 0;
   return (
     <div className="mt-5 space-y-4 border-t border-gold/30 pt-5">
       <div className="grid gap-3 sm:grid-cols-3">
-        <Stat
-          label="Sales Score"
-          value={result.salesScore}
-          suffix={`/ 100 · ${fmtMoney(result.salesAmount)} of ${fmtMoney(result.salesTarget)} (${targetPct}%)`}
-        />
+        {hasSalesKPI ? (
+          <Stat
+            label="Sales Score"
+            value={result.salesScore}
+            suffix={`/ 100 · ${fmtMoney(result.salesAmount)} of ${fmtMoney(result.salesTarget)} (${targetPct}%)`}
+          />
+        ) : (
+          <PlaceholderStat label="Objective Score" value="—" hint="No KPI in this template" />
+        )}
         <Stat label="Behaviour Score" value={result.behaviourScore} suffix="/ 100" />
         <Stat label="Final Performance" value={result.finalScore} suffix="/ 100" accent />
       </div>
+
 
       <div className="grid gap-3 sm:grid-cols-3">
         <div
