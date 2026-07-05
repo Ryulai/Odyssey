@@ -118,6 +118,13 @@ function SubmitClaim({ userId }: { userId: string | null }) {
   const [files, setFiles] = useState<File[]>([]);
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [debugLog, setDebugLog] = useState<Array<{ t: string; step: string; data?: any }>>([]);
+
+  function log(step: string, data?: any) {
+    const t = new Date().toISOString().split("T")[1]?.replace("Z", "") ?? "";
+    console.log(`[voyage-submit] ${step}`, data ?? "");
+    setDebugLog((prev) => [...prev, { t, step, data }]);
+  }
 
   const effectiveStaffId = staffId || myStaff?.id || "";
 
@@ -145,24 +152,56 @@ function SubmitClaim({ userId }: { userId: string | null }) {
 
   const submit = useMutation({
     mutationFn: async () => {
+      log("3. payload before upload", {
+        staff_id: effectiveStaffId,
+        achievement_id: achievementId,
+        evidence_text_len: evidence.length,
+        notes_len: notes.length,
+        file_count: files.length,
+        files: files.map((f) => ({ name: f.name, size: f.size, type: f.type })),
+      });
+
       const paths: string[] = [];
       if (userId && files.length) {
-        for (const file of files) {
+        log("4. upload started", { userId, count: files.length });
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
           const mime = (file as any).__mime || resolveMime(file);
           const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
           const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safe}`;
+          log(`4.${i + 1} uploading file`, { name: file.name, size: file.size, mime, path });
           const up = await supabase.storage.from("claim-evidence").upload(path, file, { upsert: false, contentType: mime });
-          if (up.error) throw up.error;
+          if (up.error) {
+            log(`4.${i + 1} upload ERROR`, { message: up.error.message, name: (up.error as any).name, statusCode: (up.error as any).statusCode });
+            throw up.error;
+          }
+          log(`4.${i + 1} upload OK`, { path: up.data?.path });
           paths.push(path);
         }
+        log("5. upload finished", { count: paths.length });
+        log("6. URLs returned", { paths });
+      } else {
+        log("4-6. upload skipped", { userId, fileCount: files.length });
       }
-      return submitClaim({ data: {
+
+      const insertPayload = {
         staff_id: effectiveStaffId,
         achievement_id: achievementId,
         evidence_text: evidence,
         evidence_files: paths,
         notes,
-      }});
+      };
+      log("7. final payload before insert", insertPayload);
+
+      log("8. insert started");
+      try {
+        const row = await submitClaim({ data: insertPayload });
+        log("9. insert SUCCESS", { id: (row as any)?.id });
+        return row;
+      } catch (e: any) {
+        log("9. insert ERROR", { message: e?.message ?? String(e) });
+        throw e;
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["claims"] });
@@ -171,6 +210,7 @@ function SubmitClaim({ userId }: { userId: string | null }) {
     },
     onError: (e: any) => setMsg(e.message ?? "Failed"),
   });
+
 
   return (
     <section className="rounded-md border border-border bg-ink/30 p-5">
