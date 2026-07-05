@@ -8,54 +8,73 @@ import { listStaff } from "@/lib/config.functions";
 export const Route = createFileRoute("/professional-performance")({
   head: () => ({
     meta: [
-      { title: "Professional Performance — The Odyssey Guide" },
+      { title: "Monthly Review — Odyssey" },
       {
         name: "description",
         content:
-          "Prototype V1 — Hunter Professional Performance evaluation across four capability areas.",
+          "One monthly review per team member. Enter sales, select behaviour, and the system calculates the final monthly performance.",
       },
     ],
   }),
   component: () => (
     <AuthGate>
-      <ProfessionalPerformancePage />
+      <MonthlyReviewPage />
     </AuthGate>
   ),
 });
 
-type AreaKey = "customer" | "communication" | "execution" | "growth";
+// -------------------------------------------------------------------
+// Behaviour categories — 5 predefined descriptions per category.
+// Each option has an internal score. Managers pick one, never type numbers.
+// Scores: 20 / 40 / 60 / 80 / 100 (equal steps, easy to reason about).
+// -------------------------------------------------------------------
 
-type Area = {
-  key: AreaKey;
+type CategoryKey = "customer" | "communication" | "execution" | "growth";
+
+type BehaviourOption = { label: string; score: number };
+
+type Category = {
+  key: CategoryKey;
   label: string;
   description: string;
-  behaviours: string[];
+  options: BehaviourOption[]; // exactly 5, ordered lowest → highest
 };
 
-const AREAS: Area[] = [
+const CATEGORIES: Category[] = [
   {
     key: "customer",
     label: "Customer Relationship",
     description:
       "Builds genuine customer relationships and consistently delivers excellent customer experiences.",
-    behaviours: [
-      "Greets customers professionally.",
-      "Understands customer preferences.",
-      "Follows up with customers.",
-      "Creates memorable customer experiences.",
-      "Builds customer trust.",
+    options: [
+      { label: "Rarely builds customer relationships.", score: 20 },
+      { label: "Occasionally builds customer trust.", score: 40 },
+      { label: "Consistently provides good customer service.", score: 60 },
+      { label: "Builds long-term customer loyalty.", score: 80 },
+      {
+        label:
+          "Creates exceptional customer experiences and actively grows relationships.",
+        score: 100,
+      },
     ],
   },
   {
     key: "communication",
     label: "Communication & Collaboration",
     description: "Communicates effectively and works well with the team.",
-    behaviours: [
-      "Communicates clearly.",
-      "Supports teammates.",
-      "Shares information proactively.",
-      "Cooperates across departments.",
-      "Maintains a positive team attitude.",
+    options: [
+      { label: "Rarely communicates or cooperates with the team.", score: 20 },
+      { label: "Communicates when prompted but seldom initiates.", score: 40 },
+      { label: "Communicates clearly and supports teammates.", score: 60 },
+      {
+        label: "Proactively shares information and cooperates across departments.",
+        score: 80,
+      },
+      {
+        label:
+          "Elevates team communication and sets the standard for collaboration.",
+        score: 100,
+      },
     ],
   },
   {
@@ -63,12 +82,19 @@ const AREAS: Area[] = [
     label: "Execution",
     description:
       "Executes responsibilities consistently with discipline and reliability.",
-    behaviours: [
-      "Completes assigned tasks.",
-      "Follows SOP consistently.",
-      "Takes initiative without supervision.",
-      "Responds quickly to operational needs.",
-      "Demonstrates accountability.",
+    options: [
+      { label: "Often misses tasks or requires reminders.", score: 20 },
+      { label: "Completes tasks inconsistently.", score: 40 },
+      { label: "Completes assigned tasks and follows SOP.", score: 60 },
+      {
+        label: "Takes initiative and responds quickly to operational needs.",
+        score: 80,
+      },
+      {
+        label:
+          "Owns outcomes end-to-end and consistently raises operational standards.",
+        score: 100,
+      },
     ],
   },
   {
@@ -76,39 +102,78 @@ const AREAS: Area[] = [
     label: "Growth to Influence",
     description:
       "Continuously improves oneself and positively influences others.",
-    behaviours: [
-      "Learns actively.",
-      "Accepts feedback positively.",
-      "Applies improvements consistently.",
-      "Shares knowledge with teammates.",
-      "Positively influences others through actions.",
+    options: [
+      { label: "Rarely learns or accepts feedback.", score: 20 },
+      { label: "Occasionally applies feedback.", score: 40 },
+      { label: "Learns actively and applies improvements.", score: 60 },
+      { label: "Shares knowledge and supports teammates' growth.", score: 80 },
+      {
+        label: "Positively influences the whole team through actions and mentoring.",
+        score: 100,
+      },
     ],
   },
 ];
+
+// -------------------------------------------------------------------
+// Grading
+// -------------------------------------------------------------------
+
+function gradeFor(score: number): { grade: "A" | "B" | "C" | "D"; label: string; color: string } {
+  if (score >= 85) return { grade: "A", label: "Outstanding", color: "#F5D07A" };
+  if (score >= 70) return { grade: "B", label: "Strong", color: "#B8D4E3" };
+  if (score >= 55) return { grade: "C", label: "Steady", color: "#C8CDD4" };
+  return { grade: "D", label: "Needs Recovery", color: "#E07070" };
+}
 
 function monthKey(d = new Date()) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
-type Scores = Record<AreaKey, number>;
-type Notes = Record<AreaKey, string>;
+// -------------------------------------------------------------------
+// LocalStorage draft (prototype only)
+// -------------------------------------------------------------------
 
-const BLANK_SCORES: Scores = { customer: 0, communication: 0, execution: 0, growth: 0 };
-const BLANK_NOTES: Notes = { customer: "", communication: "", execution: "", growth: "" };
+type Selections = Record<CategoryKey, number | null>; // index of selected option
 
-const STORAGE_KEY = "odyssey.prototype.professional-performance.v1";
+const BLANK_SELECTIONS: Selections = {
+  customer: null,
+  communication: null,
+  execution: null,
+  growth: null,
+};
 
-type Draft = { scores: Scores; notes: Notes };
+type Draft = {
+  salesAmount: number;
+  salesTarget: number;
+  selections: Selections;
+  notes: string;
+  submitted?: {
+    at: string;
+    behaviourScore: number;
+    objectiveScore: number;
+    finalScore: number;
+    grade: string;
+  };
+};
+
+const STORAGE_KEY = "odyssey.prototype.monthly-review.v1";
 
 function loadDraft(staffId: string, month: string): Draft {
-  if (typeof window === "undefined") return { scores: { ...BLANK_SCORES }, notes: { ...BLANK_NOTES } };
+  const blank: Draft = {
+    salesAmount: 0,
+    salesTarget: 0,
+    selections: { ...BLANK_SELECTIONS },
+    notes: "",
+  };
+  if (typeof window === "undefined") return blank;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { scores: { ...BLANK_SCORES }, notes: { ...BLANK_NOTES } };
+    if (!raw) return blank;
     const all = JSON.parse(raw) as Record<string, Draft>;
-    return all[`${staffId}::${month}`] ?? { scores: { ...BLANK_SCORES }, notes: { ...BLANK_NOTES } };
+    return all[`${staffId}::${month}`] ?? blank;
   } catch {
-    return { scores: { ...BLANK_SCORES }, notes: { ...BLANK_NOTES } };
+    return blank;
   }
 }
 
@@ -124,58 +189,97 @@ function saveDraft(staffId: string, month: string, draft: Draft) {
   }
 }
 
-function ProfessionalPerformancePage() {
+// -------------------------------------------------------------------
+// Page
+// -------------------------------------------------------------------
+
+function MonthlyReviewPage() {
   const { role } = useRole();
-  const canEvaluate = can(role, "evaluations.write");
+  const canReview = can(role, "evaluations.write");
 
   const [month, setMonth] = useState(monthKey());
   const [staffId, setStaffId] = useState<string>("");
+  const [salesAmount, setSalesAmount] = useState<number>(0);
+  const [salesTarget, setSalesTarget] = useState<number>(0);
+  const [selections, setSelections] = useState<Selections>({ ...BLANK_SELECTIONS });
+  const [notes, setNotes] = useState<string>("");
+  const [result, setResult] = useState<Draft["submitted"]>();
 
   const { data: staff = [] } = useQuery({
     queryKey: ["staff"],
     queryFn: () => listStaff(),
-    enabled: canEvaluate,
+    enabled: canReview,
   });
 
-  const [scores, setScores] = useState<Scores>({ ...BLANK_SCORES });
-  const [notes, setNotes] = useState<Notes>({ ...BLANK_NOTES });
-  const [savedAt, setSavedAt] = useState<string | null>(null);
-
-  // Load draft whenever staff/month changes.
+  // Load draft on staff/month change
   useEffect(() => {
     if (!staffId) {
-      setScores({ ...BLANK_SCORES });
-      setNotes({ ...BLANK_NOTES });
+      setSalesAmount(0);
+      setSalesTarget(0);
+      setSelections({ ...BLANK_SELECTIONS });
+      setNotes("");
+      setResult(undefined);
       return;
     }
     const d = loadDraft(staffId, month);
-    setScores(d.scores);
+    setSalesAmount(d.salesAmount);
+    setSalesTarget(d.salesTarget);
+    setSelections(d.selections);
     setNotes(d.notes);
+    setResult(d.submitted);
   }, [staffId, month]);
 
-  const average = useMemo(() => {
-    const vals = Object.values(scores);
-    const filled = vals.filter((v) => v > 0);
-    if (!filled.length) return 0;
-    return +(filled.reduce((a, b) => a + b, 0) / filled.length).toFixed(2);
-  }, [scores]);
+  const allBehaviourSelected = useMemo(
+    () => CATEGORIES.every((c) => selections[c.key] !== null),
+    [selections],
+  );
 
-  function updateScore(key: AreaKey, value: number) {
-    setScores((s) => ({ ...s, [key]: value }));
-  }
-  function updateNote(key: AreaKey, value: string) {
-    setNotes((n) => ({ ...n, [key]: value }));
+  const salesReady = salesTarget > 0;
+  const canSubmit = Boolean(staffId) && salesReady && allBehaviourSelected;
+
+  function selectOption(key: CategoryKey, optionIndex: number) {
+    setSelections((s) => ({ ...s, [key]: optionIndex }));
   }
 
-  function handleSave() {
-    if (!staffId) return;
-    saveDraft(staffId, month, { scores, notes });
-    setSavedAt(new Date().toLocaleTimeString());
+  function handleSubmit() {
+    if (!canSubmit) return;
+    // Behaviour = average of 4 category scores
+    const behaviour =
+      CATEGORIES.reduce((sum, c) => {
+        const idx = selections[c.key] as number;
+        return sum + c.options[idx].score;
+      }, 0) / CATEGORIES.length;
+
+    // Objective = sales vs target, capped at 100
+    const objective = Math.min(100, Math.round((salesAmount / salesTarget) * 100));
+
+    // Final = 50/50
+    const finalScore = +((behaviour + objective) / 2).toFixed(2);
+    const gradeInfo = gradeFor(finalScore);
+
+    const submitted = {
+      at: new Date().toISOString(),
+      behaviourScore: +behaviour.toFixed(2),
+      objectiveScore: objective,
+      finalScore,
+      grade: gradeInfo.grade,
+    };
+    setResult(submitted);
+    saveDraft(staffId, month, {
+      salesAmount,
+      salesTarget,
+      selections,
+      notes,
+      submitted,
+    });
   }
 
   function handleReset() {
-    setScores({ ...BLANK_SCORES });
-    setNotes({ ...BLANK_NOTES });
+    setSalesAmount(0);
+    setSalesTarget(0);
+    setSelections({ ...BLANK_SELECTIONS });
+    setNotes("");
+    setResult(undefined);
   }
 
   return (
@@ -187,13 +291,13 @@ function ProfessionalPerformancePage() {
               Prototype V1 · Hunter
             </div>
             <h1 className="font-display text-xl font-semibold uppercase tracking-widest text-gold">
-              Professional Performance
+              Monthly Review
             </h1>
             <p className="mt-1 max-w-2xl text-xs text-muted-foreground">
-              Contributes 50% of the Monthly Performance. Objective Performance (Monthly Sales)
-              provides the other 50%. This prototype only captures scores — Monthly Grade,
-              Rank Promotion, the 12-Month Rolling Window, Promotion Engine, and Legacy are
-              intentionally not calculated here.
+              One review per team member per month. Enter sales, select the behaviour
+              that best matches the month, then submit. The system calculates the
+              Behaviour Score, Objective Score, Final Monthly Performance, and Monthly
+              Grade automatically.
             </p>
           </div>
           <Link
@@ -206,22 +310,22 @@ function ProfessionalPerformancePage() {
 
         <section className="mb-6 rounded-md border border-gold/30 bg-gold/5 p-4 text-xs text-gold/90">
           <div className="font-display uppercase tracking-[0.25em] text-gold">
-            Evaluation Principle
+            Evaluation Philosophy
           </div>
           <p className="mt-2 text-muted-foreground">
-            Never score based on personal feelings. Every score must be supported by observable
-            behaviours. The behaviour list below each area is a <span className="text-gold">reference guideline</span>,
-            not a checklist — do not count how many behaviours were completed. Evaluate the crew
-            member's overall <span className="text-gold">capability</span> demonstrated throughout the month.
+            Managers judge behaviour. The system calculates performance. Do not invent
+            numbers — pick the behaviour description that best represents the
+            team member's month.
           </p>
         </section>
 
-        {!canEvaluate ? (
+        {!canReview ? (
           <div className="rounded-md border border-border bg-ink/30 p-5 text-xs text-muted-foreground">
-            Only Captains and Managers can record Professional Performance evaluations.
+            Only Managers and Directors can complete a Monthly Review.
           </div>
         ) : (
           <>
+            {/* Step 0 — target */}
             <section className="mb-6 grid gap-3 rounded-md border border-border bg-ink/30 p-4 sm:grid-cols-2">
               <label className="block">
                 <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">
@@ -253,51 +357,140 @@ function ProfessionalPerformancePage() {
               </label>
             </section>
 
-            <div className="space-y-4">
-              {AREAS.map((area) => (
-                <AreaCard
-                  key={area.key}
-                  area={area}
-                  score={scores[area.key]}
-                  note={notes[area.key]}
-                  onScore={(v) => updateScore(area.key, v)}
-                  onNote={(v) => updateNote(area.key, v)}
-                  disabled={!staffId}
-                />
-              ))}
-            </div>
-
-            <section className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-md border border-gold/30 bg-gold/5 p-4">
-              <div className="text-xs text-muted-foreground">
-                Professional Performance (prototype average):{" "}
-                <span className="font-display text-lg text-gold">{average || "—"}</span>
-                <span className="ml-1 text-[10px] uppercase tracking-widest text-gold/60">/ 100</span>
+            {/* Step 1 — Sales entry */}
+            <section className="mb-6 rounded-md border border-border bg-ink/30 p-5">
+              <div className="mb-1 flex items-center gap-2">
+                <span className="rounded-full border border-gold/50 px-2 py-0.5 font-display text-[10px] uppercase tracking-[0.25em] text-gold">
+                  Step 1
+                </span>
+                <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">
+                  Sales
+                </h2>
               </div>
-              <div className="flex items-center gap-2">
-                {savedAt && (
-                  <span className="text-[10px] uppercase tracking-widest text-emerald-300">
-                    Saved locally · {savedAt}
+              <p className="text-xs text-muted-foreground">
+                Enter the team member's total sales this month and their agreed target.
+                This is data entry only.
+              </p>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <label className="block">
+                  <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">
+                    Sales this month
                   </span>
-                )}
-                <button
-                  onClick={handleReset}
-                  disabled={!staffId}
-                  className="rounded-md border border-border px-3 py-2 text-xs uppercase tracking-widest text-muted-foreground hover:border-red-400/40 hover:text-red-200 disabled:opacity-50"
-                >
-                  Reset
-                </button>
-                <button
-                  onClick={handleSave}
-                  disabled={!staffId}
-                  className="rounded-md border border-gold bg-gold/10 px-4 py-2 font-display text-xs uppercase tracking-widest text-gold hover:bg-gold/20 disabled:opacity-50"
-                >
-                  Save Draft
-                </button>
+                  <input
+                    type="number"
+                    min={0}
+                    step={1}
+                    disabled={!staffId}
+                    value={salesAmount || ""}
+                    placeholder="0"
+                    onChange={(e) => setSalesAmount(Math.max(0, Number(e.target.value) || 0))}
+                    className="w-full rounded-md border border-border bg-ink/60 px-3 py-2 text-sm text-foreground focus:border-gold focus:outline-none disabled:opacity-50"
+                  />
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">
+                    Monthly sales target
+                  </span>
+                  <input
+                    type="number"
+                    min={0}
+                    step={1}
+                    disabled={!staffId}
+                    value={salesTarget || ""}
+                    placeholder="0"
+                    onChange={(e) => setSalesTarget(Math.max(0, Number(e.target.value) || 0))}
+                    className="w-full rounded-md border border-border bg-ink/60 px-3 py-2 text-sm text-foreground focus:border-gold focus:outline-none disabled:opacity-50"
+                  />
+                </label>
               </div>
             </section>
 
+            {/* Step 2 — Behaviour selection */}
+            <section className="mb-6">
+              <div className="mb-3 flex items-center gap-2">
+                <span className="rounded-full border border-gold/50 px-2 py-0.5 font-display text-[10px] uppercase tracking-[0.25em] text-gold">
+                  Step 2
+                </span>
+                <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">
+                  Behaviour
+                </h2>
+              </div>
+              <p className="mb-4 text-xs text-muted-foreground">
+                Select the one description in each category that best represents the
+                team member's behaviour throughout the month.
+              </p>
+              <div className="space-y-4">
+                {CATEGORIES.map((cat) => (
+                  <CategoryCard
+                    key={cat.key}
+                    category={cat}
+                    selectedIndex={selections[cat.key]}
+                    onSelect={(i) => selectOption(cat.key, i)}
+                    disabled={!staffId}
+                  />
+                ))}
+              </div>
+            </section>
+
+            {/* Step 3 — Optional notes */}
+            <section className="mb-6 rounded-md border border-border bg-ink/30 p-5">
+              <div className="mb-1 flex items-center gap-2">
+                <span className="rounded-full border border-border px-2 py-0.5 font-display text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
+                  Optional
+                </span>
+                <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">
+                  Manager Notes
+                </h2>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Optional. Add notes only for exceptional performance or performance that
+                needs recovery. Leave blank for a normal month.
+              </p>
+              <textarea
+                rows={3}
+                disabled={!staffId}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Optional — only for exceptional or poor performance."
+                className="mt-3 w-full resize-none rounded-md border border-border bg-ink/60 px-3 py-2 text-sm text-foreground focus:border-gold focus:outline-none disabled:opacity-50"
+              />
+            </section>
+
+            {/* Submit + Result */}
+            <section className="rounded-md border border-gold/30 bg-gold/5 p-5">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="text-xs text-muted-foreground">
+                  {canSubmit
+                    ? "Ready to submit — the system will calculate the final performance."
+                    : !staffId
+                    ? "Select a team member to begin."
+                    : !salesReady
+                    ? "Enter a sales target before submitting."
+                    : "Select a behaviour description in every category."}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleReset}
+                    disabled={!staffId}
+                    className="rounded-md border border-border px-3 py-2 text-xs uppercase tracking-widest text-muted-foreground hover:border-red-400/40 hover:text-red-200 disabled:opacity-50"
+                  >
+                    Reset
+                  </button>
+                  <button
+                    onClick={handleSubmit}
+                    disabled={!canSubmit}
+                    className="rounded-md border border-gold bg-gold/10 px-4 py-2 font-display text-xs uppercase tracking-widest text-gold hover:bg-gold/20 disabled:opacity-50"
+                  >
+                    Submit Monthly Review
+                  </button>
+                </div>
+              </div>
+
+              {result && <ResultPanel result={result} />}
+            </section>
+
             <p className="mt-3 text-[10px] uppercase tracking-widest text-muted-foreground">
-              Prototype only · saved to this device · not connected to grading, promotion, or legacy
+              Prototype only · saved to this device · calculation preview
             </p>
           </>
         )}
@@ -306,74 +499,117 @@ function ProfessionalPerformancePage() {
   );
 }
 
-function AreaCard({
-  area,
-  score,
-  note,
-  onScore,
-  onNote,
+// -------------------------------------------------------------------
+// Category card — behaviour picker (radio group, one selection)
+// -------------------------------------------------------------------
+
+function CategoryCard({
+  category,
+  selectedIndex,
+  onSelect,
   disabled,
 }: {
-  area: Area;
-  score: number;
-  note: string;
-  onScore: (v: number) => void;
-  onNote: (v: string) => void;
+  category: Category;
+  selectedIndex: number | null;
+  onSelect: (index: number) => void;
   disabled: boolean;
 }) {
   return (
     <article className="rounded-md border border-border bg-ink/30 p-5">
-      <header className="flex flex-wrap items-start justify-between gap-3">
-        <div className="max-w-2xl">
-          <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">
-            {area.label}
-          </h2>
-          <p className="mt-1 text-xs text-muted-foreground">{area.description}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <input
-            type="number"
-            min={0}
-            max={100}
-            step={1}
-            disabled={disabled}
-            value={score || ""}
-            placeholder="0"
-            onChange={(e) => onScore(Math.max(0, Math.min(100, Number(e.target.value) || 0)))}
-            className="w-20 rounded-md border border-border bg-ink/60 px-3 py-2 text-right text-sm text-foreground focus:border-gold focus:outline-none disabled:opacity-50"
-          />
-          <span className="text-[10px] uppercase tracking-widest text-muted-foreground">/ 100</span>
-        </div>
+      <header>
+        <h3 className="font-display text-sm uppercase tracking-[0.25em] text-gold">
+          {category.label}
+        </h3>
+        <p className="mt-1 text-xs text-muted-foreground">{category.description}</p>
       </header>
-
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <div className="rounded-md border border-border/60 bg-black/20 p-3">
-          <div className="mb-2 text-[10px] uppercase tracking-widest text-gold/70">
-            Behaviour reference · guideline, not checklist
-          </div>
-          <ul className="space-y-1 text-xs text-muted-foreground">
-            {area.behaviours.map((b) => (
-              <li key={b} className="flex gap-2">
-                <span className="text-gold/60">◇</span>
-                <span>{b}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <label className="block">
-          <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">
-            Captain's observation notes
-          </span>
-          <textarea
-            rows={7}
-            disabled={disabled}
-            value={note}
-            onChange={(e) => onNote(e.target.value)}
-            placeholder="Cite the observable behaviours that support this score."
-            className="w-full resize-none rounded-md border border-border bg-ink/60 px-3 py-2 text-sm text-foreground focus:border-gold focus:outline-none disabled:opacity-50"
-          />
-        </label>
-      </div>
+      <ul className="mt-4 space-y-2">
+        {category.options.map((opt, i) => {
+          const active = selectedIndex === i;
+          return (
+            <li key={i}>
+              <button
+                type="button"
+                disabled={disabled}
+                onClick={() => onSelect(i)}
+                className={`flex w-full items-start gap-3 rounded-md border px-3 py-2 text-left text-sm transition disabled:opacity-50 ${
+                  active
+                    ? "border-gold bg-gold/10 text-foreground"
+                    : "border-border bg-black/20 text-muted-foreground hover:border-gold/40 hover:text-foreground"
+                }`}
+              >
+                <span
+                  className={`mt-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${
+                    active ? "border-gold" : "border-border"
+                  }`}
+                >
+                  {active && <span className="h-2 w-2 rounded-full bg-gold" />}
+                </span>
+                <span className="flex-1">{opt.label}</span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
     </article>
+  );
+}
+
+// -------------------------------------------------------------------
+// Result panel — calculated summary after submit
+// -------------------------------------------------------------------
+
+function ResultPanel({ result }: { result: NonNullable<Draft["submitted"]> }) {
+  const g = gradeFor(result.finalScore);
+  return (
+    <div className="mt-5 grid gap-3 border-t border-gold/30 pt-5 sm:grid-cols-4">
+      <Stat label="Behaviour Score" value={result.behaviourScore} suffix="/ 100" />
+      <Stat label="Objective Score" value={result.objectiveScore} suffix="/ 100" />
+      <Stat label="Final Performance" value={result.finalScore} suffix="/ 100" accent />
+      <div className="rounded-md border p-3 text-center" style={{ borderColor: g.color }}>
+        <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+          Monthly Grade
+        </div>
+        <div className="mt-1 font-display text-2xl font-bold" style={{ color: g.color }}>
+          {g.grade}
+        </div>
+        <div className="text-[10px] uppercase tracking-widest" style={{ color: g.color }}>
+          {g.label}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Stat({
+  label,
+  value,
+  suffix,
+  accent,
+}: {
+  label: string;
+  value: number;
+  suffix?: string;
+  accent?: boolean;
+}) {
+  return (
+    <div
+      className={`rounded-md border p-3 text-center ${
+        accent ? "border-gold bg-gold/10" : "border-border bg-ink/40"
+      }`}
+    >
+      <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+        {label}
+      </div>
+      <div
+        className={`mt-1 font-display text-2xl ${accent ? "text-gold" : "text-foreground"}`}
+      >
+        {value}
+      </div>
+      {suffix && (
+        <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+          {suffix}
+        </div>
+      )}
+    </div>
   );
 }
