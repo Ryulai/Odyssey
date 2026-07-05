@@ -251,8 +251,9 @@ type Draft = {
 
 const STORAGE_KEY = "odyssey.prototype.monthly-review.v1";
 
-function loadDraft(staffId: string, month: string): Draft {
-  const blank: Draft = { salesAmount: 0, selections: { ...BLANK_SELECTIONS }, notes: "" };
+function loadDraft(staffId: string, month: string, template: ReviewTemplate | null): Draft {
+  const blank: Draft = { salesAmount: 0, selections: blankSelections(template), notes: "" };
+
   if (typeof window === "undefined") return blank;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
