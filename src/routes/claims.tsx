@@ -253,6 +253,9 @@ function SubmitClaim({ userId }: { userId: string | null }) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["claims"] });
+      qc.invalidateQueries({ queryKey: ["records"] });
+      qc.refetchQueries({ queryKey: ["claims"] });
+      qc.refetchQueries({ queryKey: ["records"] });
       setMsg("Voyage recorded. Awaiting harbor review.");
       setEvidence(""); setNotes(""); setFiles([]); setAchievementId("");
     },
