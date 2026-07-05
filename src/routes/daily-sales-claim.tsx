@@ -9,8 +9,10 @@ import {
   listMyDailySales,
   signDailySalesEvidence,
   submitDailySales,
+  testMinimalDailySalesInsert,
   type DailySalesClaim,
 } from "@/lib/daily-sales.functions";
+
 
 export const Route = createFileRoute("/daily-sales-claim")({
   head: () => ({
