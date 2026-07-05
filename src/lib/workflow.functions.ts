@@ -87,7 +87,7 @@ export const getStaffDashboard = createServerFn({ method: "GET" })
       return { staff: null, totals: null, evaluation: null, records: [], grades: [], legacy: null, holdings: [], claims: { pending: 0, approved: 0, rejected: 0 } };
     }
 
-    const [staffRes, recordsRes, gradesRes, evalRes, legacyCfg, legacyTitles, claimsRes, holdingsRes] = await Promise.all([
+    const [staffRes, recordsRes, gradesRes, evalRes, legacyCfg, legacyTitles, claimsRes, holdingsRes, identitiesRes] = await Promise.all([
       context.supabase.from("staff").select("*, location:locations!staff_location_id_fkey(id, name, code)").eq("id", staffId).maybeSingle(),
       context.supabase
         .from("achievement_records")
@@ -113,8 +113,13 @@ export const getStaffDashboard = createServerFn({ method: "GET" })
         .select("*, location:locations(id, name, code)")
         .eq("staff_id", staffId)
         .order("granted_at", { ascending: false, nullsFirst: false }),
+      context.supabase
+        .from("staff_identities")
+        .select("*")
+        .eq("staff_id", staffId)
+        .order("position"),
     ]);
-    for (const r of [staffRes, recordsRes, gradesRes, evalRes, legacyCfg, legacyTitles, claimsRes, holdingsRes]) {
+    for (const r of [staffRes, recordsRes, gradesRes, evalRes, legacyCfg, legacyTitles, claimsRes, holdingsRes, identitiesRes]) {
       if ((r as any).error) throw new Error((r as any).error.message);
     }
 
@@ -158,7 +163,7 @@ export const getStaffDashboard = createServerFn({ method: "GET" })
     };
 
     return {
-      staff: staffRes.data ? { ...staffRes.data, rank, manager, rpg } : null,
+      staff: staffRes.data ? { ...staffRes.data, rank, manager, rpg, identities: identitiesRes.data ?? [] } : null,
       totals: {
         stars: totalStars,
         moons: moonsTotal,
