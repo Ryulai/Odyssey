@@ -161,12 +161,28 @@ function SubmitDailySales() {
       });
     }
 
-    setPicked((prev) => [...prev, ...next]);
+    setPicked((prev) => {
+      const merged = [...prev, ...next];
+      if (merged[0]) {
+        const f0 = merged[0].file;
+        console.log("[proof] AFTER onChange picked[0].file =", f0);
+        console.log("[proof] AFTER onChange meta =", {
+          name: f0.name,
+          size: f0.size,
+          type: f0.type,
+          lastModified: f0.lastModified,
+          isFile: f0 instanceof File,
+          isBlob: f0 instanceof Blob,
+        });
+      }
+      return merged;
+    });
     setPhase("idle");
     if (next.length) {
       setMessage(`${next.length} file(s) ready to upload.`);
     }
   }
+
 
   function removePicked(id: string) {
     setPicked((prev) => {
