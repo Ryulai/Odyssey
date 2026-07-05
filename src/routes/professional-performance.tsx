@@ -682,7 +682,7 @@ function CategoryCard({
         <div className="mb-2 text-[10px] uppercase tracking-widest text-gold/70">
           Behaviour Reference
         </div>
-        <p className="mb-2 text-[11px] italic text-muted-foreground">{REFERENCE_NOTE}</p>
+        <p className="mb-2 text-[11px] italic text-muted-foreground">{referenceNote}</p>
         <ul className="space-y-1 text-xs text-muted-foreground">
           {category.behaviourExamples.map((b) => (
             <li key={b} className="flex gap-2">
