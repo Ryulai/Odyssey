@@ -185,36 +185,47 @@ function SubmitClaim({ userId }: { userId: string | null }) {
 
   const submit = useMutation({
     mutationFn: async () => {
-      log("3. payload before upload", {
-        staff_id: effectiveStaffId,
-        achievement_id: achievementId,
-        evidence_text_len: evidence.length,
-        notes_len: notes.length,
-        file_count: files.length,
-        files: files.map((f) => ({ name: f.name, size: f.size, type: f.type })),
-      });
+      // Stages 3-6: snapshot inputs
+      setStage(3,  { status: achievementId    ? "success" : "failed", data: achievementId,    error: achievementId    ? undefined : "empty" });
+      setStage(4,  { status: effectiveStaffId ? "success" : "failed", data: effectiveStaffId, error: effectiveStaffId ? undefined : "empty" });
+      setStage(5,  { status: "success", data: { length: evidence.length, preview: evidence.slice(0, 120) } });
+      setStage(6,  { status: "success", data: { count: files.length, files: files.map(f => ({ name: f.name, size: f.size, type: f.type })) } });
 
       const paths: string[] = [];
       if (userId && files.length) {
-        log("4. upload started", { userId, count: files.length });
-        for (let i = 0; i < files.length; i++) {
-          const file = files[i];
-          const mime = (file as any).__mime || resolveMime(file);
-          const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-          const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safe}`;
-          log(`4.${i + 1} uploading file`, { name: file.name, size: file.size, mime, path });
-          const up = await supabase.storage.from("claim-evidence").upload(path, file, { upsert: false, contentType: mime });
-          if (up.error) {
-            log(`4.${i + 1} upload ERROR`, { message: up.error.message, name: (up.error as any).name, statusCode: (up.error as any).statusCode });
-            throw up.error;
+        setStage(7, { status: "running", data: { userId, count: files.length } });
+        setStage(8, { status: "running", data: { uploaded: 0, of: files.length } });
+        try {
+          for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const mime = (file as any).__mime || resolveMime(file);
+            const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+            const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safe}`;
+            setStage(8, { status: "running", data: { uploading: i + 1, of: files.length, name: file.name, size: file.size, mime, path } });
+            const up = await supabase.storage.from("claim-evidence").upload(path, file, { upsert: false, contentType: mime });
+            if (up.error) {
+              setStage(8, { status: "failed", data: { failedAt: i + 1, name: file.name, path }, error: up.error.message });
+              setStage(9, { status: "failed", error: "aborted after upload error" });
+              setStage(10, { status: "failed", error: "no URLs — upload failed" });
+              throw up.error;
+            }
+            paths.push(path);
+            setStage(8, { status: "running", data: { uploaded: i + 1, of: files.length, lastPath: up.data?.path } });
           }
-          log(`4.${i + 1} upload OK`, { path: up.data?.path });
-          paths.push(path);
+          setStage(7, { status: "success", data: { count: files.length } });
+          setStage(8, { status: "success", data: { uploaded: paths.length } });
+          setStage(9, { status: "success", data: { count: paths.length } });
+          setStage(10, { status: "success", data: { paths } });
+        } catch (e: any) {
+          setStage(7, { status: "failed", error: e?.message ?? String(e) });
+          throw e;
         }
-        log("5. upload finished", { count: paths.length });
-        log("6. URLs returned", { paths });
       } else {
-        log("4-6. upload skipped", { userId, fileCount: files.length });
+        const skipReason = !userId ? "no userId" : "no files";
+        setStage(7,  { status: "success", data: { skipped: true, reason: skipReason } });
+        setStage(8,  { status: "success", data: { skipped: true } });
+        setStage(9,  { status: "success", data: { skipped: true } });
+        setStage(10, { status: "success", data: { paths: [], skipped: true, reason: skipReason } });
       }
 
       const insertPayload = {
@@ -224,15 +235,19 @@ function SubmitClaim({ userId }: { userId: string | null }) {
         evidence_files: paths,
         notes,
       };
-      log("7. final payload before insert", insertPayload);
+      setStage(11, { status: "success", data: insertPayload });
 
-      log("8. insert started");
+      setStage(12, { status: "running" });
       try {
         const row = await submitClaim({ data: insertPayload });
-        log("9. insert SUCCESS", { id: (row as any)?.id });
+        setStage(12, { status: "success" });
+        setStage(13, { status: "success", data: row });
+        setStage(14, { status: "success", data: { id: (row as any)?.id } });
         return row;
       } catch (e: any) {
-        log("9. insert ERROR", { message: e?.message ?? String(e) });
+        setStage(12, { status: "failed", error: e?.message ?? String(e) });
+        setStage(13, { status: "failed", error: e?.message ?? String(e), data: { name: e?.name, code: (e as any)?.code, details: (e as any)?.details, hint: (e as any)?.hint } });
+        setStage(14, { status: "failed", error: e?.message ?? String(e) });
         throw e;
       }
     },
