@@ -92,7 +92,7 @@ export const listMyRecords = createServerFn({ method: "GET" })
 // to isolate which field/constraint is causing failures on Harbor Records.
 export const testMinimalClaimInsert = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .handler(async ({ context }): Promise<any> => {
     // Need a staff row + an achievement row (both NOT NULL FKs). Pick the first.
     const staff = await context.supabase.from("staff").select("id").limit(1).maybeSingle();
     if (staff.error) return { ok: false, step: "select staff", error: staff.error };
