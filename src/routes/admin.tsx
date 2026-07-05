@@ -202,7 +202,11 @@ function StaffModule() {
   const { data: accounts = [] } = useQuery({ queryKey: ["user-accounts"], queryFn: () => listUserAccounts(), enabled: role === "director" });
   const { data: locations = [] } = useQuery({ queryKey: ["locations"], queryFn: () => listLocations() });
   const invalidate = () => { qc.invalidateQueries({ queryKey: ["staff"] }); qc.invalidateQueries({ queryKey: ["fleet-overview"] }); qc.invalidateQueries({ queryKey: ["manager-dashboard"] }); };
-  const save = useMutation({ mutationFn: (d: any) => upsertStaff({ data: d }), onSuccess: invalidate });
+  const save = useMutation({
+    mutationFn: (d: any) => upsertStaff({ data: d }),
+    onSuccess: (_r, vars: any) => { invalidate(); toast.success(vars?.id ? `Saved ${vars?.name ?? "member"}` : `Created ${vars?.name ?? "member"}`); },
+    onError: (e: any) => toast.error(e?.message ?? "Save failed"),
+  });
   const link = useMutation({ mutationFn: (d: any) => linkStaffAccount({ data: d }), onSuccess: invalidate });
   const del  = useMutation({ mutationFn: (id: string) => deleteStaff({ data: { id } }), onSuccess: invalidate });
   const transfer = useMutation({ mutationFn: (d: any) => transferStaff({ data: d }), onSuccess: invalidate });
