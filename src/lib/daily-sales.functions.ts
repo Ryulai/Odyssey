@@ -95,12 +95,14 @@ export const signDailySalesEvidence = createServerFn({ method: "POST" })
     if (!paths.length) return {} as Record<string, string>;
     const out: Record<string, string> = {};
     for (const p of paths) {
+      if (/^https?:\/\//i.test(p)) { out[p] = p; continue; }
       const { data: signed } = await context.supabase.storage
         .from("daily-sales-evidence")
         .createSignedUrl(p, 60 * 30);
       if (signed?.signedUrl) out[p] = signed.signedUrl;
     }
     return out;
+
   });
 
 /** Lightweight check: is the current user a Hunter? */
