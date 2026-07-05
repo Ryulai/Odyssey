@@ -12,6 +12,7 @@ import {
   getLegacy, updateLegacyConfig, upsertLegacyTitle, deleteLegacyTitle,
   listLocations, upsertLocation, deleteLocation,
 } from "@/lib/config.functions";
+import type { StaffIdentityInput } from "@/lib/config.functions";
 import {
   listLegacyHoldings, upsertLegacyHolding, deleteLegacyHolding,
 } from "@/lib/legacy.functions";
@@ -182,7 +183,8 @@ type StaffRow = {
   employee_code?: string | null; guild_id?: string | null; join_date?: string | null;
   phone?: string | null; branch?: string | null;
   career_path?: string | null; shipbuilder_path?: string | null;
-  // Sprint 1 — RPG hierarchy
+  identities?: StaffIdentityInput[];
+  // Legacy fallback only. The UI source of truth is identities[].
   primary_class?: string | null; primary_role?: string | null;
   secondary_class?: string | null; secondary_role?: string | null;
   secondary_unlocked?: boolean;
@@ -210,8 +212,8 @@ function StaffModule() {
     id: "", name: "", email: "", role: "", role_family: "hunter", business_unit: "Sales",
     manager_id: null, status: "active", user_id: null, app_role: "staff", location_id: null,
     employee_code: "", join_date: new Date().toISOString().slice(0, 10), phone: "", branch: "", career_path: "", shipbuilder_path: "",
-    primary_class: "ranger", primary_role: "hunter",
-    secondary_class: null, secondary_role: null, secondary_unlocked: false,
+    identities: [{ class_key: "ranger", role_key: "hunter", rank_key: "bronze", promotion_progress: 0 }],
+    secondary_unlocked: false,
     rank_key: "bronze",
   };
 
@@ -249,10 +251,20 @@ function StaffModule() {
                   <td className="py-2 pr-3 text-muted-foreground">{s.employee_code ?? "—"}</td>
                   <td className="py-2 pr-3 text-muted-foreground">{s.role}</td>
                   <td className="py-2 pr-3 text-muted-foreground">
-                    {s.primary_class ? (
+                    {s.identities?.length ? (
+                      <div className="space-y-0.5">
+                        {s.identities.slice(0, 3).map((idn: StaffIdentityInput, index: number) => (
+                          <div key={idn.id ?? index}>
+                            <span className="text-foreground">Identity #{index + 1}</span>
+                            <span className="text-muted-foreground"> · {classLabel(idn.class_key)}{idn.role_key ? ` · ${roleLabel(idn.role_key)}` : ""}</span>
+                          </div>
+                        ))}
+                        {s.identities.length > 3 && <div className="text-[10px] text-muted-foreground">+{s.identities.length - 3} more</div>}
+                      </div>
+                    ) : s.primary_class ? (
                       <div>
-                        <span className="text-foreground">{classLabel(s.primary_class)}</span>
-                        {s.primary_role && <span className="text-muted-foreground"> · {roleLabel(s.primary_role)}</span>}
+                        <span className="text-foreground">Identity #1</span>
+                        <span className="text-muted-foreground"> · {classLabel(s.primary_class)}{s.primary_role ? ` · ${roleLabel(s.primary_role)}` : ""}</span>
                       </div>
                     ) : (
                       <span className="text-muted-foreground/70">— unassigned —</span>
@@ -265,7 +277,11 @@ function StaffModule() {
                       </div>
                     )}
                   </td>
-                  <td className="py-2 pr-3 text-muted-foreground">{rankLabel(s.current_rank_key ?? s.rank_key ?? "bronze")}</td>
+                  <td className="py-2 pr-3 text-muted-foreground">
+                    {s.identities?.length
+                      ? s.identities.map((idn: StaffIdentityInput, index: number) => <div key={idn.id ?? index}>#{index + 1} {rankLabel(idn.rank_key ?? "bronze")}</div>)
+                      : rankLabel(s.current_rank_key ?? s.rank_key ?? "bronze")}
+                  </td>
                   <td className="py-2 pr-3 text-muted-foreground">{locations.find((l: any) => l.id === s.location_id)?.name ?? <span className="text-amber-300/80">— Unassigned —</span>}</td>
                   <td className="py-2 pr-3 text-muted-foreground">{staff.find((x: any) => x.id === s.manager_id)?.name ?? "—"}</td>
                   <td className="py-2 pr-3 text-muted-foreground">{s.join_date ?? "—"}</td>
@@ -382,46 +398,54 @@ function StaffForm({ row, managers, accounts, locations, isDirector, onSave, onC
   const set = <K extends keyof StaffRow>(k: K, v: StaffRow[K]) => setD(x => ({ ...x, [k]: v }));
   const matched = emailMatchesAccount(d.email, accounts);
 
-  // ---- Identity Array (frozen architecture: mem://features/identity-array-architecture) ----
-  // Every Identity is an independent bundle: { class, role, rank, promotion_progress }.
-  // Backend schema currently only persists 2 (primary_*, secondary_*) — identities beyond
-  // index 1 are held in local state and flagged until the staff_identities table lands.
-  type Identity = { class: string | null; role: string | null; rank: string; progress: number };
-  const seed: Identity[] = [
-    { class: d.primary_class ?? "ranger", role: d.primary_role ?? null, rank: d.rank_key ?? "bronze", progress: 0 },
-  ];
-  if (d.secondary_class) {
-    seed.push({ class: d.secondary_class, role: d.secondary_role ?? null, rank: "bronze", progress: 0 });
-  }
+  type Identity = StaffIdentityInput & {
+    class_key: string | null;
+    role_key: string | null;
+    rank_key: string;
+    promotion_progress: number;
+    monthly_review: any;
+    achievement_progress: any;
+    statistics: any;
+  };
+  const seed: Identity[] = (d.identities?.length ? d.identities : [
+    { class_key: d.primary_class ?? "ranger", role_key: d.primary_role ?? "hunter", rank_key: d.rank_key ?? "bronze", promotion_progress: 0 },
+    ...(d.secondary_class ? [{ class_key: d.secondary_class, role_key: d.secondary_role ?? null, rank_key: "bronze", promotion_progress: 0 }] : []),
+  ]).map((idn) => ({
+    id: idn.id ?? null,
+    class_key: idn.class_key ?? null,
+    role_key: idn.role_key ?? null,
+    rank_key: idn.rank_key ?? "bronze",
+    promotion_progress: Number(idn.promotion_progress ?? 0),
+    monthly_review: idn.monthly_review ?? {},
+    achievement_progress: idn.achievement_progress ?? {},
+    statistics: idn.statistics ?? {},
+  }));
   const [identities, setIdentities] = useState<Identity[]>(seed);
+  const [overrideReason, setOverrideReason] = useState("");
 
   const updateIdentity = (i: number, patch: Partial<Identity>) => {
     setIdentities(list => list.map((id, idx) => idx === i ? { ...id, ...patch } : id));
   };
+  const addIdentity = () => {
+    setIdentities(list => [...list, { class_key: null, role_key: null, rank_key: "bronze", promotion_progress: 0, monthly_review: {}, achievement_progress: {}, statistics: {} }]);
+  };
   const removeIdentity = (i: number) => {
-    if (i === 0) return; // Main Identity cannot be removed
+    if (i === 0) return;
     setIdentities(list => list.filter((_, idx) => idx !== i));
   };
-
-  // Dynamic slot rule: show one empty trailing slot after the last filled Identity.
-  const visible = [...identities];
-  const last = visible[visible.length - 1];
-  if (last && last.class) visible.push({ class: null, role: null, rank: "bronze", progress: 0 });
 
   return (
     <form onSubmit={(e) => {
       e.preventDefault();
       if (!d.name.trim()) return;
-      // Persist first two identities into the current 2-slot schema.
-      const main = identities[0];
-      const sub  = identities[1];
+      const filledIdentities = identities.filter((idn) => !!idn.class_key);
+      if (!filledIdentities.length) return;
+      if (directorMode && !overrideReason.trim()) return;
       const payload: any = {
         ...d,
-        primary_class:   main?.class ?? null,
-        primary_role:    main?.role ?? null,
-        rank_key:        main?.rank ?? "bronze",
-        secondary_class: sub?.class ?? null,
-        secondary_role:  sub?.role ?? null,
+        identities: filledIdentities,
+        is_director_override: directorMode,
+        override_reason: directorMode ? overrideReason.trim() : null,
       };
       if (!payload.id) delete payload.id;
       onSave(payload);
@@ -463,28 +487,22 @@ function StaffForm({ row, managers, accounts, locations, isDirector, onSave, onC
         </select>
       </Field>
 
-      {/* RPG Identities — Identity Array (frozen) */}
-      <div className="sm:col-span-2 -mb-1 mt-3 border-b border-border/60 pb-1 text-[10px] font-display uppercase tracking-[0.25em] text-muted-foreground">
-        RPG Identities — each Identity has its own Class · Role · Rank · Promotion
+      <div className="sm:col-span-2 mt-3 flex items-center justify-between border-b border-border/60 pb-2">
+        <div className="text-[10px] font-display uppercase tracking-[0.25em] text-muted-foreground">
+          Identities
+        </div>
+        {isDirector && directorMode && <Btn onClick={addIdentity}>+ Add Identity</Btn>}
       </div>
 
-      {visible.map((idn, i) => {
-        const isMain = i === 0;
-        const isTrailingEmpty = i === visible.length - 1 && !idn.class && !isMain;
-        const roleOptions = idn.class ? (CLASS_ROLES[idn.class as PrimaryClass] ?? []) : [];
-        const persisted = i < 2;
+      {identities.map((idn, i) => {
+        const roleOptions = idn.class_key ? (CLASS_ROLES[idn.class_key as PrimaryClass] ?? []) : [];
         return (
           <div key={i} className="sm:col-span-2 rounded-md border border-border/60 bg-ink/30 p-3">
             <div className="mb-2 flex items-center justify-between">
               <div className="font-display text-[10px] uppercase tracking-[0.3em] text-gold">
-                {isMain ? "Main Identity" : `Sub Identity #${i}`}
-                {!persisted && idn.class && (
-                  <span className="ml-2 text-amber-300/80 normal-case tracking-normal">
-                    · frontend only (schema migration pending)
-                  </span>
-                )}
+                Identity #{i + 1}{i === 0 && <span className="ml-2 text-muted-foreground normal-case tracking-normal">is_primary=true</span>}
               </div>
-              {!isMain && !isTrailingEmpty && (
+              {isDirector && directorMode && i > 0 && (
                 <button type="button" onClick={() => removeIdentity(i)}
                   className="rounded border border-red-400/40 px-2 py-0.5 text-[10px] uppercase tracking-widest text-red-300 hover:bg-red-500/10">
                   Remove
@@ -496,11 +514,11 @@ function StaffForm({ row, managers, accounts, locations, isDirector, onSave, onC
               <Field label="Class">
                 <select
                   className={inputCls}
-                  value={idn.class ?? ""}
+                  value={idn.class_key ?? ""}
                   onChange={e => {
                     const cls = e.target.value || null;
                     const firstRole = cls ? (CLASS_ROLES[cls as PrimaryClass]?.[0]?.key ?? null) : null;
-                    updateIdentity(i, { class: cls, role: firstRole });
+                    updateIdentity(i, { class_key: cls, role_key: firstRole });
                   }}
                 >
                   <option value="">— Select class —</option>
@@ -508,11 +526,11 @@ function StaffForm({ row, managers, accounts, locations, isDirector, onSave, onC
                 </select>
               </Field>
 
-              {idn.class && (
+              {idn.class_key && (
                 <>
                   <Field label="Role">
-                    <select className={inputCls} value={idn.role ?? ""}
-                      onChange={e => updateIdentity(i, { role: e.target.value || null })} required>
+                    <select className={inputCls} value={idn.role_key ?? ""}
+                      onChange={e => updateIdentity(i, { role_key: e.target.value || null })} required>
                       <option value="">— Select role —</option>
                       {roleOptions.map(r => (
                         <option key={r.key} value={r.key}>
@@ -523,8 +541,8 @@ function StaffForm({ row, managers, accounts, locations, isDirector, onSave, onC
                   </Field>
 
                   <Field label="Rank">
-                    <select className={inputCls} value={idn.rank}
-                      onChange={e => updateIdentity(i, { rank: e.target.value })}>
+                    <select className={inputCls} value={idn.rank_key}
+                      onChange={e => updateIdentity(i, { rank_key: e.target.value })}>
                       {RANKS.map(r => {
                         const locked = !r.unlocked && !directorMode;
                         return (
@@ -543,10 +561,28 @@ function StaffForm({ row, managers, accounts, locations, isDirector, onSave, onC
 
                   <Field label="Promotion Progress">
                     <div className="flex items-center gap-2">
-                      <input type="range" min={0} max={100} value={idn.progress}
-                        onChange={e => updateIdentity(i, { progress: Number(e.target.value) })}
+                      <input type="range" min={0} max={100} value={idn.promotion_progress}
+                        onChange={e => updateIdentity(i, { promotion_progress: Number(e.target.value) })}
                         className="flex-1" />
-                      <span className="w-10 text-right font-mono text-xs text-gold">{idn.progress}%</span>
+                      <span className="w-10 text-right font-mono text-xs text-gold">{idn.promotion_progress}%</span>
+                    </div>
+                  </Field>
+
+                  <Field label="Monthly Review">
+                    <div className="rounded border border-border/60 bg-ink/40 px-3 py-2 text-xs text-muted-foreground">
+                      Latest: {idn.monthly_review?.latest_grade ?? "—"} {idn.monthly_review?.latest_month ? `· ${idn.monthly_review.latest_month}` : ""}
+                    </div>
+                  </Field>
+
+                  <Field label="Achievement Progress">
+                    <div className="rounded border border-border/60 bg-ink/40 px-3 py-2 text-xs text-muted-foreground">
+                      Stars: {idn.achievement_progress?.stars ?? 0} · Unique: {idn.achievement_progress?.unique_achievements ?? 0}
+                    </div>
+                  </Field>
+
+                  <Field label="Statistics">
+                    <div className="rounded border border-border/60 bg-ink/40 px-3 py-2 text-xs text-muted-foreground">
+                      Promotions: {idn.statistics?.total_promotions ?? 0}
                     </div>
                   </Field>
                 </>
@@ -556,10 +592,20 @@ function StaffForm({ row, managers, accounts, locations, isDirector, onSave, onC
         );
       })}
 
+      {isDirector && directorMode && (
+        <Field label="Director Override Reason">
+          <textarea
+            className={inputCls}
+            value={overrideReason}
+            onChange={e => setOverrideReason(e.target.value)}
+            required
+            placeholder="Required for audit log"
+          />
+        </Field>
+      )}
+
       <div className="sm:col-span-2 rounded border border-border/60 bg-ink/40 px-3 py-2 text-[11px] italic text-muted-foreground">
-        Every Identity is fully independent — its own Class, Role, Rank and Promotion.
-        Changing one Identity never affects the others. A new empty slot appears automatically
-        after each Identity is filled.
+        Every Identity is fully independent — its own Class, Role, Rank, Promotion, Monthly Review, Achievement Progress and Statistics.
       </div>
 
 

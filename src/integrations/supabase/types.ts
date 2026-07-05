@@ -230,6 +230,57 @@ export type Database = {
           },
         ]
       }
+      director_audit_log: {
+        Row: {
+          action: string
+          actor_user_id: string
+          after_state: Json | null
+          before_state: Json | null
+          created_at: string
+          id: string
+          identity_id: string | null
+          reason: string
+          staff_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_user_id: string
+          after_state?: Json | null
+          before_state?: Json | null
+          created_at?: string
+          id?: string
+          identity_id?: string | null
+          reason: string
+          staff_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string
+          after_state?: Json | null
+          before_state?: Json | null
+          created_at?: string
+          id?: string
+          identity_id?: string | null
+          reason?: string
+          staff_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "director_audit_log_identity_id_fkey"
+            columns: ["identity_id"]
+            isOneToOne: false
+            referencedRelation: "staff_identities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "director_audit_log_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       grade_rules: {
         Row: {
           bonus_pct: number
@@ -759,6 +810,68 @@ export type Database = {
           {
             foreignKeyName: "staff_manager_id_fkey"
             columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_identities: {
+        Row: {
+          achievement_progress: Json
+          class_key: string | null
+          created_at: string
+          id: string
+          is_primary: boolean
+          monthly_review: Json
+          position: number
+          promotion_progress: number
+          promotion_state: Json
+          rank_key: string
+          role_key: string | null
+          source: string
+          staff_id: string
+          statistics: Json
+          updated_at: string
+        }
+        Insert: {
+          achievement_progress?: Json
+          class_key?: string | null
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          monthly_review?: Json
+          position: number
+          promotion_progress?: number
+          promotion_state?: Json
+          rank_key?: string
+          role_key?: string | null
+          source?: string
+          staff_id: string
+          statistics?: Json
+          updated_at?: string
+        }
+        Update: {
+          achievement_progress?: Json
+          class_key?: string | null
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          monthly_review?: Json
+          position?: number
+          promotion_progress?: number
+          promotion_state?: Json
+          rank_key?: string
+          role_key?: string | null
+          source?: string
+          staff_id?: string
+          statistics?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_identities_staff_id_fkey"
+            columns: ["staff_id"]
             isOneToOne: false
             referencedRelation: "staff"
             referencedColumns: ["id"]
