@@ -12,7 +12,7 @@ export const Route = createFileRoute("/professional-performance")({
       {
         name: "description",
         content:
-          "One monthly review per team member. Enter sales, select behaviour, and the system calculates the final monthly performance.",
+          "One monthly review per team member. Enter sales, judge behaviour, and the system calculates the final monthly performance automatically.",
       },
     ],
   }),
@@ -24,20 +24,48 @@ export const Route = createFileRoute("/professional-performance")({
 });
 
 // -------------------------------------------------------------------
-// Behaviour categories — 5 predefined descriptions per category.
-// Each option has an internal score. Managers pick one, never type numbers.
-// Scores: 20 / 40 / 60 / 80 / 100 (equal steps, easy to reason about).
+// Fixed configuration
+// -------------------------------------------------------------------
+
+// Prototype V1: fixed monthly sales target for all Hunters.
+// Future: promote to an Admin setting; still not editable on this page.
+const MONTHLY_SALES_TARGET = 50000;
+
+const CURRENCY = "RM";
+function fmtMoney(n: number) {
+  return `${CURRENCY}${n.toLocaleString()}`;
+}
+
+// -------------------------------------------------------------------
+// Behaviour tiers — 5 fixed choices, shared by every category.
+// Managers judge behaviour; internal scores are hidden from the UI.
+// -------------------------------------------------------------------
+
+type TierKey = "nsi" | "below" | "meets" | "exceeds" | "role";
+
+type Tier = { key: TierKey; label: string; score: number };
+
+const TIERS: Tier[] = [
+  { key: "nsi",     label: "Needs Significant Improvement", score: 20 },
+  { key: "below",   label: "Below Expectations",            score: 40 },
+  { key: "meets",   label: "Meets Expectations",            score: 60 },
+  { key: "exceeds", label: "Exceeds Expectations",          score: 80 },
+  { key: "role",    label: "Role Model",                    score: 100 },
+];
+
+// -------------------------------------------------------------------
+// Behaviour categories — reference material only.
+// The five options are always the fixed TIERS. The behaviour examples
+// are references, NOT a checklist.
 // -------------------------------------------------------------------
 
 type CategoryKey = "customer" | "communication" | "execution" | "growth";
-
-type BehaviourOption = { label: string; score: number };
 
 type Category = {
   key: CategoryKey;
   label: string;
   description: string;
-  options: BehaviourOption[]; // exactly 5, ordered lowest → highest
+  behaviourExamples: string[];
 };
 
 const CATEGORIES: Category[] = [
@@ -46,35 +74,24 @@ const CATEGORIES: Category[] = [
     label: "Customer Relationship",
     description:
       "Builds genuine customer relationships and consistently delivers excellent customer experiences.",
-    options: [
-      { label: "Rarely builds customer relationships.", score: 20 },
-      { label: "Occasionally builds customer trust.", score: 40 },
-      { label: "Consistently provides good customer service.", score: 60 },
-      { label: "Builds long-term customer loyalty.", score: 80 },
-      {
-        label:
-          "Creates exceptional customer experiences and actively grows relationships.",
-        score: 100,
-      },
+    behaviourExamples: [
+      "Greets customers professionally.",
+      "Understands customer preferences.",
+      "Follows up with customers.",
+      "Creates memorable customer experiences.",
+      "Builds customer trust.",
     ],
   },
   {
     key: "communication",
     label: "Communication & Collaboration",
     description: "Communicates effectively and works well with the team.",
-    options: [
-      { label: "Rarely communicates or cooperates with the team.", score: 20 },
-      { label: "Communicates when prompted but seldom initiates.", score: 40 },
-      { label: "Communicates clearly and supports teammates.", score: 60 },
-      {
-        label: "Proactively shares information and cooperates across departments.",
-        score: 80,
-      },
-      {
-        label:
-          "Elevates team communication and sets the standard for collaboration.",
-        score: 100,
-      },
+    behaviourExamples: [
+      "Communicates clearly.",
+      "Supports teammates.",
+      "Shares information proactively.",
+      "Cooperates across departments.",
+      "Maintains a positive team attitude.",
     ],
   },
   {
@@ -82,19 +99,12 @@ const CATEGORIES: Category[] = [
     label: "Execution",
     description:
       "Executes responsibilities consistently with discipline and reliability.",
-    options: [
-      { label: "Often misses tasks or requires reminders.", score: 20 },
-      { label: "Completes tasks inconsistently.", score: 40 },
-      { label: "Completes assigned tasks and follows SOP.", score: 60 },
-      {
-        label: "Takes initiative and responds quickly to operational needs.",
-        score: 80,
-      },
-      {
-        label:
-          "Owns outcomes end-to-end and consistently raises operational standards.",
-        score: 100,
-      },
+    behaviourExamples: [
+      "Completes assigned tasks.",
+      "Follows SOP consistently.",
+      "Takes initiative without supervision.",
+      "Responds quickly to operational needs.",
+      "Demonstrates accountability.",
     ],
   },
   {
@@ -102,18 +112,18 @@ const CATEGORIES: Category[] = [
     label: "Growth to Influence",
     description:
       "Continuously improves oneself and positively influences others.",
-    options: [
-      { label: "Rarely learns or accepts feedback.", score: 20 },
-      { label: "Occasionally applies feedback.", score: 40 },
-      { label: "Learns actively and applies improvements.", score: 60 },
-      { label: "Shares knowledge and supports teammates' growth.", score: 80 },
-      {
-        label: "Positively influences the whole team through actions and mentoring.",
-        score: 100,
-      },
+    behaviourExamples: [
+      "Learns actively.",
+      "Accepts feedback positively.",
+      "Applies improvements consistently.",
+      "Shares knowledge with teammates.",
+      "Positively influences others through actions.",
     ],
   },
 ];
+
+const REFERENCE_NOTE =
+  "Choose the ONE description that best represents the employee's overall behaviour throughout the month. The examples below are references, not items to count.";
 
 // -------------------------------------------------------------------
 // Grading
@@ -134,7 +144,7 @@ function monthKey(d = new Date()) {
 // LocalStorage draft (prototype only)
 // -------------------------------------------------------------------
 
-type Selections = Record<CategoryKey, number | null>; // index of selected option
+type Selections = Record<CategoryKey, TierKey | null>;
 
 const BLANK_SELECTIONS: Selections = {
   customer: null,
@@ -143,29 +153,27 @@ const BLANK_SELECTIONS: Selections = {
   growth: null,
 };
 
-type Draft = {
+type Submitted = {
+  at: string;
   salesAmount: number;
   salesTarget: number;
+  salesScore: number;
+  behaviourScore: number;
+  finalScore: number;
+  grade: "A" | "B" | "C" | "D";
+};
+
+type Draft = {
+  salesAmount: number;
   selections: Selections;
   notes: string;
-  submitted?: {
-    at: string;
-    behaviourScore: number;
-    objectiveScore: number;
-    finalScore: number;
-    grade: string;
-  };
+  submitted?: Submitted;
 };
 
 const STORAGE_KEY = "odyssey.prototype.monthly-review.v1";
 
 function loadDraft(staffId: string, month: string): Draft {
-  const blank: Draft = {
-    salesAmount: 0,
-    salesTarget: 0,
-    selections: { ...BLANK_SELECTIONS },
-    notes: "",
-  };
+  const blank: Draft = { salesAmount: 0, selections: { ...BLANK_SELECTIONS }, notes: "" };
   if (typeof window === "undefined") return blank;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
@@ -200,10 +208,9 @@ function MonthlyReviewPage() {
   const [month, setMonth] = useState(monthKey());
   const [staffId, setStaffId] = useState<string>("");
   const [salesAmount, setSalesAmount] = useState<number>(0);
-  const [salesTarget, setSalesTarget] = useState<number>(0);
   const [selections, setSelections] = useState<Selections>({ ...BLANK_SELECTIONS });
   const [notes, setNotes] = useState<string>("");
-  const [result, setResult] = useState<Draft["submitted"]>();
+  const [result, setResult] = useState<Submitted | undefined>();
 
   const { data: staff = [] } = useQuery({
     queryKey: ["staff"],
@@ -211,11 +218,9 @@ function MonthlyReviewPage() {
     enabled: canReview,
   });
 
-  // Load draft on staff/month change
   useEffect(() => {
     if (!staffId) {
       setSalesAmount(0);
-      setSalesTarget(0);
       setSelections({ ...BLANK_SELECTIONS });
       setNotes("");
       setResult(undefined);
@@ -223,7 +228,6 @@ function MonthlyReviewPage() {
     }
     const d = loadDraft(staffId, month);
     setSalesAmount(d.salesAmount);
-    setSalesTarget(d.salesTarget);
     setSelections(d.selections);
     setNotes(d.notes);
     setResult(d.submitted);
@@ -233,50 +237,42 @@ function MonthlyReviewPage() {
     () => CATEGORIES.every((c) => selections[c.key] !== null),
     [selections],
   );
-
-  const salesReady = salesTarget > 0;
+  const salesReady = salesAmount > 0;
   const canSubmit = Boolean(staffId) && salesReady && allBehaviourSelected;
 
-  function selectOption(key: CategoryKey, optionIndex: number) {
-    setSelections((s) => ({ ...s, [key]: optionIndex }));
+  function selectTier(key: CategoryKey, tier: TierKey) {
+    setSelections((s) => ({ ...s, [key]: tier }));
   }
 
   function handleSubmit() {
     if (!canSubmit) return;
-    // Behaviour = average of 4 category scores
-    const behaviour =
+
+    const behaviourScore =
       CATEGORIES.reduce((sum, c) => {
-        const idx = selections[c.key] as number;
-        return sum + c.options[idx].score;
+        const tierKey = selections[c.key] as TierKey;
+        const tier = TIERS.find((t) => t.key === tierKey)!;
+        return sum + tier.score;
       }, 0) / CATEGORIES.length;
 
-    // Objective = sales vs target, capped at 100
-    const objective = Math.min(100, Math.round((salesAmount / salesTarget) * 100));
+    const salesScore = Math.min(100, Math.round((salesAmount / MONTHLY_SALES_TARGET) * 100));
+    const finalScore = +((behaviourScore + salesScore) / 2).toFixed(2);
+    const g = gradeFor(finalScore);
 
-    // Final = 50/50
-    const finalScore = +((behaviour + objective) / 2).toFixed(2);
-    const gradeInfo = gradeFor(finalScore);
-
-    const submitted = {
+    const submitted: Submitted = {
       at: new Date().toISOString(),
-      behaviourScore: +behaviour.toFixed(2),
-      objectiveScore: objective,
+      salesAmount,
+      salesTarget: MONTHLY_SALES_TARGET,
+      salesScore,
+      behaviourScore: +behaviourScore.toFixed(2),
       finalScore,
-      grade: gradeInfo.grade,
+      grade: g.grade,
     };
     setResult(submitted);
-    saveDraft(staffId, month, {
-      salesAmount,
-      salesTarget,
-      selections,
-      notes,
-      submitted,
-    });
+    saveDraft(staffId, month, { salesAmount, selections, notes, submitted });
   }
 
   function handleReset() {
     setSalesAmount(0);
-    setSalesTarget(0);
     setSelections({ ...BLANK_SELECTIONS });
     setNotes("");
     setResult(undefined);
@@ -294,10 +290,8 @@ function MonthlyReviewPage() {
               Monthly Review
             </h1>
             <p className="mt-1 max-w-2xl text-xs text-muted-foreground">
-              One review per team member per month. Enter sales, select the behaviour
-              that best matches the month, then submit. The system calculates the
-              Behaviour Score, Objective Score, Final Monthly Performance, and Monthly
-              Grade automatically.
+              Manager observes. Manager judges behaviour. System calculates. Complete
+              the review first — the system reveals scores and grade only after Submit.
             </p>
           </div>
           <Link
@@ -308,24 +302,13 @@ function MonthlyReviewPage() {
           </Link>
         </header>
 
-        <section className="mb-6 rounded-md border border-gold/30 bg-gold/5 p-4 text-xs text-gold/90">
-          <div className="font-display uppercase tracking-[0.25em] text-gold">
-            Evaluation Philosophy
-          </div>
-          <p className="mt-2 text-muted-foreground">
-            Managers judge behaviour. The system calculates performance. Do not invent
-            numbers — pick the behaviour description that best represents the
-            team member's month.
-          </p>
-        </section>
-
         {!canReview ? (
           <div className="rounded-md border border-border bg-ink/30 p-5 text-xs text-muted-foreground">
             Only Managers and Directors can complete a Monthly Review.
           </div>
         ) : (
           <>
-            {/* Step 0 — target */}
+            {/* Team member + month */}
             <section className="mb-6 grid gap-3 rounded-md border border-border bg-ink/30 p-4 sm:grid-cols-2">
               <label className="block">
                 <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">
@@ -357,7 +340,7 @@ function MonthlyReviewPage() {
               </label>
             </section>
 
-            {/* Step 1 — Sales entry */}
+            {/* Step 1 — Sales */}
             <section className="mb-6 rounded-md border border-border bg-ink/30 p-5">
               <div className="mb-1 flex items-center gap-2">
                 <span className="rounded-full border border-gold/50 px-2 py-0.5 font-display text-[10px] uppercase tracking-[0.25em] text-gold">
@@ -368,13 +351,13 @@ function MonthlyReviewPage() {
                 </h2>
               </div>
               <p className="text-xs text-muted-foreground">
-                Enter the team member's total sales this month and their agreed target.
-                This is data entry only.
+                Enter the team member's total sales this month. The monthly target is
+                fixed for all Hunters.
               </p>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 <label className="block">
                   <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">
-                    Sales this month
+                    Sales this month ({CURRENCY})
                   </span>
                   <input
                     type="number"
@@ -387,25 +370,23 @@ function MonthlyReviewPage() {
                     className="w-full rounded-md border border-border bg-ink/60 px-3 py-2 text-sm text-foreground focus:border-gold focus:outline-none disabled:opacity-50"
                   />
                 </label>
-                <label className="block">
-                  <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">
-                    Monthly sales target
-                  </span>
-                  <input
-                    type="number"
-                    min={0}
-                    step={1}
-                    disabled={!staffId}
-                    value={salesTarget || ""}
-                    placeholder="0"
-                    onChange={(e) => setSalesTarget(Math.max(0, Number(e.target.value) || 0))}
-                    className="w-full rounded-md border border-border bg-ink/60 px-3 py-2 text-sm text-foreground focus:border-gold focus:outline-none disabled:opacity-50"
-                  />
-                </label>
+                <div className="block">
+                  <div className="mb-1 text-[10px] uppercase tracking-widest text-muted-foreground">
+                    Monthly Sales Target
+                  </div>
+                  <div className="flex items-center gap-2 rounded-md border border-border/60 bg-black/20 px-3 py-2 text-sm">
+                    <span className="font-display text-gold">
+                      {fmtMoney(MONTHLY_SALES_TARGET)}
+                    </span>
+                    <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                      · fixed for all Hunters
+                    </span>
+                  </div>
+                </div>
               </div>
             </section>
 
-            {/* Step 2 — Behaviour selection */}
+            {/* Step 2 — Behaviour */}
             <section className="mb-6">
               <div className="mb-3 flex items-center gap-2">
                 <span className="rounded-full border border-gold/50 px-2 py-0.5 font-display text-[10px] uppercase tracking-[0.25em] text-gold">
@@ -416,16 +397,16 @@ function MonthlyReviewPage() {
                 </h2>
               </div>
               <p className="mb-4 text-xs text-muted-foreground">
-                Select the one description in each category that best represents the
-                team member's behaviour throughout the month.
+                For each category, select the one description that best represents the
+                team member's overall behaviour throughout the month.
               </p>
               <div className="space-y-4">
                 {CATEGORIES.map((cat) => (
                   <CategoryCard
                     key={cat.key}
                     category={cat}
-                    selectedIndex={selections[cat.key]}
-                    onSelect={(i) => selectOption(cat.key, i)}
+                    selectedTier={selections[cat.key]}
+                    onSelect={(t) => selectTier(cat.key, t)}
                     disabled={!staffId}
                   />
                 ))}
@@ -443,40 +424,41 @@ function MonthlyReviewPage() {
                 </h2>
               </div>
               <p className="mt-1 text-xs text-muted-foreground">
-                Optional. Add notes only for exceptional performance or performance that
-                needs recovery. Leave blank for a normal month.
+                Optional. Use only for exceptional performance, serious performance
+                issues, or important incidents requiring documentation. Leave blank for
+                a normal month.
               </p>
               <textarea
                 rows={3}
                 disabled={!staffId}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Optional — only for exceptional or poor performance."
+                placeholder="Optional — only for exceptional, serious, or incident-related situations."
                 className="mt-3 w-full resize-none rounded-md border border-border bg-ink/60 px-3 py-2 text-sm text-foreground focus:border-gold focus:outline-none disabled:opacity-50"
               />
             </section>
 
-            {/* Submit + Result */}
+            {/* Submit */}
             <section className="rounded-md border border-gold/30 bg-gold/5 p-5">
               {result && (
                 <div className="mb-4 flex items-center gap-2 rounded-md border border-emerald-400/50 bg-emerald-400/10 px-3 py-2 text-xs text-emerald-200">
                   <span className="font-display uppercase tracking-widest">✓ Submitted</span>
                   <span className="text-emerald-100/80">
-                    Saved locally at {new Date(result.at).toLocaleTimeString()} · results below
+                    at {new Date(result.at).toLocaleTimeString()} · results below
                   </span>
                 </div>
               )}
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="text-xs text-muted-foreground">
                   {result
-                    ? "Review already submitted for this month. You can adjust and resubmit."
+                    ? "Review already submitted for this month. Adjust and resubmit if needed."
                     : canSubmit
-                    ? "Ready to submit — the system will calculate the final performance."
+                    ? "Ready to submit. The system will calculate everything automatically."
                     : !staffId
                     ? "Select a team member to begin."
                     : !salesReady
-                    ? "Enter a sales target before submitting."
-                    : "Select a behaviour description in every category."}
+                    ? "Enter this month's sales figure to continue."
+                    : "Select a behaviour rating in every category."}
                 </div>
                 <div className="flex items-center gap-2">
                   <button
@@ -499,7 +481,6 @@ function MonthlyReviewPage() {
               {result && <ResultPanel result={result} />}
             </section>
 
-
             <p className="mt-3 text-[10px] uppercase tracking-widest text-muted-foreground">
               Prototype only · saved to this device · calculation preview
             </p>
@@ -511,18 +492,18 @@ function MonthlyReviewPage() {
 }
 
 // -------------------------------------------------------------------
-// Category card — behaviour picker (radio group, one selection)
+// Category card — 5 tier radios + reference-only behaviour examples
 // -------------------------------------------------------------------
 
 function CategoryCard({
   category,
-  selectedIndex,
+  selectedTier,
   onSelect,
   disabled,
 }: {
   category: Category;
-  selectedIndex: number | null;
-  onSelect: (index: number) => void;
+  selectedTier: TierKey | null;
+  onSelect: (tier: TierKey) => void;
   disabled: boolean;
 }) {
   return (
@@ -533,59 +514,106 @@ function CategoryCard({
         </h3>
         <p className="mt-1 text-xs text-muted-foreground">{category.description}</p>
       </header>
+
       <ul className="mt-4 space-y-2">
-        {category.options.map((opt, i) => {
-          const active = selectedIndex === i;
+        {TIERS.map((tier) => {
+          const active = selectedTier === tier.key;
           return (
-            <li key={i}>
+            <li key={tier.key}>
               <button
                 type="button"
                 disabled={disabled}
-                onClick={() => onSelect(i)}
-                className={`flex w-full items-start gap-3 rounded-md border px-3 py-2 text-left text-sm transition disabled:opacity-50 ${
+                onClick={() => onSelect(tier.key)}
+                aria-pressed={active}
+                className={`flex w-full items-center gap-3 rounded-md border px-3 py-2 text-left text-sm transition disabled:opacity-50 ${
                   active
                     ? "border-gold bg-gold/10 text-foreground"
                     : "border-border bg-black/20 text-muted-foreground hover:border-gold/40 hover:text-foreground"
                 }`}
               >
                 <span
-                  className={`mt-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${
+                  className={`inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${
                     active ? "border-gold" : "border-border"
                   }`}
                 >
                   {active && <span className="h-2 w-2 rounded-full bg-gold" />}
                 </span>
-                <span className="flex-1">{opt.label}</span>
+                <span className="flex-1">{tier.label}</span>
               </button>
             </li>
           );
         })}
       </ul>
+
+      <div className="mt-4 rounded-md border border-border/60 bg-black/20 p-3">
+        <div className="mb-2 text-[10px] uppercase tracking-widest text-gold/70">
+          Behaviour Reference
+        </div>
+        <p className="mb-2 text-[11px] italic text-muted-foreground">{REFERENCE_NOTE}</p>
+        <ul className="space-y-1 text-xs text-muted-foreground">
+          {category.behaviourExamples.map((b) => (
+            <li key={b} className="flex gap-2">
+              <span className="text-gold/60">◇</span>
+              <span>{b}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
     </article>
   );
 }
 
 // -------------------------------------------------------------------
-// Result panel — calculated summary after submit
+// Result panel — revealed only after Submit
 // -------------------------------------------------------------------
 
-function ResultPanel({ result }: { result: NonNullable<Draft["submitted"]> }) {
+function ResultPanel({ result }: { result: Submitted }) {
   const g = gradeFor(result.finalScore);
+  const targetPct = Math.round((result.salesAmount / result.salesTarget) * 100);
   return (
-    <div className="mt-5 grid gap-3 border-t border-gold/30 pt-5 sm:grid-cols-4">
-      <Stat label="Behaviour Score" value={result.behaviourScore} suffix="/ 100" />
-      <Stat label="Objective Score" value={result.objectiveScore} suffix="/ 100" />
-      <Stat label="Final Performance" value={result.finalScore} suffix="/ 100" accent />
-      <div className="rounded-md border p-3 text-center" style={{ borderColor: g.color }}>
-        <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
-          Monthly Grade
+    <div className="mt-5 space-y-4 border-t border-gold/30 pt-5">
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Stat
+          label="Sales Score"
+          value={result.salesScore}
+          suffix={`/ 100 · ${fmtMoney(result.salesAmount)} of ${fmtMoney(result.salesTarget)} (${targetPct}%)`}
+        />
+        <Stat label="Behaviour Score" value={result.behaviourScore} suffix="/ 100" />
+        <Stat label="Final Performance" value={result.finalScore} suffix="/ 100" accent />
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div
+          className="rounded-md border p-3 text-center"
+          style={{ borderColor: g.color }}
+        >
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+            Monthly Grade
+          </div>
+          <div
+            className="mt-1 font-display text-2xl font-bold"
+            style={{ color: g.color }}
+          >
+            {g.grade}
+          </div>
+          <div
+            className="text-[10px] uppercase tracking-widest"
+            style={{ color: g.color }}
+          >
+            {g.label}
+          </div>
         </div>
-        <div className="mt-1 font-display text-2xl font-bold" style={{ color: g.color }}>
-          {g.grade}
-        </div>
-        <div className="text-[10px] uppercase tracking-widest" style={{ color: g.color }}>
-          {g.label}
-        </div>
+
+        <PlaceholderStat
+          label="Rolling Performance"
+          value="—"
+          hint="12-month engine · not connected in prototype"
+        />
+        <PlaceholderStat
+          label="Promotion Progress"
+          value="—"
+          hint="Promotion engine · not connected in prototype"
+        />
       </div>
     </div>
   );
@@ -617,10 +645,32 @@ function Stat({
         {value}
       </div>
       {suffix && (
-        <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+        <div className="mt-1 text-[10px] uppercase tracking-widest text-muted-foreground">
           {suffix}
         </div>
       )}
+    </div>
+  );
+}
+
+function PlaceholderStat({
+  label,
+  value,
+  hint,
+}: {
+  label: string;
+  value: string;
+  hint: string;
+}) {
+  return (
+    <div className="rounded-md border border-dashed border-border/70 bg-black/20 p-3 text-center">
+      <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+        {label}
+      </div>
+      <div className="mt-1 font-display text-2xl text-muted-foreground">{value}</div>
+      <div className="mt-1 text-[10px] uppercase tracking-widest text-muted-foreground">
+        {hint}
+      </div>
     </div>
   );
 }
