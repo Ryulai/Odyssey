@@ -43,6 +43,10 @@ function ClaimsPage() {
           <Link to="/" className="rounded-md border border-border px-3 py-2 text-xs uppercase tracking-widest text-muted-foreground hover:border-gold/40 hover:text-gold">← Ledger</Link>
         </header>
 
+        <MinimalInsertTest />
+
+
+
         <div className="grid gap-6 lg:grid-cols-2">
           <SubmitClaim userId={user?.id ?? null} />
           <MyRecords />
