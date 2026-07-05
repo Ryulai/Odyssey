@@ -187,12 +187,14 @@ export const signSalesEvidenceForReview = createServerFn({ method: "POST" })
     const paths = (data.paths ?? []).filter(Boolean);
     const out: Record<string, string> = {};
     for (const p of paths) {
+      if (/^https?:\/\//i.test(p)) { out[p] = p; continue; }
       const { data: signed } = await context.supabase.storage
         .from("daily-sales-evidence")
         .createSignedUrl(p, 60 * 30);
       if (signed?.signedUrl) out[p] = signed.signedUrl;
     }
     return out;
+
   });
 
 /** Decide (approve/reject) a Daily Sales Claim. Managers/Directors only. */
