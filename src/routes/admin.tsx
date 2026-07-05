@@ -16,6 +16,7 @@ import {
   listLegacyHoldings, upsertLegacyHolding, deleteLegacyHolding,
 } from "@/lib/legacy.functions";
 import { PRIMARY_CLASSES, CLASS_ROLES, TEMPORARY_ROLES, RANKS, STAFF_STATUSES, classLabel, roleLabel, rankLabel, statusLabel, type PrimaryClass } from "@/lib/rpg";
+import { useDirectorMode } from "@/lib/director-mode";
 
 
 export const Route = createFileRoute("/admin")({
@@ -376,6 +377,7 @@ function StaffForm({ row, managers, accounts, locations, isDirector, onSave, onC
   row: StaffRow; managers: any[]; accounts: any[]; locations: any[]; isDirector: boolean; onSave: (r: any) => void; onCancel: () => void; busy: boolean;
 }) {
 
+  const { enabled: directorMode } = useDirectorMode();
   const [d, setD] = useState<StaffRow>({ ...row, status: row.status ?? "active", user_id: row.user_id ?? null, app_role: row.app_role ?? roleToAppRole(row.role) });
   const set = <K extends keyof StaffRow>(k: K, v: StaffRow[K]) => setD(x => ({ ...x, [k]: v }));
   const matched = emailMatchesAccount(d.email, accounts);
@@ -445,30 +447,66 @@ function StaffForm({ row, managers, accounts, locations, isDirector, onSave, onC
       </Field>
       <Field label="Rank">
         <select className={inputCls} value={d.rank_key ?? "bronze"} onChange={e => set("rank_key", e.target.value)}>
-          {RANKS.map(r => (
-            <option key={r.key} value={r.key} disabled={!r.unlocked}>
-              {r.label}{r.unlocked ? "" : " — locked"}
+          {RANKS.map(r => {
+            const locked = !r.unlocked && !directorMode;
+            return (
+              <option key={r.key} value={r.key} disabled={locked}>
+                {r.label}
+                {r.unlocked ? "" : directorMode ? " — override" : " — locked"}
+              </option>
+            );
+          })}
+        </select>
+        {directorMode && (
+          <div className="mt-1 text-[10px] uppercase tracking-widest text-red-300">
+            Director Mode · all ranks selectable
+          </div>
+        )}
+      </Field>
+      {/* Secondary Class — normally locked until Gold rank; Director Mode bypasses. */}
+      <div className="sm:col-span-2 -mb-1 mt-3 border-b border-border/60 pb-1 text-[10px] font-display uppercase tracking-[0.25em] text-muted-foreground">
+        Secondary Class {directorMode ? "· Director Mode override" : "— 🔒 locked (unlocks at Gold rank)"}
+      </div>
+      <Field label="Secondary Class">
+        <select
+          className={inputCls}
+          value={d.secondary_class ?? ""}
+          disabled={!directorMode}
+          title={directorMode ? "Director Override" : "Locked until Gold rank"}
+          onChange={e => {
+            const cls = (e.target.value || null) as PrimaryClass | null;
+            set("secondary_class", cls);
+            set("secondary_role", cls ? (CLASS_ROLES[cls]?.[0]?.key ?? null) : null);
+          }}
+        >
+          <option value="">{directorMode ? "— Select class —" : "— locked —"}</option>
+          {directorMode && PRIMARY_CLASSES.map(c => (
+            <option key={c.key} value={c.key}>{c.label}</option>
+          ))}
+        </select>
+      </Field>
+      <Field label="Secondary Role">
+        <select
+          className={inputCls}
+          value={d.secondary_role ?? ""}
+          disabled={!directorMode || !d.secondary_class}
+          title={directorMode ? "Director Override" : "Locked until Gold rank"}
+          onChange={e => set("secondary_role", e.target.value || null)}
+        >
+          <option value="">{directorMode ? "— Select role —" : "— locked —"}</option>
+          {directorMode && (CLASS_ROLES[(d.secondary_class ?? "ranger") as PrimaryClass] ?? []).map(r => (
+            <option key={r.key} value={r.key}>
+              {r.label}{TEMPORARY_ROLES.has(r.key) ? " (Temporary)" : ""}
             </option>
           ))}
         </select>
       </Field>
-      {/* Secondary Class — stored but LOCKED until Gold rank */}
-      <div className="sm:col-span-2 -mb-1 mt-3 border-b border-border/60 pb-1 text-[10px] font-display uppercase tracking-[0.25em] text-muted-foreground">
-        Secondary Class — 🔒 locked (unlocks at Gold rank)
-      </div>
-      <Field label="Secondary Class">
-        <select className={inputCls} value={d.secondary_class ?? ""} disabled title="Locked until Gold rank">
-          <option value="">— locked —</option>
-        </select>
-      </Field>
-      <Field label="Secondary Role">
-        <select className={inputCls} value={d.secondary_role ?? ""} disabled title="Locked until Gold rank">
-          <option value="">— locked —</option>
-        </select>
-      </Field>
       <div className="sm:col-span-2 rounded border border-border/60 bg-ink/40 px-3 py-2 text-[11px] italic text-muted-foreground">
-        Secondary Class is reserved for a future sprint. The fields exist in the database but are not editable or displayed on the dashboard until the crew member reaches Gold rank.
+        {directorMode
+          ? "Director Mode · Secondary Class is editable as an administrative override. Every change is recorded in the audit log."
+          : "Secondary Class is reserved for a future sprint. The fields exist in the database but are not editable or displayed on the dashboard until the crew member reaches Gold rank."}
       </div>
+
 
       <div className="sm:col-span-2 -mb-1 mt-3 border-b border-border/60 pb-1 text-[10px] font-display uppercase tracking-[0.25em] text-muted-foreground">Account</div>
 
