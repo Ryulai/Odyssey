@@ -16,6 +16,7 @@ import {
   listLegacyHoldings, upsertLegacyHolding, deleteLegacyHolding,
 } from "@/lib/legacy.functions";
 import { PRIMARY_CLASSES, CLASS_ROLES, TEMPORARY_ROLES, RANKS, STAFF_STATUSES, classLabel, roleLabel, rankLabel, statusLabel, type PrimaryClass } from "@/lib/rpg";
+import { useDirectorMode } from "@/lib/director-mode";
 
 
 export const Route = createFileRoute("/admin")({
