@@ -381,131 +381,52 @@ function StaffForm({ row, managers, accounts, locations, isDirector, onSave, onC
   const [d, setD] = useState<StaffRow>({ ...row, status: row.status ?? "active", user_id: row.user_id ?? null, app_role: row.app_role ?? roleToAppRole(row.role) });
   const set = <K extends keyof StaffRow>(k: K, v: StaffRow[K]) => setD(x => ({ ...x, [k]: v }));
   const matched = emailMatchesAccount(d.email, accounts);
+
+  // ---- Identity Array (frozen architecture: mem://features/identity-array-architecture) ----
+  // Every Identity is an independent bundle: { class, role, rank, promotion_progress }.
+  // Backend schema currently only persists 2 (primary_*, secondary_*) — identities beyond
+  // index 1 are held in local state and flagged until the staff_identities table lands.
+  type Identity = { class: string | null; role: string | null; rank: string; progress: number };
+  const seed: Identity[] = [
+    { class: d.primary_class ?? "ranger", role: d.primary_role ?? null, rank: d.rank_key ?? "bronze", progress: 0 },
+  ];
+  if (d.secondary_class) {
+    seed.push({ class: d.secondary_class, role: d.secondary_role ?? null, rank: "bronze", progress: 0 });
+  }
+  const [identities, setIdentities] = useState<Identity[]>(seed);
+
+  const updateIdentity = (i: number, patch: Partial<Identity>) => {
+    setIdentities(list => list.map((id, idx) => idx === i ? { ...id, ...patch } : id));
+  };
+  const removeIdentity = (i: number) => {
+    if (i === 0) return; // Main Identity cannot be removed
+    setIdentities(list => list.filter((_, idx) => idx !== i));
+  };
+
+  // Dynamic slot rule: show one empty trailing slot after the last filled Identity.
+  const visible = [...identities];
+  const last = visible[visible.length - 1];
+  if (last && last.class) visible.push({ class: null, role: null, rank: "bronze", progress: 0 });
+
   return (
-    <form onSubmit={(e) => { e.preventDefault(); if (d.name.trim()) {
-      const payload: any = { ...d };
+    <form onSubmit={(e) => {
+      e.preventDefault();
+      if (!d.name.trim()) return;
+      // Persist first two identities into the current 2-slot schema.
+      const main = identities[0];
+      const sub  = identities[1];
+      const payload: any = {
+        ...d,
+        primary_class:   main?.class ?? null,
+        primary_role:    main?.role ?? null,
+        rank_key:        main?.rank ?? "bronze",
+        secondary_class: sub?.class ?? null,
+        secondary_role:  sub?.role ?? null,
+      };
       if (!payload.id) delete payload.id;
       onSave(payload);
-    } }}
-      className="mt-5 grid gap-3 rounded-md border border-gold/30 bg-ink/50 p-4 sm:grid-cols-2">
-      <div className="sm:col-span-2 font-display text-xs uppercase tracking-widest text-gold">
-        {row.id ? "Edit Staff" : "Create Staff"}
-      </div>
+    }}
 
-      {/* Identity */}
-      <div className="sm:col-span-2 -mb-1 mt-2 border-b border-border/60 pb-1 text-[10px] font-display uppercase tracking-[0.25em] text-muted-foreground">Identity</div>
-      <Field label="Name"><input className={inputCls} value={d.name} onChange={e => set("name", e.target.value)} required /></Field>
-      <Field label="Guild ID"><input className={inputCls + " font-mono text-gold"} value={d.guild_id ?? "(auto-assigned on save)"} readOnly disabled /></Field>
-      <Field label="Employee ID (external / HR)"><input className={inputCls} value={d.employee_code ?? ""} onChange={e => set("employee_code", e.target.value)} placeholder="Optional — external HR reference" /></Field>
-      <Field label="Email"><input type="email" className={inputCls} value={d.email ?? ""} onChange={e => set("email", e.target.value)} /></Field>
-      <Field label="Phone"><input className={inputCls} value={d.phone ?? ""} onChange={e => set("phone", e.target.value)} placeholder="e.g. +60 12 345 6789" /></Field>
-      <Field label="Branch"><input className={inputCls} value={d.branch ?? ""} onChange={e => set("branch", e.target.value)} placeholder="e.g. KL · Ting Livehouse" /></Field>
-      <Field label="Join Date"><input type="date" required className={inputCls} value={d.join_date ?? ""} onChange={e => set("join_date", e.target.value)} /></Field>
-
-      {/* Work Identity */}
-      <div className="sm:col-span-2 -mb-1 mt-3 border-b border-border/60 pb-1 text-[10px] font-display uppercase tracking-[0.25em] text-muted-foreground">Work Identity — where they report today</div>
-      <Field label="Position"><input className={inputCls} value={d.role} onChange={e => { set("role", e.target.value); set("app_role", roleToAppRole(e.target.value)); }} placeholder="e.g. Finance Manager" /></Field>
-      <Field label="Business Unit">
-        <select className={inputCls} value={d.business_unit} onChange={e => set("business_unit", e.target.value)}>
-          {BUSINESS_UNITS.map(x => <option key={x} value={x}>{x}</option>)}
-        </select>
-      </Field>
-      {isDirector && <Field label="Manager (Captain)">
-        <select className={inputCls} value={d.manager_id ?? ""} onChange={e => set("manager_id", e.target.value || null)}>
-          <option value="">— None —</option>
-          {managers.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-        </select>
-      </Field>}
-      <Field label="Assigned Fleet / Location">
-        <select className={inputCls} value={d.location_id ?? ""} onChange={e => set("location_id", e.target.value || null)}>
-          <option value="">— Unassigned —</option>
-          {locations.map((l: any) => <option key={l.id} value={l.id}>{l.name}{l.code ? ` · ${l.code}` : ""}</option>)}
-        </select>
-      </Field>
-
-      {/* RPG Identity */}
-      <div className="sm:col-span-2 -mb-1 mt-3 border-b border-border/60 pb-1 text-[10px] font-display uppercase tracking-[0.25em] text-muted-foreground">RPG Identity — character class & progression</div>
-      <Field label="Primary Class">
-        <select className={inputCls} value={d.primary_class ?? "ranger"} onChange={e => {
-          const cls = e.target.value as PrimaryClass;
-          set("primary_class", cls);
-          // Reset role to first valid option for the newly chosen class.
-          set("primary_role", CLASS_ROLES[cls]?.[0]?.key ?? null);
-        }}>
-          {PRIMARY_CLASSES.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
-        </select>
-      </Field>
-      <Field label="Primary Role">
-        <select className={inputCls} value={d.primary_role ?? ""} onChange={e => set("primary_role", e.target.value || null)} required>
-          <option value="">— Select role —</option>
-          {(CLASS_ROLES[(d.primary_class ?? "ranger") as PrimaryClass] ?? []).map(r => (
-            <option key={r.key} value={r.key}>
-              {r.label}{TEMPORARY_ROLES.has(r.key) ? " (Temporary)" : ""}
-            </option>
-          ))}
-        </select>
-      </Field>
-      <Field label="Rank">
-        <select className={inputCls} value={d.rank_key ?? "bronze"} onChange={e => set("rank_key", e.target.value)}>
-          {RANKS.map(r => {
-            const locked = !r.unlocked && !directorMode;
-            return (
-              <option key={r.key} value={r.key} disabled={locked}>
-                {r.label}
-                {r.unlocked ? "" : directorMode ? " — override" : " — locked"}
-              </option>
-            );
-          })}
-        </select>
-        {directorMode && (
-          <div className="mt-1 text-[10px] uppercase tracking-widest text-red-300">
-            Director Mode · all ranks selectable
-          </div>
-        )}
-      </Field>
-      {/* Secondary Class — normally locked until Gold rank; Director Mode bypasses. */}
-      <div className="sm:col-span-2 -mb-1 mt-3 border-b border-border/60 pb-1 text-[10px] font-display uppercase tracking-[0.25em] text-muted-foreground">
-        Secondary Class {directorMode ? "· Director Mode override" : "— 🔒 locked (unlocks at Gold rank)"}
-      </div>
-      <Field label="Secondary Class">
-        <select
-          className={inputCls}
-          value={d.secondary_class ?? ""}
-          disabled={!directorMode}
-          title={directorMode ? "Director Override" : "Locked until Gold rank"}
-          onChange={e => {
-            const cls = (e.target.value || null) as PrimaryClass | null;
-            set("secondary_class", cls);
-            set("secondary_role", cls ? (CLASS_ROLES[cls]?.[0]?.key ?? null) : null);
-          }}
-        >
-          <option value="">{directorMode ? "— Select class —" : "— locked —"}</option>
-          {directorMode && PRIMARY_CLASSES.map(c => (
-            <option key={c.key} value={c.key}>{c.label}</option>
-          ))}
-        </select>
-      </Field>
-      <Field label="Secondary Role">
-        <select
-          className={inputCls}
-          value={d.secondary_role ?? ""}
-          disabled={!directorMode || !d.secondary_class}
-          title={directorMode ? "Director Override" : "Locked until Gold rank"}
-          onChange={e => set("secondary_role", e.target.value || null)}
-        >
-          <option value="">{directorMode ? "— Select role —" : "— locked —"}</option>
-          {directorMode && (CLASS_ROLES[(d.secondary_class ?? "ranger") as PrimaryClass] ?? []).map(r => (
-            <option key={r.key} value={r.key}>
-              {r.label}{TEMPORARY_ROLES.has(r.key) ? " (Temporary)" : ""}
-            </option>
-          ))}
-        </select>
-      </Field>
-      <div className="sm:col-span-2 rounded border border-border/60 bg-ink/40 px-3 py-2 text-[11px] italic text-muted-foreground">
-        {directorMode
-          ? "Director Mode · Secondary Class is editable as an administrative override. Every change is recorded in the audit log."
-          : "Secondary Class is reserved for a future sprint. The fields exist in the database but are not editable or displayed on the dashboard until the crew member reaches Gold rank."}
-      </div>
 
 
       <div className="sm:col-span-2 -mb-1 mt-3 border-b border-border/60 pb-1 text-[10px] font-display uppercase tracking-[0.25em] text-muted-foreground">Account</div>
