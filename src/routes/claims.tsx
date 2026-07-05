@@ -118,13 +118,46 @@ function SubmitClaim({ userId }: { userId: string | null }) {
   const [files, setFiles] = useState<File[]>([]);
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [debugLog, setDebugLog] = useState<Array<{ t: string; step: string; data?: any }>>([]);
+  // ── 🧪 Structured 14-stage debug tracker ─────────────────────────────────
+  type StageStatus = "waiting" | "running" | "success" | "failed";
+  type Stage = { id: number; label: string; status: StageStatus; t?: string; data?: any; error?: string };
+  const STAGE_DEFS: Array<Omit<Stage, "status">> = [
+    { id: 1,  label: "① Submit button clicked" },
+    { id: 2,  label: "② Form validation passed" },
+    { id: 3,  label: "③ Selected achievement ID" },
+    { id: 4,  label: "④ Selected staff ID" },
+    { id: 5,  label: "⑤ Evidence text" },
+    { id: 6,  label: "⑥ Selected files count" },
+    { id: 7,  label: "⑦ Upload started" },
+    { id: 8,  label: "⑧ Upload progress" },
+    { id: 9,  label: "⑨ Upload finished" },
+    { id: 10, label: "⑩ Uploaded URLs" },
+    { id: 11, label: "⑪ Final payload before insert" },
+    { id: 12, label: "⑫ Insert started" },
+    { id: 13, label: "⑬ Insert response" },
+    { id: 14, label: "⑭ Success or exact error" },
+  ];
+  const freshStages = (): Stage[] => STAGE_DEFS.map((s) => ({ ...s, status: "waiting" }));
+  const [stages, setStages] = useState<Stage[]>(freshStages);
+  const [debugOpen, setDebugOpen] = useState(true);
 
+  function nowT() {
+    return new Date().toISOString().split("T")[1]?.replace("Z", "") ?? "";
+  }
+  function setStage(id: number, patch: Partial<Stage>) {
+    setStages((prev) => prev.map((s) => (s.id === id ? { ...s, t: patch.t ?? nowT(), ...patch } : s)));
+    console.log(`[voyage-submit] stage ${id}`, patch);
+  }
+  function resetStages() { setStages(freshStages()); }
+
+  // legacy free-form log kept as a no-op so any leftover calls don't crash
+  const [debugLog, setDebugLog] = useState<Array<{ t: string; step: string; data?: any }>>([]);
   function log(step: string, data?: any) {
-    const t = new Date().toISOString().split("T")[1]?.replace("Z", "") ?? "";
+    const t = nowT();
     console.log(`[voyage-submit] ${step}`, data ?? "");
     setDebugLog((prev) => [...prev, { t, step, data }]);
   }
+
 
   const effectiveStaffId = staffId || myStaff?.id || "";
 
