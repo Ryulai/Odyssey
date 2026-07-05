@@ -5,7 +5,7 @@ export const Route = createFileRoute("/performance")({
   head: () => ({
     meta: [
       { title: "Monthly Performance — The Odyssey Guide" },
-      { name: "description", content: "Your monthly ABCD grade, score, category breakdown, manager notes, and voyage history." },
+      { name: "description", content: "Your monthly ABCD grade, score, category breakdown, manager notes, and review history." },
     ],
   }),
   component: () => <AuthGate><PerformancePage /></AuthGate>,
@@ -75,7 +75,7 @@ function PerformancePage() {
             to="/"
             className="rounded-md border border-border px-3 py-2 text-xs uppercase tracking-widest text-muted-foreground hover:border-gold/40 hover:text-gold"
           >
-            ← Ledger
+            ← Dashboard
           </Link>
         </header>
 
@@ -188,7 +188,7 @@ function PerformancePage() {
         <section className="mt-6 rounded-xl border border-border bg-ink/30 p-6">
           <div className="flex items-baseline justify-between">
             <div className="font-display text-xs uppercase tracking-[0.3em] text-gold">
-              Captain's Notes
+              Manager Notes
             </div>
             <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
               From {CURRENT.captain}
@@ -211,7 +211,7 @@ function PerformancePage() {
         <section className="mt-6 rounded-xl border border-border bg-ink/30 p-6">
           <div className="mb-4 flex items-baseline justify-between">
             <div className="font-display text-xs uppercase tracking-[0.3em] text-gold">
-              Voyage History
+              Review History
             </div>
             <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
               Previous monthly grades
@@ -306,7 +306,7 @@ function PerformancePage() {
         </section>
 
         <div className="mt-8 text-center text-[10px] uppercase tracking-widest text-muted-foreground">
-          Placeholder data · will bind to Voyage Review records
+          Placeholder data · will bind to Performance Review records
         </div>
       </div>
     </div>

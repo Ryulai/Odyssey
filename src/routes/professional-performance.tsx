@@ -200,7 +200,7 @@ function ProfessionalPerformancePage() {
             to="/"
             className="rounded-md border border-border px-3 py-2 text-xs uppercase tracking-widest text-muted-foreground hover:border-gold/40 hover:text-gold"
           >
-            ← Ledger
+            ← Dashboard
           </Link>
         </header>
 
@@ -225,14 +225,14 @@ function ProfessionalPerformancePage() {
             <section className="mb-6 grid gap-3 rounded-md border border-border bg-ink/30 p-4 sm:grid-cols-2">
               <label className="block">
                 <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">
-                  Crew (Hunter)
+                  Team Member (Hunter)
                 </span>
                 <select
                   className="w-full rounded-md border border-border bg-ink/60 px-3 py-2 text-sm text-foreground focus:border-gold focus:outline-none"
                   value={staffId}
                   onChange={(e) => setStaffId(e.target.value)}
                 >
-                  <option value="">— Select crew —</option>
+                  <option value="">— Select team member —</option>
                   {staff.map((s: any) => (
                     <option key={s.id} value={s.id}>
                       {s.name} · {s.role}

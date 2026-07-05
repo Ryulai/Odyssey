@@ -32,7 +32,7 @@ function ProfilePage() {
             <div className="font-display text-lg font-semibold uppercase tracking-widest text-gold">My Profile</div>
             <div className="text-xs text-muted-foreground">Live calculations from the workflow engine — stars, rank, legacy.</div>
           </div>
-          <Link to="/" className="rounded-md border border-border px-3 py-2 text-xs uppercase tracking-widest text-muted-foreground hover:border-gold/40 hover:text-gold">← Ledger</Link>
+          <Link to="/" className="rounded-md border border-border px-3 py-2 text-xs uppercase tracking-widest text-muted-foreground hover:border-gold/40 hover:text-gold">← Dashboard</Link>
         </header>
 
         {isLoading && !active && <Skel />}
@@ -315,7 +315,7 @@ function PromotionCard({ d }: { d: any }) {
   ];
   return (
     <section className={`rounded-md border p-5 ${ev.eligible ? "border-emerald-400/60 bg-emerald-400/5" : "border-border bg-ink/30"}`}>
-      <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">Voyage Progression</h2>
+      <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">Promotions</h2>
       {!ev.next_rank_key ? (
         <div className="mt-3 text-sm text-muted-foreground">Max rank achieved.</div>
       ) : (
@@ -351,14 +351,14 @@ function PromotionCard({ d }: { d: any }) {
 function ClaimSummary({ d }: { d: any }) {
   return (
     <section className="rounded-md border border-border bg-ink/30 p-5">
-      <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">My Harbor Records</h2>
+      <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">My Achievements</h2>
       <div className="mt-3 grid grid-cols-3 gap-3 text-center">
         <Pill label="Pending"  value={d.claims.pending}  tone="gold" />
         <Pill label="Approved" value={d.claims.approved} tone="emerald" />
         <Pill label="Rejected" value={d.claims.rejected} tone="red" />
       </div>
       <div className="mt-4 text-right">
-        <Link to="/claims" className="text-xs uppercase tracking-widest text-gold hover:underline">Record a voyage →</Link>
+        <Link to="/claims" className="text-xs uppercase tracking-widest text-gold hover:underline">Submit an achievement →</Link>
       </div>
     </section>
   );
@@ -408,7 +408,7 @@ function GradesCard({ grades }: { grades: any[] }) {
             <li key={g.month} className="flex justify-between py-2 text-sm">
               <div>
                 <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{g.month}</div>
-                <div className="text-xs text-muted-foreground">Voyage Rating {g.composite_score}</div>
+                <div className="text-xs text-muted-foreground">Performance Score {g.composite_score}</div>
               </div>
               <span className="rounded border px-2 py-0.5 font-display text-sm" style={{ color: meta.color, borderColor: meta.color }}>{g.grade}</span>
             </li>

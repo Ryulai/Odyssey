@@ -5,7 +5,7 @@ import { useRole } from "@/lib/roles";
 import { getManagerDashboard } from "@/lib/workflow.functions";
 
 export const Route = createFileRoute("/manager")({
-  head: () => ({ meta: [{ title: "Captain's Bridge — The Odyssey Guide" }] }),
+  head: () => ({ meta: [{ title: "Team Dashboard — The Odyssey Guide" }] }),
   component: () => <AuthGate><ManagerPage /></AuthGate>,
 });
 
@@ -23,14 +23,14 @@ function ManagerPage() {
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         <header className="mb-6 flex items-center justify-between">
           <div>
-            <div className="font-display text-lg font-semibold uppercase tracking-widest text-gold">Captain's Bridge</div>
-            <div className="text-xs text-muted-foreground">Your direct crew, grades, pending reviews, and promotion readiness.</div>
+            <div className="font-display text-lg font-semibold uppercase tracking-widest text-gold">Team Dashboard</div>
+            <div className="text-xs text-muted-foreground">Your direct reports, grades, pending reviews, and promotion readiness.</div>
           </div>
-          <Link to="/" className="rounded-md border border-border px-3 py-2 text-xs uppercase tracking-widest text-muted-foreground hover:border-gold/40 hover:text-gold">← Ledger</Link>
+          <Link to="/" className="rounded-md border border-border px-3 py-2 text-xs uppercase tracking-widest text-muted-foreground hover:border-gold/40 hover:text-gold">← Dashboard</Link>
         </header>
 
         {!allowed && <div className="rounded-md border border-border bg-ink/30 p-6 text-sm text-muted-foreground">Captains and Shipbuilders only.</div>}
-        {allowed && isLoading && <div className="py-12 text-center text-xs text-muted-foreground">Charting your crew…</div>}
+        {allowed && isLoading && <div className="py-12 text-center text-xs text-muted-foreground">Loading your team…</div>}
 
         {allowed && data && <ManagerContent data={data} />}
       </div>
@@ -72,7 +72,7 @@ function ManagerContent({ data }: { data: any }) {
       </section>
 
       <section className="rounded-md border border-gold/30 bg-ink/30 p-4">
-        <div className="mb-3 font-display text-xs uppercase tracking-widest text-gold">Direct Crew · {reports.length}</div>
+        <div className="mb-3 font-display text-xs uppercase tracking-widest text-gold">Direct Reports · {reports.length}</div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="text-left text-[10px] uppercase tracking-widest text-muted-foreground">
@@ -128,7 +128,7 @@ function ManagerContent({ data }: { data: any }) {
 
         <div className="rounded-md border border-gold/30 bg-ink/30 p-4">
           <div className="mb-3 flex items-center justify-between">
-            <div className="font-display text-xs uppercase tracking-widest text-gold">Pending Harbor Records · {pendingClaims.length}</div>
+            <div className="font-display text-xs uppercase tracking-widest text-gold">Pending Achievements · {pendingClaims.length}</div>
             <Link to="/claims" className="text-xs uppercase tracking-widest text-muted-foreground hover:text-gold">Review →</Link>
           </div>
           {!pendingClaims.length ? (

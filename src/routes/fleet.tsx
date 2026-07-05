@@ -26,7 +26,7 @@ function FleetPage() {
             <div className="font-display text-lg font-semibold uppercase tracking-widest text-gold">Shipbuilder · Fleet Overview</div>
             <div className="text-xs text-muted-foreground">Every fleet, every captain, every navigator — live from the ledger.</div>
           </div>
-          <Link to="/" className="rounded-md border border-border px-3 py-2 text-xs uppercase tracking-widest text-muted-foreground hover:border-gold/40 hover:text-gold">← Ledger</Link>
+          <Link to="/" className="rounded-md border border-border px-3 py-2 text-xs uppercase tracking-widest text-muted-foreground hover:border-gold/40 hover:text-gold">← Dashboard</Link>
         </header>
 
         {!allowed && <div className="rounded-md border border-border bg-ink/30 p-6 text-sm text-muted-foreground">Shipbuilders (Directors) only.</div>}
@@ -63,7 +63,7 @@ function FleetContent({ data }: { data: any }) {
     <div className="grid gap-6">
       <section className="grid gap-3 sm:grid-cols-4">
         <StatCard label="Fleet Built" value={locations.length} hint="locations launched" />
-        <StatCard label="Total Crew" value={activeStaff.length} hint="active members" />
+        <StatCard label="Total Team" value={activeStaff.length} hint="active members" />
         <StatCard label="Voyagers Guided" value={promotedStaff.length} hint="staff promoted past entry" />
         <StatCard label="Pending Claims" value={claims.filter((c: any) => c.status === "pending").length} hint="awaiting review" />
       </section>
