@@ -127,7 +127,7 @@ export const testMinimalDailySalesInsert = createServerFn({ method: "POST" })
       .single();
 
     if (error) {
-      return {
+      const result: TestResult = {
         ok: false,
         step: "insert",
         payload,
@@ -138,9 +138,12 @@ export const testMinimalDailySalesInsert = createServerFn({ method: "POST" })
           hint: (error as any).hint,
         },
       };
+      return result;
     }
-    return { ok: true, step: "insert", payload, row: data };
+    const okResult: TestResult = { ok: true, step: "insert", payload, row: data as Record<string, unknown> };
+    return okResult;
   });
+
 
 
 
