@@ -629,15 +629,16 @@ function MonthlyReviewPage() {
 
 function CategoryCard({
   category,
+  referenceNote,
   selectedTier,
   onSelect,
-  disabled,
 }: {
-  category: Category;
+  category: ReviewCategory;
+  referenceNote: string;
   selectedTier: TierKey | null;
   onSelect: (tier: TierKey) => void;
-  disabled: boolean;
 }) {
+
   return (
     <article className="rounded-md border border-border bg-ink/30 p-5">
       <header>
