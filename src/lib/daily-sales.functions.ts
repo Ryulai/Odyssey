@@ -90,7 +90,13 @@ export const submitDailySales = createServerFn({ method: "POST" })
  * Required: staff_id, submitted_by, total_amount. Returns the row or the RAW supabase error. */
 export const testMinimalDailySalesInsert = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .handler(async ({ context }): Promise<{
+    ok: boolean;
+    step: string;
+    payload?: { staff_id: string; submitted_by: string; total_amount: number };
+    error?: { message: string; code?: string; details?: string; hint?: string };
+    row?: unknown;
+  }> => {
     const staffRes = await context.supabase
       .from("staff")
       .select("id, role_family")
@@ -99,7 +105,7 @@ export const testMinimalDailySalesInsert = createServerFn({ method: "POST" })
       .limit(1)
       .maybeSingle();
     if (staffRes.error) {
-      return { ok: false, step: "resolve_staff", error: staffRes.error };
+      return { ok: false, step: "resolve_staff", error: { message: staffRes.error.message } };
     }
     const staff = staffRes.data;
     if (!staff?.id) {
@@ -107,7 +113,7 @@ export const testMinimalDailySalesInsert = createServerFn({ method: "POST" })
     }
 
     const payload = {
-      staff_id: staff.id,
+      staff_id: staff.id as string,
       submitted_by: context.userId,
       total_amount: 1,
     };
@@ -131,8 +137,9 @@ export const testMinimalDailySalesInsert = createServerFn({ method: "POST" })
         },
       };
     }
-    return { ok: true, payload, row: data };
+    return { ok: true, step: "insert", payload, row: data };
   });
+
 
 
 /** Signed URLs for the current user's evidence files (30 min). */
