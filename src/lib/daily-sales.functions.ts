@@ -90,13 +90,15 @@ export const submitDailySales = createServerFn({ method: "POST" })
  * Required: staff_id, submitted_by, total_amount. Returns the row or the RAW supabase error. */
 export const testMinimalDailySalesInsert = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<{
-    ok: boolean;
-    step: string;
-    payload?: { staff_id: string; submitted_by: string; total_amount: number };
-    error?: { message: string; code?: string; details?: string; hint?: string };
-    row?: unknown;
-  }> => {
+  .handler(async ({ context }) => {
+    type TestResult = {
+      ok: boolean;
+      step: string;
+      payload?: { staff_id: string; submitted_by: string; total_amount: number };
+      error?: { message: string; code?: string; details?: string; hint?: string };
+      row?: Record<string, unknown> | null;
+    };
+
     const staffRes = await context.supabase
       .from("staff")
       .select("id, role_family")
