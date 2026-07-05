@@ -161,12 +161,28 @@ function SubmitDailySales() {
       });
     }
 
-    setPicked((prev) => [...prev, ...next]);
+    setPicked((prev) => {
+      const merged = [...prev, ...next];
+      if (merged[0]) {
+        const f0 = merged[0].file;
+        console.log("[proof] AFTER onChange picked[0].file =", f0);
+        console.log("[proof] AFTER onChange meta =", {
+          name: f0.name,
+          size: f0.size,
+          type: f0.type,
+          lastModified: f0.lastModified,
+          isFile: f0 instanceof File,
+          isBlob: f0 instanceof Blob,
+        });
+      }
+      return merged;
+    });
     setPhase("idle");
     if (next.length) {
       setMessage(`${next.length} file(s) ready to upload.`);
     }
   }
+
 
   function removePicked(id: string) {
     setPicked((prev) => {
@@ -192,6 +208,28 @@ function SubmitDailySales() {
         const p = picked[i];
         const safe = p.file.name.replace(/[^a-zA-Z0-9._-]/g, "_") || "image.jpg";
         const path = `${user.id}/${Date.now()}-${i}-${safe}`;
+
+        console.log("[proof] BEFORE upload picked[" + i + "].file =", p.file);
+        console.log("[proof] BEFORE upload meta =", {
+          name: p.file.name,
+          size: p.file.size,
+          type: p.file.type,
+          lastModified: p.file.lastModified,
+          isFile: p.file instanceof File,
+          isBlob: p.file instanceof Blob,
+        });
+
+        // Prove the File is still readable right before upload.
+        try {
+          const buf = await p.file.arrayBuffer();
+          console.log("[proof] arrayBuffer() OK — byteLength =", buf.byteLength);
+        } catch (err: any) {
+          console.error("[proof] arrayBuffer() FAILED", err);
+          throw new Error(
+            `File handle invalid before upload (${p.file.name}): ${err?.name ?? ""} ${err?.message ?? String(err)}`,
+          );
+        }
+
         console.log("[uploader] uploading", { path, size: p.file.size, type: p.file.type });
         const res = await supabase.storage
           .from("daily-sales-evidence")
@@ -199,6 +237,7 @@ function SubmitDailySales() {
             upsert: false,
             contentType: p.file.type || "application/octet-stream",
           });
+
         if (res.error) {
           console.error("[uploader] upload error", res.error);
           throw new Error(`Upload failed (${p.file.name}): ${res.error.message}`);
