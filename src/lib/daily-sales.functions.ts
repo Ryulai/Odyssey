@@ -96,8 +96,9 @@ export const testMinimalDailySalesInsert = createServerFn({ method: "POST" })
       step: string;
       payload?: { staff_id: string; submitted_by: string; total_amount: number };
       error?: { message: string; code?: string; details?: string; hint?: string };
-      row?: Record<string, unknown> | null;
+      rowJson?: string;
     };
+
 
     const staffRes = await context.supabase
       .from("staff")
