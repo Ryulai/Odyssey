@@ -215,7 +215,18 @@ function SubmitClaim({ userId }: { userId: string | null }) {
   return (
     <section className="rounded-md border border-border bg-ink/30 p-5">
       <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">Record a Voyage</h2>
-      <form onSubmit={(e) => { e.preventDefault(); if (!achievementId || !effectiveStaffId) return; setBusy(true); submit.mutate(undefined, { onSettled: () => setBusy(false) }); }}
+      <form onSubmit={(e) => {
+          e.preventDefault();
+          setDebugLog([]);
+          log("1. submit clicked", { achievementId, effectiveStaffId, fileCount: files.length });
+          if (!achievementId || !effectiveStaffId) {
+            log("2. validation FAILED", { achievementId, effectiveStaffId });
+            return;
+          }
+          log("2. validation passed");
+          setBusy(true);
+          submit.mutate(undefined, { onSettled: () => setBusy(false) });
+        }}
         className="mt-4 space-y-3">
         <label className="block">
           <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">Navigator (crew)</span>
