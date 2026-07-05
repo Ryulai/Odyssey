@@ -563,12 +563,13 @@ function StaffForm({ row, managers, accounts, locations, isDirector, onSave, onC
       </div>
 
 
-
+      <div className="sm:col-span-2 -mb-1 mt-3 border-b border-border/60 pb-1 text-[10px] font-display uppercase tracking-[0.25em] text-muted-foreground">Account</div>
 
       <Field label="Status">
         <select className={inputCls} value={d.status} onChange={e => set("status", e.target.value as any)}>
           {STAFF_STATUSES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
         </select>
+
       </Field>
       {isDirector && <Field label="Linked User Account">
           <select className={inputCls} value={d.user_id ?? matched?.id ?? ""} onChange={e => set("user_id", e.target.value || null)}>
