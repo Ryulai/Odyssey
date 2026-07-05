@@ -425,7 +425,9 @@ function StaffForm({ row, managers, accounts, locations, isDirector, onSave, onC
       };
       if (!payload.id) delete payload.id;
       onSave(payload);
+    }}
       className="mt-5 grid gap-3 rounded-md border border-gold/30 bg-ink/50 p-4 sm:grid-cols-2">
+
       <div className="sm:col-span-2 font-display text-xs uppercase tracking-widest text-gold">
         {row.id ? "Edit Staff" : "Create Staff"}
       </div>
