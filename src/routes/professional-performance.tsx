@@ -223,14 +223,14 @@ function monthKey(d = new Date()) {
 // LocalStorage draft (prototype only)
 // -------------------------------------------------------------------
 
-type Selections = Record<CategoryKey, TierKey | null>;
+type Selections = Record<string, TierKey | null>;
 
-const BLANK_SELECTIONS: Selections = {
-  customer: null,
-  communication: null,
-  execution: null,
-  growth: null,
-};
+function blankSelections(template: ReviewTemplate | null): Selections {
+  const s: Selections = {};
+  if (template) for (const c of template.categories) s[c.key] = null;
+  return s;
+}
+
 
 type Submitted = {
   at: string;
