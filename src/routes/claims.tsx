@@ -280,6 +280,45 @@ function SubmitClaim({ userId }: { userId: string | null }) {
           {busy ? "Recording…" : "Record Voyage"}
         </button>
       </form>
+      {debugLog.length > 0 && (
+        <div className="mt-4 rounded-md border border-red-500/40 bg-black/60 p-3">
+          <div className="mb-2 flex items-center justify-between">
+            <div className="font-display text-[10px] uppercase tracking-widest text-red-200">
+              🧪 Voyage Submit Debug ({debugLog.length} step{debugLog.length === 1 ? "" : "s"})
+            </div>
+            <button
+              type="button"
+              onClick={() => setDebugLog([])}
+              className="text-[10px] uppercase tracking-widest text-muted-foreground hover:text-red-300"
+            >
+              clear
+            </button>
+          </div>
+          <ol className="space-y-1 text-[11px]">
+            {debugLog.map((entry, i) => (
+              <li key={i} className="rounded border border-border/50 bg-ink/40 px-2 py-1">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-muted-foreground">{entry.t}</span>
+                  <span className={
+                    entry.step.includes("ERROR") || entry.step.includes("FAILED")
+                      ? "font-semibold text-red-300"
+                      : entry.step.includes("SUCCESS") || entry.step.includes(" OK")
+                      ? "font-semibold text-emerald-300"
+                      : "text-gold"
+                  }>
+                    {entry.step}
+                  </span>
+                </div>
+                {entry.data !== undefined && (
+                  <pre className="mt-1 overflow-x-auto whitespace-pre-wrap break-all text-[10px] text-foreground/80">
+{JSON.stringify(entry.data, null, 2)}
+                  </pre>
+                )}
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
     </section>
   );
 }
