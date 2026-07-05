@@ -323,10 +323,15 @@ function MonthlyReviewPage() {
     () => (staff as any[]).find((s: any) => s.id === staffId) ?? null,
     [staff, staffId],
   );
-  const { template, className } = useMemo(
-    () => (selectedStaff ? resolveTemplate(selectedStaff) : { template: null, className: null }),
+  const resolved = useMemo<ResolveResult>(
+    () =>
+      selectedStaff
+        ? resolveTemplate(selectedStaff)
+        : { status: "missing", template: null, className: null, classKey: null },
     [selectedStaff],
   );
+  const { template, className } = resolved;
+
 
   useEffect(() => {
     if (!staffId) {
