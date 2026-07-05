@@ -765,6 +765,68 @@ export type Database = {
           },
         ]
       }
+      staff_identities: {
+        Row: {
+          achievement_progress: Json
+          class_key: string | null
+          created_at: string
+          id: string
+          is_primary: boolean
+          monthly_review: Json
+          position: number
+          promotion_progress: number
+          promotion_state: Json
+          rank_key: string
+          role_key: string | null
+          source: string
+          staff_id: string
+          statistics: Json
+          updated_at: string
+        }
+        Insert: {
+          achievement_progress?: Json
+          class_key?: string | null
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          monthly_review?: Json
+          position: number
+          promotion_progress?: number
+          promotion_state?: Json
+          rank_key?: string
+          role_key?: string | null
+          source?: string
+          staff_id: string
+          statistics?: Json
+          updated_at?: string
+        }
+        Update: {
+          achievement_progress?: Json
+          class_key?: string | null
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          monthly_review?: Json
+          position?: number
+          promotion_progress?: number
+          promotion_state?: Json
+          rank_key?: string
+          role_key?: string | null
+          source?: string
+          staff_id?: string
+          statistics?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_identities_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
