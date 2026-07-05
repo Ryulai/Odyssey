@@ -342,21 +342,24 @@ export const upsertStaff = createServerFn({ method: "POST" })
       if ((beforeIdentities as any).error) throw new Error((beforeIdentities as any).error.message);
 
       if (normalizedIdentities.length) {
-        const identityRows = normalizedIdentities.map((idn, index) => ({
-          id: idn.id || undefined,
-          staff_id: row.id,
-          position: index + 1,
-          is_primary: index === 0,
-          class_key: idn.class_key,
-          role_key: idn.role_key,
-          rank_key: idn.rank_key || "bronze",
-          promotion_progress: idn.promotion_progress ?? 0,
-          promotion_state: idn.promotion_state ?? {},
-          monthly_review: idn.monthly_review ?? {},
-          achievement_progress: idn.achievement_progress ?? {},
-          statistics: idn.statistics ?? {},
-          source: directorOverride ? "director_override" : "manual",
-        }));
+        const identityRows = normalizedIdentities.map((idn, index) => {
+          const base: any = {
+            staff_id: row.id,
+            position: index + 1,
+            is_primary: index === 0,
+            class_key: idn.class_key,
+            role_key: idn.role_key,
+            rank_key: idn.rank_key || "bronze",
+            promotion_progress: idn.promotion_progress ?? 0,
+            promotion_state: idn.promotion_state ?? {},
+            monthly_review: idn.monthly_review ?? {},
+            achievement_progress: idn.achievement_progress ?? {},
+            statistics: idn.statistics ?? {},
+            source: directorOverride ? "director_override" : "manual",
+          };
+          if (idn.id) base.id = idn.id;
+          return base;
+        });
         const { error: identityErr } = await context.supabase
           .from("staff_identities")
           .upsert(identityRows, { onConflict: "staff_id,position" });
