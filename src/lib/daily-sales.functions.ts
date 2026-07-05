@@ -141,7 +141,7 @@ export const testMinimalDailySalesInsert = createServerFn({ method: "POST" })
       };
       return result;
     }
-    const okResult: TestResult = { ok: true, step: "insert", payload, row: data as Record<string, unknown> };
+    const okResult: TestResult = { ok: true, step: "insert", payload, rowJson: JSON.stringify(data) };
     return okResult;
   });
 
