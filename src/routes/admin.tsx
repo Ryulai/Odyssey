@@ -12,6 +12,7 @@ import {
   getLegacy, updateLegacyConfig, upsertLegacyTitle, deleteLegacyTitle,
   listLocations, upsertLocation, deleteLocation,
 } from "@/lib/config.functions";
+import type { StaffIdentityInput } from "@/lib/config.functions";
 import {
   listLegacyHoldings, upsertLegacyHolding, deleteLegacyHolding,
 } from "@/lib/legacy.functions";
@@ -182,7 +183,8 @@ type StaffRow = {
   employee_code?: string | null; guild_id?: string | null; join_date?: string | null;
   phone?: string | null; branch?: string | null;
   career_path?: string | null; shipbuilder_path?: string | null;
-  // Sprint 1 — RPG hierarchy
+  identities?: StaffIdentityInput[];
+  // Legacy fallback only. The UI source of truth is identities[].
   primary_class?: string | null; primary_role?: string | null;
   secondary_class?: string | null; secondary_role?: string | null;
   secondary_unlocked?: boolean;
@@ -210,8 +212,8 @@ function StaffModule() {
     id: "", name: "", email: "", role: "", role_family: "hunter", business_unit: "Sales",
     manager_id: null, status: "active", user_id: null, app_role: "staff", location_id: null,
     employee_code: "", join_date: new Date().toISOString().slice(0, 10), phone: "", branch: "", career_path: "", shipbuilder_path: "",
-    primary_class: "ranger", primary_role: "hunter",
-    secondary_class: null, secondary_role: null, secondary_unlocked: false,
+    identities: [{ class_key: "ranger", role_key: "hunter", rank_key: "bronze", promotion_progress: 0 }],
+    secondary_unlocked: false,
     rank_key: "bronze",
   };
 
@@ -249,10 +251,20 @@ function StaffModule() {
                   <td className="py-2 pr-3 text-muted-foreground">{s.employee_code ?? "—"}</td>
                   <td className="py-2 pr-3 text-muted-foreground">{s.role}</td>
                   <td className="py-2 pr-3 text-muted-foreground">
-                    {s.primary_class ? (
+                    {s.identities?.length ? (
+                      <div className="space-y-0.5">
+                        {s.identities.slice(0, 3).map((idn: StaffIdentityInput, index: number) => (
+                          <div key={idn.id ?? index}>
+                            <span className="text-foreground">Identity #{index + 1}</span>
+                            <span className="text-muted-foreground"> · {classLabel(idn.class_key)}{idn.role_key ? ` · ${roleLabel(idn.role_key)}` : ""}</span>
+                          </div>
+                        ))}
+                        {s.identities.length > 3 && <div className="text-[10px] text-muted-foreground">+{s.identities.length - 3} more</div>}
+                      </div>
+                    ) : s.primary_class ? (
                       <div>
-                        <span className="text-foreground">{classLabel(s.primary_class)}</span>
-                        {s.primary_role && <span className="text-muted-foreground"> · {roleLabel(s.primary_role)}</span>}
+                        <span className="text-foreground">Identity #1</span>
+                        <span className="text-muted-foreground"> · {classLabel(s.primary_class)}{s.primary_role ? ` · ${roleLabel(s.primary_role)}` : ""}</span>
                       </div>
                     ) : (
                       <span className="text-muted-foreground/70">— unassigned —</span>
@@ -265,7 +277,11 @@ function StaffModule() {
                       </div>
                     )}
                   </td>
-                  <td className="py-2 pr-3 text-muted-foreground">{rankLabel(s.current_rank_key ?? s.rank_key ?? "bronze")}</td>
+                  <td className="py-2 pr-3 text-muted-foreground">
+                    {s.identities?.length
+                      ? s.identities.map((idn: StaffIdentityInput, index: number) => <div key={idn.id ?? index}>#{index + 1} {rankLabel(idn.rank_key ?? "bronze")}</div>)
+                      : rankLabel(s.current_rank_key ?? s.rank_key ?? "bronze")}
+                  </td>
                   <td className="py-2 pr-3 text-muted-foreground">{locations.find((l: any) => l.id === s.location_id)?.name ?? <span className="text-amber-300/80">— Unassigned —</span>}</td>
                   <td className="py-2 pr-3 text-muted-foreground">{staff.find((x: any) => x.id === s.manager_id)?.name ?? "—"}</td>
                   <td className="py-2 pr-3 text-muted-foreground">{s.join_date ?? "—"}</td>
