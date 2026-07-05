@@ -477,14 +477,35 @@ function MonthlyReviewPage() {
               </div>
             )}
 
-            {/* Staff selected but no template registered for their Class */}
-            {staffId && !template && (
+            {/* Staff selected but Class field is missing on the record */}
+            {staffId && resolved.status === "missing" && (
+              <div className="rounded-md border border-red-500/60 bg-red-500/5 p-6 text-center">
+                <div className="font-display text-sm uppercase tracking-[0.25em] text-red-300">
+                  Class not set for {selectedStaff?.name ?? "this employee"}
+                </div>
+                <p className="mt-3 text-xs text-red-100/80">
+                  Cannot load a review template — this employee has no Class recorded
+                  (<code className="rounded bg-black/40 px-1">primary_role</code> is empty).
+                </p>
+                <p className="mt-2 text-[10px] uppercase tracking-widest text-muted-foreground">
+                  Set the employee's Class in their profile before running a review. The
+                  system never guesses a Class.
+                </p>
+              </div>
+            )}
+
+            {/* Class recognised but no template registered for it yet */}
+            {staffId && resolved.status === "pending" && (
               <div className="rounded-md border border-amber-400/50 bg-amber-400/5 p-6 text-center">
                 <div className="font-display text-sm uppercase tracking-[0.25em] text-amber-200">
-                  {className ? `${className} Review Template` : "Class Review Template"} is under development
+                  {className} Review Template is under development
                 </div>
                 <p className="mt-3 text-xs text-amber-100/80">
-                  This employee cannot be reviewed until the template becomes available.
+                  This employee's Class is <strong>{className}</strong>
+                  {resolved.classKey ? (
+                    <> (<code className="rounded bg-black/40 px-1">{resolved.classKey}</code>)</>
+                  ) : null}
+                  . They cannot be reviewed until their template is built.
                 </p>
                 <p className="mt-2 text-[10px] uppercase tracking-widest text-muted-foreground">
                   Every Class in Odyssey has its own unique review template. Do not use
@@ -492,6 +513,7 @@ function MonthlyReviewPage() {
                 </p>
               </div>
             )}
+
 
             {/* Template loaded — render review */}
             {staffId && template && (
