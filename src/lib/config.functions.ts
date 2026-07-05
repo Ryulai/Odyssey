@@ -3,6 +3,18 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 type AppRole = "director" | "manager" | "staff";
 
+export type StaffIdentityInput = {
+  id?: string | null;
+  class_key?: string | null;
+  role_key?: string | null;
+  rank_key?: string | null;
+  promotion_progress?: number | null;
+  promotion_state?: any;
+  monthly_review?: any;
+  achievement_progress?: any;
+  statistics?: any;
+};
+
 async function currentUserRole(context: any): Promise<AppRole | null> {
   const { data, error } = await context.supabase
     .from("user_roles")
@@ -141,28 +153,44 @@ export const listStaff = createServerFn({ method: "GET" })
       }
     }
 
-    // Load RPG identity for all listed staff (class / role / secondary).
-    const { data: rpgRows, error: rpgErr } = ids.length
-      ? await context.supabase.from("rpg_identity").select("*").in("staff_id", ids)
-      : { data: [], error: null } as any;
-    if (rpgErr) throw new Error(rpgErr.message);
+    // Load the frozen Identity Array. Legacy rpg_identity is only a fallback.
+    const [identityRes, rpgRes] = await Promise.all([
+      ids.length
+        ? context.supabase.from("staff_identities").select("*").in("staff_id", ids).order("position")
+        : Promise.resolve({ data: [], error: null } as any),
+      ids.length
+        ? context.supabase.from("rpg_identity").select("*").in("staff_id", ids)
+        : Promise.resolve({ data: [], error: null } as any),
+    ]);
+    if ((identityRes as any).error) throw new Error((identityRes as any).error.message);
+    if ((rpgRes as any).error) throw new Error((rpgRes as any).error.message);
+    const identityMap = new Map<string, any[]>();
+    for (const idn of ((identityRes as any).data ?? []) as any[]) {
+      const list = identityMap.get(idn.staff_id) ?? [];
+      list.push(idn);
+      identityMap.set(idn.staff_id, list);
+    }
     const rpgMap = new Map<string, any>();
-    for (const r of (rpgRows ?? []) as any[]) rpgMap.set(r.staff_id, r);
+    for (const r of ((rpgRes as any).data ?? []) as any[]) rpgMap.set(r.staff_id, r);
 
     return rows.map((s: any) => {
       const ev: any = evalMap.get(s.id) ?? null;
       const rpg = rpgMap.get(s.id) ?? null;
+      const identities = identityMap.get(s.id) ?? [];
+      const first = identities[0] ?? null;
+      const second = identities[1] ?? null;
       return {
         ...s,
+        identities,
         app_role: s.user_id ? (roleLookup.get(s.user_id) ?? s.system_role ?? null) : (s.system_role ?? null),
         total_stars: starsMap.get(s.id) ?? 0,
         latest_grade: gradeMap.get(s.id) ?? null,
         promotion_ready: !!ev?.eligible,
         promotion_next_rank_name: ev?.next_rank_name ?? null,
-        primary_class:      rpg?.primary_class ?? null,
-        primary_role:       rpg?.primary_role  ?? null,
-        secondary_class:    rpg?.secondary_class ?? null,
-        secondary_role:     rpg?.secondary_role  ?? null,
+        primary_class:      first?.class_key ?? rpg?.primary_class ?? null,
+        primary_role:       first?.role_key  ?? rpg?.primary_role  ?? null,
+        secondary_class:    second?.class_key ?? rpg?.secondary_class ?? null,
+        secondary_role:     second?.role_key  ?? rpg?.secondary_role  ?? null,
         secondary_unlocked: rpg?.secondary_unlocked ?? false,
       };
     });
@@ -200,7 +228,10 @@ export const upsertStaff = createServerFn({ method: "POST" })
     employee_code?: string | null; join_date?: string | null;
     phone?: string | null; branch?: string | null;
     career_path?: string | null; shipbuilder_path?: string | null;
-    // Sprint 1 — RPG hierarchy
+    identities?: StaffIdentityInput[];
+    is_director_override?: boolean;
+    override_reason?: string | null;
+    // Legacy input accepted only as fallback while older screens are migrated.
     primary_class?: string | null; primary_role?: string | null;
     secondary_class?: string | null; secondary_role?: string | null;
     rank_key?: string | null;
@@ -228,10 +259,27 @@ export const upsertStaff = createServerFn({ method: "POST" })
     // Normalize RPG values to KEYS (lower_snake_case) — never store display names.
     const normKey = (v: string | null | undefined) =>
       v ? v.trim().toLowerCase().replace(/\s+/g, "_") : null;
-    const primaryClass = normKey(data.primary_class);
-    const primaryRole  = normKey(data.primary_role);
-    const secondaryClass = normKey(data.secondary_class);
-    const secondaryRole  = normKey(data.secondary_role);
+    const normalizedIdentities = (data.identities?.length ? data.identities : [
+      { class_key: data.primary_class, role_key: data.primary_role, rank_key: data.rank_key, promotion_progress: 0 },
+      ...(data.secondary_class ? [{ class_key: data.secondary_class, role_key: data.secondary_role, rank_key: "bronze", promotion_progress: 0 }] : []),
+    ])
+      .map((idn) => ({
+        ...idn,
+        class_key: normKey(idn.class_key),
+        role_key: normKey(idn.role_key),
+        rank_key: normKey(idn.rank_key) ?? "bronze",
+        promotion_progress: Math.max(0, Math.min(100, Number(idn.promotion_progress ?? 0))),
+      }))
+      .filter((idn) => !!idn.class_key);
+
+    const firstIdentity = normalizedIdentities[0] ?? { class_key: "ranger", role_key: "hunter", rank_key: "bronze", promotion_progress: 0 };
+    const primaryClass = firstIdentity.class_key;
+    const primaryRole = firstIdentity.role_key;
+    const directorOverride = !!data.is_director_override;
+    if (directorOverride) {
+      requireDirector(actorRole);
+      if (!data.override_reason?.trim()) throw new Error("Director Override requires a reason.");
+    }
 
     // Legacy `role_family` still exists on the staff table; derive it from primary_class
     // so downstream progression logic keeps working. Ranger/Warrior/Mage → hunter (progression path),
@@ -240,7 +288,7 @@ export const upsertStaff = createServerFn({ method: "POST" })
       data.role_family ??
       (primaryClass === "guardian" ? "operational" : "hunter");
 
-    const newRankKey = (data.rank_key?.trim() || "bronze");
+    const newRankKey = firstIdentity.rank_key || "bronze";
 
     // Detect rank change for promotion history.
     let priorRank: string | null = null;
@@ -287,17 +335,64 @@ export const upsertStaff = createServerFn({ method: "POST" })
       .from("staff").upsert(payload).select().single();
     if (error) throw new Error(error.message);
 
-    // Mirror RPG identity (primary + secondary). Secondary is stored but locked.
-    if (row?.id && (primaryClass || primaryRole || secondaryClass || secondaryRole)) {
+    if (row?.id) {
+      const beforeIdentities = row.id
+        ? await context.supabase.from("staff_identities").select("*").eq("staff_id", row.id).order("position")
+        : { data: [], error: null } as any;
+      if ((beforeIdentities as any).error) throw new Error((beforeIdentities as any).error.message);
+
+      if (normalizedIdentities.length) {
+        const identityRows = normalizedIdentities.map((idn, index) => ({
+          id: idn.id || undefined,
+          staff_id: row.id,
+          position: index + 1,
+          is_primary: index === 0,
+          class_key: idn.class_key,
+          role_key: idn.role_key,
+          rank_key: idn.rank_key || "bronze",
+          promotion_progress: idn.promotion_progress ?? 0,
+          promotion_state: idn.promotion_state ?? {},
+          monthly_review: idn.monthly_review ?? {},
+          achievement_progress: idn.achievement_progress ?? {},
+          statistics: idn.statistics ?? {},
+          source: directorOverride ? "director_override" : "manual",
+        }));
+        const { error: identityErr } = await context.supabase
+          .from("staff_identities")
+          .upsert(identityRows, { onConflict: "staff_id,position" });
+        if (identityErr) throw new Error(identityErr.message);
+
+        const keepPositions = identityRows.map((idn) => idn.position);
+        const deleteQuery = context.supabase.from("staff_identities").delete().eq("staff_id", row.id);
+        const deleteRes = keepPositions.length ? await deleteQuery.not("position", "in", `(${keepPositions.join(",")})`) : await deleteQuery;
+        if (deleteRes.error) throw new Error(deleteRes.error.message);
+      }
+
+      if (directorOverride) {
+        const afterIdentities = await context.supabase.from("staff_identities").select("*").eq("staff_id", row.id).order("position");
+        if (afterIdentities.error) throw new Error(afterIdentities.error.message);
+        const { error: auditError } = await context.supabase.from("director_audit_log").insert({
+          actor_user_id: context.userId,
+          staff_id: row.id,
+          action: "staff_identities_override",
+          reason: data.override_reason!.trim(),
+          before_state: { identities: (beforeIdentities as any).data ?? [] },
+          after_state: { identities: afterIdentities.data ?? [] },
+        });
+        if (auditError) throw new Error(auditError.message);
+      }
+
+      // Legacy mirror for older routes only; the Identity Array is source of truth.
+      const secondIdentity = normalizedIdentities[1] ?? null;
       const rpgPayload: any = {
         staff_id: row.id,
         primary_class: primaryClass,
         primary_role:  primaryRole,
-        secondary_class: secondaryClass,
-        secondary_role:  secondaryRole,
-        secondary_unlocked: false,
-        // Legacy column kept in sync for older UI that reads `class`.
+        secondary_class: secondIdentity?.class_key ?? null,
+        secondary_role:  secondIdentity?.role_key ?? null,
+        secondary_unlocked: !!secondIdentity?.class_key,
         class: primaryClass,
+        current_rank_key: newRankKey,
       };
       const { error: rpgErr } = await context.supabase
         .from("rpg_identity")
