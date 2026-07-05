@@ -230,6 +230,57 @@ export type Database = {
           },
         ]
       }
+      director_audit_log: {
+        Row: {
+          action: string
+          actor_user_id: string
+          after_state: Json | null
+          before_state: Json | null
+          created_at: string
+          id: string
+          identity_id: string | null
+          reason: string
+          staff_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_user_id: string
+          after_state?: Json | null
+          before_state?: Json | null
+          created_at?: string
+          id?: string
+          identity_id?: string | null
+          reason: string
+          staff_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string
+          after_state?: Json | null
+          before_state?: Json | null
+          created_at?: string
+          id?: string
+          identity_id?: string | null
+          reason?: string
+          staff_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "director_audit_log_identity_id_fkey"
+            columns: ["identity_id"]
+            isOneToOne: false
+            referencedRelation: "staff_identities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "director_audit_log_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       grade_rules: {
         Row: {
           bonus_pct: number
