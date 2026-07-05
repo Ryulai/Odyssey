@@ -97,9 +97,11 @@ function DailySalesPage() {
           </div>
         ) : (
           <div className="space-y-8">
+            <MinimalInsertTest />
             <SubmitDailySales />
             <SubmissionHistory />
           </div>
+
         )}
       </div>
     </div>
