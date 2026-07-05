@@ -357,7 +357,7 @@ export const upsertStaff = createServerFn({ method: "POST" })
             statistics: idn.statistics ?? {},
             source: directorOverride ? "director_override" : "manual",
           };
-          if (idn.id) base.id = idn.id;
+          // Never send id: mixed presence across rows makes supabase-js null-fill missing ids
           return base;
         });
         const { error: identityErr } = await context.supabase
