@@ -613,6 +613,7 @@ function OdysseyHeader() {
         {role === "director" && <Link to="/fleet" className={navLink}>Fleet Overview</Link>}
         {can(role, "team.recommendPromotion") && <Link to="/promotions" className={navLink}>Voyage Progression</Link>}
         {can(role, "evaluations.write") && <Link to="/evaluations" className={navLink}>Voyage Review</Link>}
+        {can(role, "evaluations.write") && <Link to="/professional-performance" className={navLink}>Professional Perf.</Link>}
 
         {can(role, "admin.access") && (
           <Link to="/admin" className="rounded-md border border-gold/50 bg-gold/10 px-3 py-2 font-display text-[10px] uppercase tracking-widest text-gold hover:bg-gold/20">
