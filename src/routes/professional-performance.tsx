@@ -185,23 +185,44 @@ function normaliseClassKey(v: string | null | undefined): string {
   return (v ?? "").toString().trim().toLowerCase().replace(/\s+/g, "_");
 }
 
-function resolveTemplate(staff: any): {
-  template: ReviewTemplate | null;
-  className: string | null;
-} {
-  const roleKey = normaliseClassKey(staff?.primary_role);
-  const classKey = normaliseClassKey(staff?.primary_class);
-  const candidates = [roleKey, classKey].filter(Boolean);
-  for (const k of candidates) {
-    if (TEMPLATES[k]) return { template: TEMPLATES[k], className: TEMPLATES[k].className };
+/**
+ * Resolve the review template from the employee's stored Class.
+ *
+ * SOURCE OF TRUTH: `staff.primary_role` (the specialization: hunter, sniper,
+ * alchemist, vanguard, mage subclasses, ...). This is the field that
+ * corresponds to what the business calls "Class" (Hunter, Vanguard, Mage, ...).
+ *
+ * `primary_class` is the parent guild (ranger / warrior / mage / guardian)
+ * and MUST NOT be used to pick a review template — a Hunter's parent guild
+ * is "ranger", which would incorrectly load the Ranger template.
+ *
+ * No fallback, no guessing. If the field is missing we return an explicit
+ * error so the manager sees exactly what's wrong instead of silently
+ * loading the wrong Class's form.
+ */
+type ResolveResult =
+  | { status: "ok";      template: ReviewTemplate; className: string; classKey: string }
+  | { status: "pending"; template: null;           className: string; classKey: string }
+  | { status: "missing"; template: null;           className: null;   classKey: null };
+
+function resolveTemplate(staff: any): ResolveResult {
+  const classKey = normaliseClassKey(staff?.primary_role);
+  if (!classKey) {
+    return { status: "missing", template: null, className: null, classKey: null };
   }
-  for (const k of candidates) {
-    if (KNOWN_CLASSES_WITHOUT_TEMPLATE[k]) {
-      return { template: null, className: KNOWN_CLASSES_WITHOUT_TEMPLATE[k] };
-    }
+  if (TEMPLATES[classKey]) {
+    const t = TEMPLATES[classKey];
+    return { status: "ok", template: t, className: t.className, classKey };
   }
-  return { template: null, className: candidates[0] ? candidates[0] : null };
+  const known = KNOWN_CLASSES_WITHOUT_TEMPLATE[classKey];
+  return {
+    status: "pending",
+    template: null,
+    className: known ?? classKey.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+    classKey,
+  };
 }
+
 
 
 // -------------------------------------------------------------------
@@ -302,10 +323,15 @@ function MonthlyReviewPage() {
     () => (staff as any[]).find((s: any) => s.id === staffId) ?? null,
     [staff, staffId],
   );
-  const { template, className } = useMemo(
-    () => (selectedStaff ? resolveTemplate(selectedStaff) : { template: null, className: null }),
+  const resolved = useMemo<ResolveResult>(
+    () =>
+      selectedStaff
+        ? resolveTemplate(selectedStaff)
+        : { status: "missing", template: null, className: null, classKey: null },
     [selectedStaff],
   );
+  const { template, className } = resolved;
+
 
   useEffect(() => {
     if (!staffId) {
@@ -451,14 +477,35 @@ function MonthlyReviewPage() {
               </div>
             )}
 
-            {/* Staff selected but no template registered for their Class */}
-            {staffId && !template && (
+            {/* Staff selected but Class field is missing on the record */}
+            {staffId && resolved.status === "missing" && (
+              <div className="rounded-md border border-red-500/60 bg-red-500/5 p-6 text-center">
+                <div className="font-display text-sm uppercase tracking-[0.25em] text-red-300">
+                  Class not set for {selectedStaff?.name ?? "this employee"}
+                </div>
+                <p className="mt-3 text-xs text-red-100/80">
+                  Cannot load a review template — this employee has no Class recorded
+                  (<code className="rounded bg-black/40 px-1">primary_role</code> is empty).
+                </p>
+                <p className="mt-2 text-[10px] uppercase tracking-widest text-muted-foreground">
+                  Set the employee's Class in their profile before running a review. The
+                  system never guesses a Class.
+                </p>
+              </div>
+            )}
+
+            {/* Class recognised but no template registered for it yet */}
+            {staffId && resolved.status === "pending" && (
               <div className="rounded-md border border-amber-400/50 bg-amber-400/5 p-6 text-center">
                 <div className="font-display text-sm uppercase tracking-[0.25em] text-amber-200">
-                  {className ? `${className} Review Template` : "Class Review Template"} is under development
+                  {className} Review Template is under development
                 </div>
                 <p className="mt-3 text-xs text-amber-100/80">
-                  This employee cannot be reviewed until the template becomes available.
+                  This employee's Class is <strong>{className}</strong>
+                  {resolved.classKey ? (
+                    <> (<code className="rounded bg-black/40 px-1">{resolved.classKey}</code>)</>
+                  ) : null}
+                  . They cannot be reviewed until their template is built.
                 </p>
                 <p className="mt-2 text-[10px] uppercase tracking-widest text-muted-foreground">
                   Every Class in Odyssey has its own unique review template. Do not use
@@ -466,6 +513,7 @@ function MonthlyReviewPage() {
                 </p>
               </div>
             )}
+
 
             {/* Template loaded — render review */}
             {staffId && template && (
