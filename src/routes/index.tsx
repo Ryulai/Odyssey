@@ -290,7 +290,7 @@ function LinkedHome({ d }: { d: any }) {
           Open My Profile →
         </Link>
         <Link to="/claims" className="rounded-md border border-border px-4 py-2 font-display text-[10px] uppercase tracking-widest text-muted-foreground hover:border-gold/40 hover:text-gold">
-          Record a Voyage
+          Submit Achievement
         </Link>
       </div>
 
@@ -608,11 +608,11 @@ function OdysseyHeader() {
       <div className="flex flex-wrap items-center gap-2">
         <Link to="/profile" className={navLink}>My Profile</Link>
         <Link to="/career" className={navLink}>Class</Link>
-        <Link to="/claims" className={navLink}>Harbor Records</Link>
-        {(role === "manager" || role === "director") && <Link to="/manager" className={navLink}>Captain's Bridge</Link>}
+        <Link to="/claims" className={navLink}>Achievements</Link>
+        {(role === "manager" || role === "director") && <Link to="/manager" className={navLink}>Team Dashboard</Link>}
         {role === "director" && <Link to="/fleet" className={navLink}>Fleet Overview</Link>}
-        {can(role, "team.recommendPromotion") && <Link to="/promotions" className={navLink}>Voyage Progression</Link>}
-        {can(role, "evaluations.write") && <Link to="/evaluations" className={navLink}>Voyage Review</Link>}
+        {can(role, "team.recommendPromotion") && <Link to="/promotions" className={navLink}>Promotions</Link>}
+        {can(role, "evaluations.write") && <Link to="/evaluations" className={navLink}>Performance Review</Link>}
         {can(role, "evaluations.write") && <Link to="/professional-performance" className={navLink}>Professional Perf.</Link>}
 
         {can(role, "admin.access") && (

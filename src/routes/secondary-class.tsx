@@ -41,7 +41,7 @@ function SecondaryClassPage() {
             to="/"
             className="rounded-md border border-border px-3 py-2 text-xs uppercase tracking-widest text-muted-foreground hover:border-gold/40 hover:text-gold"
           >
-            ← Ledger
+            ← Dashboard
           </Link>
         </header>
 

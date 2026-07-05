@@ -8,7 +8,7 @@ import { listStaff, getGradeConfig } from "@/lib/config.functions";
 import { listEvaluations, submitEvaluation, deleteEvaluation, computeComposite } from "@/lib/evaluations.functions";
 
 export const Route = createFileRoute("/evaluations")({
-  head: () => ({ meta: [{ title: "Voyage Review — The Odyssey Guide" }] }),
+  head: () => ({ meta: [{ title: "Performance Review — The Odyssey Guide" }] }),
   component: () => <AuthGate><EvaluationsPage /></AuthGate>,
 });
 
@@ -21,8 +21,8 @@ function firstOfMonth(date = new Date()) {
 const FACTORS: { key: "sales" | "attendance" | "achievements" | "review" | "discipline" | "kpi"; label: string; hint: string }[] = [
   { key: "sales",        label: "Trade Performance", hint: "Sales / revenue contribution" },
   { key: "attendance",   label: "Attendance",        hint: "Punctuality & presence" },
-  { key: "achievements", label: "Achievements",      hint: "Approved Harbor Records this period" },
-  { key: "review",       label: "Crew Reputation",   hint: "Peer + customer review score" },
+  { key: "achievements", label: "Achievements",      hint: "Approved Achievements this period" },
+  { key: "review",       label: "Reputation",   hint: "Peer + customer review score" },
   { key: "discipline",   label: "Discipline",        hint: "Conduct, SOP adherence" },
   { key: "kpi",          label: "KPI Completion",    hint: "Targets hit vs assigned" },
 ];
@@ -51,7 +51,7 @@ function EvaluationsPage() {
       discipline_score: scores.discipline,
       kpi_score: scores.kpi,
     } }),
-    onSuccess: () => { setMsg("Voyage Review recorded."); qc.invalidateQueries({ queryKey: ["evaluations"] }); },
+    onSuccess: () => { setMsg("Performance Review recorded."); qc.invalidateQueries({ queryKey: ["evaluations"] }); },
     onError: (e: any) => setMsg(e.message ?? "Failed"),
   });
   const del = useMutation({ mutationFn: (id: string) => deleteEvaluation({ data: { id } }),
@@ -77,20 +77,20 @@ function EvaluationsPage() {
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
         <header className="mb-8 flex items-center justify-between">
           <div>
-            <div className="font-display text-lg font-semibold uppercase tracking-widest text-gold">Voyage Review</div>
+            <div className="font-display text-lg font-semibold uppercase tracking-widest text-gold">Performance Review</div>
             <div className="text-xs text-muted-foreground">
               Grade Engine: 6 factors, weighted average. Edit weights in Admin → Grades.
             </div>
           </div>
-          <Link to="/" className="rounded-md border border-border px-3 py-2 text-xs uppercase tracking-widest text-muted-foreground hover:border-gold/40 hover:text-gold">← Ledger</Link>
+          <Link to="/" className="rounded-md border border-border px-3 py-2 text-xs uppercase tracking-widest text-muted-foreground hover:border-gold/40 hover:text-gold">← Dashboard</Link>
         </header>
 
         {canWrite ? (
           <section className="rounded-md border border-border bg-ink/30 p-5">
-            <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">Record Voyage Review</h2>
+            <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">Submit Performance Review</h2>
             <form onSubmit={(e) => { e.preventDefault(); if (staffId) submit.mutate(); }} className="mt-4 grid gap-3 sm:grid-cols-2">
               <label className="block">
-                <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">Crew</span>
+                <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">Team Member</span>
                 <select className={inputCls} value={staffId} onChange={e => setStaffId(e.target.value)} required>
                   <option value="">— Select —</option>
                   {staff.map((s: any) => <option key={s.id} value={s.id}>{s.name} · {s.role}</option>)}
@@ -125,7 +125,7 @@ function EvaluationsPage() {
 
               <div className="sm:col-span-2 flex items-center justify-between rounded-md border border-gold/30 bg-gold/5 px-3 py-2">
                 <div className="text-xs text-muted-foreground">
-                  Voyage Rating preview: <span className="text-gold">{composite}</span>
+                  Performance Score preview: <span className="text-gold">{composite}</span>
                 </div>
                 <div className="font-display text-xs uppercase tracking-widest" style={{ color: GRADE_META[projectedGrade as "A"].color }}>
                   Grade {projectedGrade} · {GRADE_META[projectedGrade as "A"].label}
@@ -147,13 +147,13 @@ function EvaluationsPage() {
         )}
 
         <section className="mt-8 rounded-md border border-border bg-ink/30 p-5">
-          <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">Voyage Records</h2>
+          <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">Review History</h2>
           {isLoading ? <div className="py-4 text-xs text-muted-foreground">Loading…</div> : (
             <div className="mt-4 overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="text-left text-[10px] uppercase tracking-widest text-muted-foreground">
                   <tr className="border-b border-border">
-                    <th className="py-2 pr-3">Month</th><th className="py-2 pr-3">Crew</th>
+                    <th className="py-2 pr-3">Month</th><th className="py-2 pr-3">Team Member</th>
                     <th className="py-2 pr-3">Sales</th><th className="py-2 pr-3">Att.</th>
                     <th className="py-2 pr-3">Ach.</th><th className="py-2 pr-3">Rev.</th>
                     <th className="py-2 pr-3">Disc.</th><th className="py-2 pr-3">KPI</th>

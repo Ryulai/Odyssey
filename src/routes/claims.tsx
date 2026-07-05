@@ -8,7 +8,7 @@ import { listAchievements, listStaff } from "@/lib/config.functions";
 import { listClaims, submitClaim, decideClaim, listMyRecords, testMinimalClaimInsert } from "@/lib/claims.functions";
 
 export const Route = createFileRoute("/claims")({
-  head: () => ({ meta: [{ title: "Harbor Records — The Odyssey Guide" }] }),
+  head: () => ({ meta: [{ title: "Achievements — The Odyssey Guide" }] }),
   component: () => <AuthGate><ClaimsPage /></AuthGate>,
 });
 
@@ -37,10 +37,10 @@ function ClaimsPage() {
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
         <header className="mb-8 flex items-center justify-between">
           <div>
-            <div className="font-display text-lg font-semibold uppercase tracking-widest text-gold">Harbor Records</div>
+            <div className="font-display text-lg font-semibold uppercase tracking-widest text-gold">Achievements</div>
             <div className="text-xs text-muted-foreground">Record your voyages, attach voyage proof, await harbor approval.</div>
           </div>
-          <Link to="/" className="rounded-md border border-border px-3 py-2 text-xs uppercase tracking-widest text-muted-foreground hover:border-gold/40 hover:text-gold">← Ledger</Link>
+          <Link to="/" className="rounded-md border border-border px-3 py-2 text-xs uppercase tracking-widest text-muted-foreground hover:border-gold/40 hover:text-gold">← Dashboard</Link>
         </header>
 
         <MinimalInsertTest />
@@ -86,7 +86,7 @@ function MinimalInsertTest() {
       </h2>
       <p className="mt-1 text-xs text-muted-foreground">
         Inserts the smallest possible row into <code>achievement_claims</code> (staff_id + achievement_id + submitted_by).
-        All other columns fall back to DB defaults. Use this to isolate which field breaks the Harbor Records submission.
+        All other columns fall back to DB defaults. Use this to isolate which field breaks the Achievements submission.
       </p>
       <button
         type="button"
@@ -265,7 +265,7 @@ function SubmitClaim({ userId }: { userId: string | null }) {
 
   return (
     <section className="rounded-md border border-border bg-ink/30 p-5">
-      <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">Record a Voyage</h2>
+      <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">Submit Achievement</h2>
       <form onSubmit={(e) => {
           e.preventDefault();
           resetStages();
@@ -329,7 +329,7 @@ function SubmitClaim({ userId }: { userId: string | null }) {
         {msg && <div className="rounded border border-gold/30 bg-gold/5 px-3 py-2 text-xs text-gold">{msg}</div>}
         <button type="submit" disabled={busy || !achievementId || !effectiveStaffId}
           className="w-full rounded-md border border-gold bg-gold/10 px-4 py-2 font-display text-xs uppercase tracking-widest text-gold hover:bg-gold/20 disabled:opacity-50">
-          {busy ? "Recording…" : "Record Voyage"}
+          {busy ? "Submitting…" : "Submit Achievement"}
         </button>
       </form>
       <div className="mt-4 rounded-md border border-red-500/40 bg-black/70 p-3">
