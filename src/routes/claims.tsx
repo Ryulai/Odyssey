@@ -265,13 +265,14 @@ function SubmitClaim({ userId }: { userId: string | null }) {
       <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">Record a Voyage</h2>
       <form onSubmit={(e) => {
           e.preventDefault();
+          resetStages();
           setDebugLog([]);
-          log("1. submit clicked", { achievementId, effectiveStaffId, fileCount: files.length });
+          setStage(1, { status: "success", data: { achievementId, effectiveStaffId, fileCount: files.length, evidenceLen: evidence.length } });
           if (!achievementId || !effectiveStaffId) {
-            log("2. validation FAILED", { achievementId, effectiveStaffId });
+            setStage(2, { status: "failed", error: "missing achievement_id or staff_id", data: { achievementId, effectiveStaffId } });
             return;
           }
-          log("2. validation passed");
+          setStage(2, { status: "success" });
           setBusy(true);
           submit.mutate(undefined, { onSettled: () => setBusy(false) });
         }}
