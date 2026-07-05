@@ -425,11 +425,142 @@ function StaffForm({ row, managers, accounts, locations, isDirector, onSave, onC
       };
       if (!payload.id) delete payload.id;
       onSave(payload);
-    }}
+      className="mt-5 grid gap-3 rounded-md border border-gold/30 bg-ink/50 p-4 sm:grid-cols-2">
+      <div className="sm:col-span-2 font-display text-xs uppercase tracking-widest text-gold">
+        {row.id ? "Edit Staff" : "Create Staff"}
+      </div>
+
+      {/* Identity */}
+      <div className="sm:col-span-2 -mb-1 mt-2 border-b border-border/60 pb-1 text-[10px] font-display uppercase tracking-[0.25em] text-muted-foreground">Identity</div>
+      <Field label="Name"><input className={inputCls} value={d.name} onChange={e => set("name", e.target.value)} required /></Field>
+      <Field label="Guild ID"><input className={inputCls + " font-mono text-gold"} value={d.guild_id ?? "(auto-assigned on save)"} readOnly disabled /></Field>
+      <Field label="Employee ID (external / HR)"><input className={inputCls} value={d.employee_code ?? ""} onChange={e => set("employee_code", e.target.value)} placeholder="Optional — external HR reference" /></Field>
+      <Field label="Email"><input type="email" className={inputCls} value={d.email ?? ""} onChange={e => set("email", e.target.value)} /></Field>
+      <Field label="Phone"><input className={inputCls} value={d.phone ?? ""} onChange={e => set("phone", e.target.value)} placeholder="e.g. +60 12 345 6789" /></Field>
+      <Field label="Branch"><input className={inputCls} value={d.branch ?? ""} onChange={e => set("branch", e.target.value)} placeholder="e.g. KL · Ting Livehouse" /></Field>
+      <Field label="Join Date"><input type="date" required className={inputCls} value={d.join_date ?? ""} onChange={e => set("join_date", e.target.value)} /></Field>
+
+      {/* Work Identity */}
+      <div className="sm:col-span-2 -mb-1 mt-3 border-b border-border/60 pb-1 text-[10px] font-display uppercase tracking-[0.25em] text-muted-foreground">Work Identity — where they report today</div>
+      <Field label="Position"><input className={inputCls} value={d.role} onChange={e => { set("role", e.target.value); set("app_role", roleToAppRole(e.target.value)); }} placeholder="e.g. Finance Manager" /></Field>
+      <Field label="Business Unit">
+        <select className={inputCls} value={d.business_unit} onChange={e => set("business_unit", e.target.value)}>
+          {BUSINESS_UNITS.map(x => <option key={x} value={x}>{x}</option>)}
+        </select>
+      </Field>
+      {isDirector && <Field label="Manager (Captain)">
+        <select className={inputCls} value={d.manager_id ?? ""} onChange={e => set("manager_id", e.target.value || null)}>
+          <option value="">— None —</option>
+          {managers.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+        </select>
+      </Field>}
+      <Field label="Assigned Fleet / Location">
+        <select className={inputCls} value={d.location_id ?? ""} onChange={e => set("location_id", e.target.value || null)}>
+          <option value="">— Unassigned —</option>
+          {locations.map((l: any) => <option key={l.id} value={l.id}>{l.name}{l.code ? ` · ${l.code}` : ""}</option>)}
+        </select>
+      </Field>
+
+      {/* RPG Identities — Identity Array (frozen) */}
+      <div className="sm:col-span-2 -mb-1 mt-3 border-b border-border/60 pb-1 text-[10px] font-display uppercase tracking-[0.25em] text-muted-foreground">
+        RPG Identities — each Identity has its own Class · Role · Rank · Promotion
+      </div>
+
+      {visible.map((idn, i) => {
+        const isMain = i === 0;
+        const isTrailingEmpty = i === visible.length - 1 && !idn.class && !isMain;
+        const roleOptions = idn.class ? (CLASS_ROLES[idn.class as PrimaryClass] ?? []) : [];
+        const persisted = i < 2;
+        return (
+          <div key={i} className="sm:col-span-2 rounded-md border border-border/60 bg-ink/30 p-3">
+            <div className="mb-2 flex items-center justify-between">
+              <div className="font-display text-[10px] uppercase tracking-[0.3em] text-gold">
+                {isMain ? "Main Identity" : `Sub Identity #${i}`}
+                {!persisted && idn.class && (
+                  <span className="ml-2 text-amber-300/80 normal-case tracking-normal">
+                    · frontend only (schema migration pending)
+                  </span>
+                )}
+              </div>
+              {!isMain && !isTrailingEmpty && (
+                <button type="button" onClick={() => removeIdentity(i)}
+                  className="rounded border border-red-400/40 px-2 py-0.5 text-[10px] uppercase tracking-widest text-red-300 hover:bg-red-500/10">
+                  Remove
+                </button>
+              )}
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Class">
+                <select
+                  className={inputCls}
+                  value={idn.class ?? ""}
+                  onChange={e => {
+                    const cls = e.target.value || null;
+                    const firstRole = cls ? (CLASS_ROLES[cls as PrimaryClass]?.[0]?.key ?? null) : null;
+                    updateIdentity(i, { class: cls, role: firstRole });
+                  }}
+                >
+                  <option value="">— Select class —</option>
+                  {PRIMARY_CLASSES.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
+                </select>
+              </Field>
+
+              {idn.class && (
+                <>
+                  <Field label="Role">
+                    <select className={inputCls} value={idn.role ?? ""}
+                      onChange={e => updateIdentity(i, { role: e.target.value || null })} required>
+                      <option value="">— Select role —</option>
+                      {roleOptions.map(r => (
+                        <option key={r.key} value={r.key}>
+                          {r.label}{TEMPORARY_ROLES.has(r.key) ? " (Temporary)" : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+
+                  <Field label="Rank">
+                    <select className={inputCls} value={idn.rank}
+                      onChange={e => updateIdentity(i, { rank: e.target.value })}>
+                      {RANKS.map(r => {
+                        const locked = !r.unlocked && !directorMode;
+                        return (
+                          <option key={r.key} value={r.key} disabled={locked}>
+                            {r.label}{r.unlocked ? "" : directorMode ? " — override" : " — locked"}
+                          </option>
+                        );
+                      })}
+                    </select>
+                    {directorMode && (
+                      <div className="mt-1 text-[10px] uppercase tracking-widest text-red-300">
+                        Director Mode · all ranks selectable
+                      </div>
+                    )}
+                  </Field>
+
+                  <Field label="Promotion Progress">
+                    <div className="flex items-center gap-2">
+                      <input type="range" min={0} max={100} value={idn.progress}
+                        onChange={e => updateIdentity(i, { progress: Number(e.target.value) })}
+                        className="flex-1" />
+                      <span className="w-10 text-right font-mono text-xs text-gold">{idn.progress}%</span>
+                    </div>
+                  </Field>
+                </>
+              )}
+            </div>
+          </div>
+        );
+      })}
+
+      <div className="sm:col-span-2 rounded border border-border/60 bg-ink/40 px-3 py-2 text-[11px] italic text-muted-foreground">
+        Every Identity is fully independent — its own Class, Role, Rank and Promotion.
+        Changing one Identity never affects the others. A new empty slot appears automatically
+        after each Identity is filled.
+      </div>
 
 
-
-      <div className="sm:col-span-2 -mb-1 mt-3 border-b border-border/60 pb-1 text-[10px] font-display uppercase tracking-[0.25em] text-muted-foreground">Account</div>
 
 
       <Field label="Status">
