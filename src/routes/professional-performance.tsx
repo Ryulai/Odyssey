@@ -54,76 +54,155 @@ const TIERS: Tier[] = [
 ];
 
 // -------------------------------------------------------------------
-// Behaviour categories — reference material only.
-// The five options are always the fixed TIERS. The behaviour examples
-// are references, NOT a checklist.
+// Review Template registry (FROZEN ARCHITECTURE)
+//
+// Every Class in Odyssey owns its own Review Template. The manager only
+// picks the employee; the system loads the correct template based on the
+// employee's assigned Class (staff.primary_role, falling back to
+// primary_class). The calculation engine is shared, but review content
+// (behaviour categories, references, KPI logic) is NEVER shared between
+// Classes. New Classes are added by registering a new template here —
+// existing templates must not be modified to fit new ones.
 // -------------------------------------------------------------------
 
-type CategoryKey = "customer" | "communication" | "execution" | "growth";
+type CategoryKey = string;
 
-type Category = {
+type ReviewCategory = {
   key: CategoryKey;
   label: string;
   description: string;
   behaviourExamples: string[];
 };
 
-const CATEGORIES: Category[] = [
-  {
-    key: "customer",
-    label: "Customer Relationship",
-    description:
-      "Builds genuine customer relationships and consistently delivers excellent customer experiences.",
-    behaviourExamples: [
-      "Greets customers professionally.",
-      "Understands customer preferences.",
-      "Follows up with customers.",
-      "Creates memorable customer experiences.",
-      "Builds customer trust.",
-    ],
-  },
-  {
-    key: "communication",
-    label: "Communication & Collaboration",
-    description: "Communicates effectively and works well with the team.",
-    behaviourExamples: [
-      "Communicates clearly.",
-      "Supports teammates.",
-      "Shares information proactively.",
-      "Cooperates across departments.",
-      "Maintains a positive team attitude.",
-    ],
-  },
-  {
-    key: "execution",
-    label: "Execution",
-    description:
-      "Executes responsibilities consistently with discipline and reliability.",
-    behaviourExamples: [
-      "Completes assigned tasks.",
-      "Follows SOP consistently.",
-      "Takes initiative without supervision.",
-      "Responds quickly to operational needs.",
-      "Demonstrates accountability.",
-    ],
-  },
-  {
-    key: "growth",
-    label: "Growth to Influence",
-    description:
-      "Continuously improves oneself and positively influences others.",
-    behaviourExamples: [
-      "Learns actively.",
-      "Accepts feedback positively.",
-      "Applies improvements consistently.",
-      "Shares knowledge with teammates.",
-      "Positively influences others through actions.",
-    ],
-  },
-];
+type ObjectiveKPI =
+  | {
+      kind: "sales_vs_target";
+      label: string;
+      inputLabel: string;
+      monthlyTarget: number;
+      targetNote: string;
+    }
+  | { kind: "none" };
 
-const REFERENCE_NOTE =
-  "Choose the ONE description that best represents the employee's overall behaviour throughout the month. The examples below are references, not items to count.";
+type ReviewTemplate = {
+  id: string;              // e.g. "hunter_review_v1"
+  classKey: string;        // matches staff.primary_role or primary_class slug
+  className: string;       // display name (Hunter, Vanguard, ...)
+  behaviourWeight: number; // 0..1 (share of final score)
+  objective: ObjectiveKPI;
+  referenceNote: string;
+  categories: ReviewCategory[];
+};
+
+const HUNTER_TEMPLATE: ReviewTemplate = {
+  id: "hunter_review_v1",
+  classKey: "hunter",
+  className: "Hunter",
+  behaviourWeight: 0.5,
+  objective: {
+    kind: "sales_vs_target",
+    label: "Sales",
+    inputLabel: "Sales this month",
+    monthlyTarget: 50000,
+    targetNote: "fixed for all Hunters",
+  },
+  referenceNote:
+    "Choose the ONE description that best represents the employee's overall behaviour throughout the month. The examples below are references, not items to count.",
+  categories: [
+    {
+      key: "customer",
+      label: "Customer Relationship",
+      description:
+        "Builds genuine customer relationships and consistently delivers excellent customer experiences.",
+      behaviourExamples: [
+        "Greets customers professionally.",
+        "Understands customer preferences.",
+        "Follows up with customers.",
+        "Creates memorable customer experiences.",
+        "Builds customer trust.",
+      ],
+    },
+    {
+      key: "communication",
+      label: "Communication & Collaboration",
+      description: "Communicates effectively and works well with the team.",
+      behaviourExamples: [
+        "Communicates clearly.",
+        "Supports teammates.",
+        "Shares information proactively.",
+        "Cooperates across departments.",
+        "Maintains a positive team attitude.",
+      ],
+    },
+    {
+      key: "execution",
+      label: "Execution",
+      description:
+        "Executes responsibilities consistently with discipline and reliability.",
+      behaviourExamples: [
+        "Completes assigned tasks.",
+        "Follows SOP consistently.",
+        "Takes initiative without supervision.",
+        "Responds quickly to operational needs.",
+        "Demonstrates accountability.",
+      ],
+    },
+    {
+      key: "growth",
+      label: "Growth to Influence",
+      description:
+        "Continuously improves oneself and positively influences others.",
+      behaviourExamples: [
+        "Learns actively.",
+        "Accepts feedback positively.",
+        "Applies improvements consistently.",
+        "Shares knowledge with teammates.",
+        "Positively influences others through actions.",
+      ],
+    },
+  ],
+};
+
+// Register templates here. Only add — never rewrite an existing one to fit
+// a new Class. Missing Classes intentionally render an "under development"
+// placeholder so nobody is evaluated with the wrong form.
+const TEMPLATES: Record<string, ReviewTemplate> = {
+  hunter: HUNTER_TEMPLATE,
+};
+
+// Classes recognised by Odyssey but without a template yet. Anything not
+// listed here AND not in TEMPLATES falls back to the same placeholder.
+const KNOWN_CLASSES_WITHOUT_TEMPLATE: Record<string, string> = {
+  vanguard:  "Vanguard",
+  alchemist: "Alchemist",
+  mage:      "Mage",
+  navigator: "Navigator",
+  sentinel:  "Sentinel",
+  artisan:   "Artisan",
+};
+
+function normaliseClassKey(v: string | null | undefined): string {
+  return (v ?? "").toString().trim().toLowerCase().replace(/\s+/g, "_");
+}
+
+function resolveTemplate(staff: any): {
+  template: ReviewTemplate | null;
+  className: string | null;
+} {
+  const roleKey = normaliseClassKey(staff?.primary_role);
+  const classKey = normaliseClassKey(staff?.primary_class);
+  const candidates = [roleKey, classKey].filter(Boolean);
+  for (const k of candidates) {
+    if (TEMPLATES[k]) return { template: TEMPLATES[k], className: TEMPLATES[k].className };
+  }
+  for (const k of candidates) {
+    if (KNOWN_CLASSES_WITHOUT_TEMPLATE[k]) {
+      return { template: null, className: KNOWN_CLASSES_WITHOUT_TEMPLATE[k] };
+    }
+  }
+  return { template: null, className: candidates[0] ? candidates[0] : null };
+}
+
 
 // -------------------------------------------------------------------
 // Grading
