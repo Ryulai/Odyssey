@@ -458,9 +458,19 @@ function MonthlyReviewPage() {
 
             {/* Submit + Result */}
             <section className="rounded-md border border-gold/30 bg-gold/5 p-5">
+              {result && (
+                <div className="mb-4 flex items-center gap-2 rounded-md border border-emerald-400/50 bg-emerald-400/10 px-3 py-2 text-xs text-emerald-200">
+                  <span className="font-display uppercase tracking-widest">✓ Submitted</span>
+                  <span className="text-emerald-100/80">
+                    Saved locally at {new Date(result.at).toLocaleTimeString()} · results below
+                  </span>
+                </div>
+              )}
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="text-xs text-muted-foreground">
-                  {canSubmit
+                  {result
+                    ? "Review already submitted for this month. You can adjust and resubmit."
+                    : canSubmit
                     ? "Ready to submit — the system will calculate the final performance."
                     : !staffId
                     ? "Select a team member to begin."
@@ -481,13 +491,14 @@ function MonthlyReviewPage() {
                     disabled={!canSubmit}
                     className="rounded-md border border-gold bg-gold/10 px-4 py-2 font-display text-xs uppercase tracking-widest text-gold hover:bg-gold/20 disabled:opacity-50"
                   >
-                    Submit Monthly Review
+                    {result ? "Resubmit Review" : "Submit Monthly Review"}
                   </button>
                 </div>
               </div>
 
               {result && <ResultPanel result={result} />}
             </section>
+
 
             <p className="mt-3 text-[10px] uppercase tracking-widest text-muted-foreground">
               Prototype only · saved to this device · calculation preview
