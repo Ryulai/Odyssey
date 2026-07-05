@@ -86,6 +86,68 @@ export const submitDailySales = createServerFn({ method: "POST" })
     return row as DailySalesClaim;
   });
 
+/** MINIMAL TEST — insert only the required-not-null columns (no defaults).
+ * Required: staff_id, submitted_by, total_amount. Returns the row or the RAW supabase error. */
+export const testMinimalDailySalesInsert = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    type TestResult = {
+      ok: boolean;
+      step: string;
+      payload?: { staff_id: string; submitted_by: string; total_amount: number };
+      error?: { message: string; code?: string; details?: string; hint?: string };
+      rowJson?: string;
+    };
+
+
+    const staffRes = await context.supabase
+      .from("staff")
+      .select("id, role_family")
+      .eq("user_id", context.userId)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (staffRes.error) {
+      return { ok: false, step: "resolve_staff", error: { message: staffRes.error.message } };
+    }
+    const staff = staffRes.data;
+    if (!staff?.id) {
+      return { ok: false, step: "resolve_staff", error: { message: "No staff row linked to this user_id." } };
+    }
+
+    const payload = {
+      staff_id: staff.id as string,
+      submitted_by: context.userId,
+      total_amount: 1,
+    };
+
+    const { data, error } = await context.supabase
+      .from("daily_sales_claims")
+      .insert(payload)
+      .select()
+      .single();
+
+    if (error) {
+      const result: TestResult = {
+        ok: false,
+        step: "insert",
+        payload,
+        error: {
+          message: error.message,
+          code: (error as any).code,
+          details: (error as any).details,
+          hint: (error as any).hint,
+        },
+      };
+      return result;
+    }
+    const okResult: TestResult = { ok: true, step: "insert", payload, rowJson: JSON.stringify(data) };
+    return okResult;
+  });
+
+
+
+
 /** Signed URLs for the current user's evidence files (30 min). */
 export const signDailySalesEvidence = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
