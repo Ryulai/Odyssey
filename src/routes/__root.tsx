@@ -13,6 +13,9 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { RoleProvider } from "../lib/roles";
 import { PrototypeToggle } from "../components/prototype/prototype-toggle";
+import { DirectorModeProvider } from "../lib/director-mode";
+import { DirectorModeToggle, DirectorModeBanner } from "../components/director-mode-toggle";
+
 
 
 function NotFoundComponent() {
@@ -129,11 +132,16 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <RoleProvider>
-        <PrototypeToggle />
-        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-        <Outlet />
+        <DirectorModeProvider>
+          <PrototypeToggle />
+          <DirectorModeBanner />
+          <DirectorModeToggle />
+          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+          <Outlet />
+        </DirectorModeProvider>
       </RoleProvider>
     </QueryClientProvider>
+
 
   );
 }
