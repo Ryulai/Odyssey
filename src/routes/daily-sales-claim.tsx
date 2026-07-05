@@ -106,12 +106,26 @@ function DailySalesPage() {
 
 type UploadPhase = "idle" | "uploading" | "success" | "error";
 
-type Picked = {
+type ImageItem = {
   id: string;
-  file: File;
-  previewUrl: string;
-  sizeKB: number;
+  url: string;
 };
+
+// Accept jpg/jpeg/png/webp/gif — checked against the URL path (ignore query/hash).
+const IMG_URL_RE = /^https?:\/\/[^\s]+\.(jpg|jpeg|png|webp|gif)(\?[^\s]*)?(#[^\s]*)?$/i;
+
+function isValidImageUrl(raw: string): boolean {
+  const s = raw.trim();
+  if (!s) return false;
+  try {
+    const u = new URL(s);
+    if (u.protocol !== "http:" && u.protocol !== "https:") return false;
+    const ext = u.pathname.split(".").pop()?.toLowerCase() ?? "";
+    return ["jpg", "jpeg", "png", "webp", "gif"].includes(ext);
+  } catch {
+    return IMG_URL_RE.test(s);
+  }
+}
 
 function SubmitDailySales() {
   const qc = useQueryClient();
@@ -120,76 +134,33 @@ function SubmitDailySales() {
   const [salesDate, setSalesDate] = useState<string>(todayIso());
   const [amount, setAmount] = useState<string>("");
   const [remarks, setRemarks] = useState<string>("");
-  const [picked, setPicked] = useState<Picked[]>([]);
+  const [images, setImages] = useState<ImageItem[]>([]);
+  const [urlInput, setUrlInput] = useState<string>("");
+  const [urlError, setUrlError] = useState<string>("");
   const [phase, setPhase] = useState<UploadPhase>("idle");
   const [message, setMessage] = useState<string>("");
 
-  // Revoke preview URLs on unmount.
-  useEffect(() => {
-    return () => picked.forEach((p) => URL.revokeObjectURL(p.previewUrl));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  function handleNativeChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const list = e.target.files;
-    const count = list ? list.length : 0;
-    console.log("[uploader] native change fired. FileList length =", count);
-
-    if (!list || count === 0) {
-      setMessage("No file selected.");
+  function handleAddUrl() {
+    const raw = urlInput.trim();
+    if (!isValidImageUrl(raw)) {
+      setUrlError("Invalid image URL");
       return;
     }
-
-    const next: Picked[] = [];
-    for (let i = 0; i < list.length; i++) {
-      const f = list.item(i);
-      if (!f) continue;
-      console.log("[uploader] file", i, { name: f.name, size: f.size, type: f.type });
-      if (f.size === 0) {
-        setMessage(`Skipped empty file: ${f.name}`);
-        continue;
-      }
-      if (f.size > MAX_BYTES) {
-        setMessage(`Skipped (>10MB): ${f.name}`);
-        continue;
-      }
-      next.push({
-        id: `${Date.now()}-${i}-${Math.random().toString(36).slice(2, 8)}`,
-        file: f,
-        previewUrl: URL.createObjectURL(f),
-        sizeKB: Math.max(1, Math.round(f.size / 1024)),
-      });
+    if (images.some((i) => i.url === raw)) {
+      setUrlError("This image is already in the list.");
+      return;
     }
-
-    setPicked((prev) => {
-      const merged = [...prev, ...next];
-      if (merged[0]) {
-        const f0 = merged[0].file;
-        console.log("[proof] AFTER onChange picked[0].file =", f0);
-        console.log("[proof] AFTER onChange meta =", {
-          name: f0.name,
-          size: f0.size,
-          type: f0.type,
-          lastModified: f0.lastModified,
-          isFile: f0 instanceof File,
-          isBlob: f0 instanceof Blob,
-        });
-      }
-      return merged;
-    });
+    setImages((prev) => [
+      ...prev,
+      { id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, url: raw },
+    ]);
+    setUrlInput("");
+    setUrlError("");
     setPhase("idle");
-    if (next.length) {
-      setMessage(`${next.length} file(s) ready to upload.`);
-    }
   }
 
-
-  function removePicked(id: string) {
-    setPicked((prev) => {
-      const target = prev.find((p) => p.id === id);
-      if (target) URL.revokeObjectURL(target.previewUrl);
-      return prev.filter((p) => p.id !== id);
-    });
+  function removeImage(id: string) {
+    setImages((prev) => prev.filter((i) => i.id !== id));
   }
 
   const submit = useMutation({
@@ -198,96 +169,56 @@ function SubmitDailySales() {
       const amt = Number(amount);
       if (!Number.isFinite(amt) || amt < 0) throw new Error("Enter a valid sales amount.");
       if (!salesDate) throw new Error("Pick a date.");
-      if (picked.length === 0) throw new Error("Attach at least one evidence image.");
+      if (images.length === 0) throw new Error("Add at least one image URL.");
 
       setPhase("uploading");
-      setMessage(`Uploading 0 / ${picked.length}…`);
-
-      const paths: string[] = [];
-      for (let i = 0; i < picked.length; i++) {
-        const p = picked[i];
-        const safe = p.file.name.replace(/[^a-zA-Z0-9._-]/g, "_") || "image.jpg";
-        const path = `${user.id}/${Date.now()}-${i}-${safe}`;
-
-        console.log("[proof] BEFORE upload picked[" + i + "].file =", p.file);
-        console.log("[proof] BEFORE upload meta =", {
-          name: p.file.name,
-          size: p.file.size,
-          type: p.file.type,
-          lastModified: p.file.lastModified,
-          isFile: p.file instanceof File,
-          isBlob: p.file instanceof Blob,
-        });
-
-        // Prove the File is still readable right before upload.
-        try {
-          const buf = await p.file.arrayBuffer();
-          console.log("[proof] arrayBuffer() OK — byteLength =", buf.byteLength);
-        } catch (err: any) {
-          console.error("[proof] arrayBuffer() FAILED", err);
-          throw new Error(
-            `File handle invalid before upload (${p.file.name}): ${err?.name ?? ""} ${err?.message ?? String(err)}`,
-          );
-        }
-
-        console.log("[uploader] uploading", { path, size: p.file.size, type: p.file.type });
-        const res = await supabase.storage
-          .from("daily-sales-evidence")
-          .upload(path, p.file, {
-            upsert: false,
-            contentType: p.file.type || "application/octet-stream",
-          });
-
-        if (res.error) {
-          console.error("[uploader] upload error", res.error);
-          throw new Error(`Upload failed (${p.file.name}): ${res.error.message}`);
-        }
-        paths.push(path);
-        setMessage(`Uploading ${i + 1} / ${picked.length}…`);
-      }
-
       setMessage("Saving claim record…");
+
+      // NOTE: image_urls are stored directly into evidence_files (text[]).
+      // When Storage upload returns, swap this array's source without touching the UI.
+      const urls = images.map((i) => i.url);
+
       return submitDailySales({
         data: {
           sales_date: salesDate,
           total_amount: amt,
-          evidence_files: paths,
+          evidence_files: urls,
           remarks,
         },
       });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["daily-sales", "history"] });
-      picked.forEach((p) => URL.revokeObjectURL(p.previewUrl));
-      setPicked([]);
+      setImages([]);
+      setUrlInput("");
+      setUrlError("");
       setAmount("");
       setRemarks("");
       setSalesDate(todayIso());
       setPhase("success");
-      setMessage("Upload successful — claim submitted (Pending Review).");
+      setMessage("Claim submitted (Pending Review).");
     },
     onError: (e: any) => {
-      console.error("[uploader] submit onError", e);
       setPhase("error");
-      setMessage(`Upload failed: ${e?.message ?? "Unknown error"}`);
+      setMessage(`Submit failed: ${e?.message ?? "Unknown error"}`);
     },
   });
 
   const phaseBadge = (() => {
     if (phase === "uploading")
-      return { text: "Uploading…", cls: "border-gold/50 bg-gold/10 text-gold" };
+      return { text: "Submitting…", cls: "border-gold/50 bg-gold/10 text-gold" };
     if (phase === "success")
-      return { text: "Upload successful", cls: "border-emerald-400/50 bg-emerald-400/10 text-emerald-200" };
+      return { text: "Submitted", cls: "border-emerald-400/50 bg-emerald-400/10 text-emerald-200" };
     if (phase === "error")
-      return { text: "Upload failed", cls: "border-red-500/50 bg-red-500/10 text-red-200" };
+      return { text: "Submit failed", cls: "border-red-500/50 bg-red-500/10 text-red-200" };
     return {
-      text: picked.length === 0 ? "No file selected" : `${picked.length} file(s) ready`,
+      text: images.length === 0 ? "No image added" : `${images.length} image(s) ready`,
       cls: "border-border bg-ink/60 text-muted-foreground",
     };
   })();
 
   const canSubmit =
-    !!user?.id && !!salesDate && !!amount && picked.length > 0 && phase !== "uploading";
+    !!user?.id && !!salesDate && !!amount && images.length > 0 && phase !== "uploading";
 
   return (
     <section className="rounded-md border border-border bg-ink/30 p-5">
@@ -330,55 +261,84 @@ function SubmitDailySales() {
           </label>
         </div>
 
-        {/* Native, visible, directly-clickable file input — no hidden input, no programmatic trigger. */}
+        {/* Image URL workflow — temporary replacement for file upload. */}
         <div className="space-y-3">
           <div>
             <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">
-              Evidence Images (jpg / png / webp / heic · max 10MB each)
+              Evidence Images (paste jpg / jpeg / png / webp / gif URL)
             </span>
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={handleNativeChange}
-              disabled={phase === "uploading"}
-              className="block w-full cursor-pointer rounded-md border border-gold/40 bg-ink/60 p-2 text-xs text-foreground file:mr-3 file:cursor-pointer file:rounded file:border-0 file:bg-gold/20 file:px-3 file:py-2 file:font-display file:text-[10px] file:uppercase file:tracking-widest file:text-gold hover:file:bg-gold/30"
-            />
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <input
+                type="url"
+                inputMode="url"
+                className={inputCls}
+                placeholder="https://..."
+                value={urlInput}
+                onChange={(e) => {
+                  setUrlInput(e.target.value);
+                  if (urlError) setUrlError("");
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddUrl();
+                  }
+                }}
+                disabled={phase === "uploading"}
+              />
+              <button
+                type="button"
+                onClick={handleAddUrl}
+                disabled={phase === "uploading" || !urlInput.trim()}
+                className="rounded-md border border-gold bg-gold/10 px-4 py-2 font-display text-[11px] uppercase tracking-widest text-gold hover:bg-gold/20 disabled:opacity-50"
+              >
+                Add Image
+              </button>
+            </div>
+            {urlError && (
+              <div className="mt-1 text-[11px] text-red-300">{urlError}</div>
+            )}
           </div>
 
           <div className={`rounded border px-3 py-2 text-[11px] uppercase tracking-widest ${phaseBadge.cls}`}>
             {phaseBadge.text}
           </div>
 
-          {picked.length > 0 && (
+          {images.length > 0 && (
             <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-              {picked.map((p) => (
+              {images.map((img) => (
                 <li
-                  key={p.id}
+                  key={img.id}
                   className="overflow-hidden rounded-md border border-border bg-ink/40"
                 >
                   <div className="aspect-square w-full bg-black/40">
                     <img
-                      src={p.previewUrl}
-                      alt={p.file.name}
+                      src={img.url}
+                      alt="evidence"
                       className="h-full w-full object-cover"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).style.opacity = "0.3";
+                      }}
                     />
                   </div>
-                  <div className="px-2 py-1">
-                    <div className="truncate text-[11px] text-foreground" title={p.file.name}>
-                      {p.file.name}
-                    </div>
-                    <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-                      <span>{p.sizeKB} KB</span>
-                      <button
-                        type="button"
-                        onClick={() => removePicked(p.id)}
-                        disabled={phase === "uploading"}
-                        className="rounded border border-red-400/40 px-1.5 py-0.5 text-red-200 hover:bg-red-500/20 disabled:opacity-40"
-                      >
-                        Remove
-                      </button>
-                    </div>
+                  <div className="flex items-center justify-between gap-2 px-2 py-1">
+                    <a
+                      href={img.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="truncate text-[10px] text-muted-foreground hover:text-gold"
+                      title={img.url}
+                    >
+                      {img.url}
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => removeImage(img.id)}
+                      disabled={phase === "uploading"}
+                      className="rounded border border-red-400/40 px-1.5 py-0.5 text-[10px] text-red-200 hover:bg-red-500/20 disabled:opacity-40"
+                    >
+                      Remove
+                    </button>
                   </div>
                 </li>
               ))}
@@ -418,12 +378,13 @@ function SubmitDailySales() {
           disabled={!canSubmit}
           className="w-full rounded-md border border-gold bg-gold/10 px-4 py-2 font-display text-xs uppercase tracking-widest text-gold hover:bg-gold/20 disabled:opacity-50"
         >
-          {phase === "uploading" ? "Uploading…" : "Submit Claim"}
+          {phase === "uploading" ? "Submitting…" : "Submit Claim"}
         </button>
       </form>
     </section>
   );
 }
+
 
 
 function StatusPill({ s }: { s: string }) {
