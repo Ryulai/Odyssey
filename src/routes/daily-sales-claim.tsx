@@ -131,7 +131,54 @@ function isValidImageUrl(raw: string): boolean {
   }
 }
 
+function MinimalInsertTest() {
+  const [result, setResult] = useState<any>(null);
+  const [running, setRunning] = useState(false);
+
+  async function run() {
+    setRunning(true);
+    setResult(null);
+    try {
+      const r = await testMinimalDailySalesInsert();
+      console.log("[minimal-test] result", r);
+      setResult(r);
+    } catch (e: any) {
+      console.error("[minimal-test] threw", e);
+      setResult({ ok: false, step: "threw", error: { message: e?.message ?? String(e) } });
+    } finally {
+      setRunning(false);
+    }
+  }
+
+  return (
+    <section className="rounded-md border border-red-500/40 bg-red-500/5 p-5">
+      <h2 className="font-display text-sm uppercase tracking-[0.25em] text-red-200">
+        🧪 Minimal Insert Test
+      </h2>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Inserts ONLY the required-not-null fields: <code>staff_id</code>, <code>submitted_by</code>,{" "}
+        <code>total_amount = 1</code>. Every other column falls back to its DB default (evidence_files=[],
+        remarks='', status='pending', sales_date=today).
+      </p>
+      <button
+        type="button"
+        onClick={run}
+        disabled={running}
+        className="mt-3 rounded-md border border-red-400 bg-red-500/10 px-4 py-2 font-display text-[11px] uppercase tracking-widest text-red-100 hover:bg-red-500/20 disabled:opacity-50"
+      >
+        {running ? "Running…" : "Run Minimal Insert"}
+      </button>
+      {result && (
+        <pre className="mt-3 overflow-x-auto rounded border border-border bg-black/50 p-3 text-[11px] text-foreground">
+{JSON.stringify(result, null, 2)}
+        </pre>
+      )}
+    </section>
+  );
+}
+
 function SubmitDailySales() {
+
   const qc = useQueryClient();
   const { user } = useAuth();
 
