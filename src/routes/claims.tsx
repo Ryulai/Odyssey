@@ -5,7 +5,7 @@ import { AuthGate } from "@/components/auth-gate";
 import { useAuth, useRole, can } from "@/lib/roles";
 import { supabase } from "@/integrations/supabase/client";
 import { listAchievements, listStaff } from "@/lib/config.functions";
-import { listClaims, submitClaim, decideClaim, listMyRecords } from "@/lib/claims.functions";
+import { listClaims, submitClaim, decideClaim, listMyRecords, testMinimalClaimInsert } from "@/lib/claims.functions";
 
 export const Route = createFileRoute("/claims")({
   head: () => ({ meta: [{ title: "Harbor Records — The Odyssey Guide" }] }),
