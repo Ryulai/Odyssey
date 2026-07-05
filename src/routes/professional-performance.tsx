@@ -655,8 +655,8 @@ function CategoryCard({
             <li key={tier.key}>
               <button
                 type="button"
-                disabled={disabled}
                 onClick={() => onSelect(tier.key)}
+
                 aria-pressed={active}
                 className={`flex w-full items-center gap-3 rounded-md border px-3 py-2 text-left text-sm transition disabled:opacity-50 ${
                   active
