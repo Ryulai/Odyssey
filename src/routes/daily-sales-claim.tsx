@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AuthGate } from "@/components/auth-gate";
 import { useAuth } from "@/lib/roles";
-import { supabase } from "@/integrations/supabase/client";
+
 import {
   getMyHunterStatus,
   listMyDailySales,
