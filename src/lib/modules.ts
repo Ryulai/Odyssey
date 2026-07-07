@@ -1,13 +1,15 @@
 /**
  * Odyssey Module Catalog — the permanent architecture.
  *
- * This file is intentionally data-only. It describes every module Odyssey will
- * eventually contain so navigation, the Odyssey Map, and future database
- * models all agree on one source of truth.
+ * Organized into FIVE DOMAINS (not systems):
+ *   ⚔️  Class    — How do I grow?
+ *   👤 Profile   — Who am I?
+ *   ⚓ Guild     — Where do I belong?
+ *   🌍 World     — What exists in Odyssey?
+ *   ⚙️  System   — How do I manage everything?
  *
- * Future work: replace `status: "planned" | "coming-soon"` entries with real
- * routes/components and, when needed, populate the `dataModel` hints in a
- * Supabase migration.
+ * The Odyssey Map renders these domains as the main navigation of the
+ * Odyssey universe. This file is data-only.
  */
 
 export type ModuleStatus = "live" | "planned" | "coming-soon" | "locked";
@@ -15,7 +17,7 @@ export type ModuleStatus = "live" | "planned" | "coming-soon" | "locked";
 export type ModuleEntry = {
   key: string;
   label: string;
-  to: string;                    // route path
+  to: string;
   status: ModuleStatus;
   description: string;
   /** Loose hint for the future database schema. Not enforced anywhere yet. */
@@ -25,62 +27,79 @@ export type ModuleEntry = {
 export type ModuleGroup = {
   key: string;
   label: string;
+  glyph: string;
+  subtitle: string;
   blurb: string;
   entries: ModuleEntry[];
 };
 
 export const MODULE_GROUPS: ModuleGroup[] = [
   {
-    key: "career",
-    label: "Career",
-    blurb: "Your professional voyage — primary path, secondary craft, mentorship, and ownership.",
+    key: "class",
+    label: "Class",
+    glyph: "⚔️",
+    subtitle: "How do I grow?",
+    blurb: "The five progression systems that shape your growth.",
     entries: [
-      { key: "primary",     label: "Primary Class",       to: "/class",              status: "live",         description: "Your main class, rank progression, and monthly performance.", dataModel: "rpg_identity + monthly_evaluations" },
-      { key: "secondary",   label: "Secondary Class",     to: "/secondary-class",    status: "locked",       description: "Unlocked at Gold — a second craft you cultivate alongside your primary.", dataModel: "rpg_identity.secondary_class" },
-      { key: "mentorship",  label: "Mentorship",          to: "/mentorship",         status: "coming-soon",  description: "Guide the crew. Track proteges, sessions, and the mentors who shaped you.", dataModel: "mentorships(mentor_id, protege_id, started_at, status)" },
-      { key: "ownership",   label: "Ownership",           to: "/ownership",          status: "coming-soon",  description: "Ventures, holdings, and legacy titles — the shipbuilder's ledger.", dataModel: "legacy_holdings + ventures(id, name, kind, granted_at)" },
+      { key: "performance",     label: "Performance System",   to: "/performance",     status: "live",        description: "Track your monthly performance, ABCD evaluations, reviews, and personal growth." },
+      { key: "ranking",         label: "Ranking System",       to: "/promotions",      status: "live",        description: "View your permanent rank progression from Bronze to Legend." },
+      { key: "secondary",       label: "Second Class System",  to: "/secondary-class", status: "locked",      description: "Unlocked after Gold Rank. Develop a completely independent secondary class and role." },
+      { key: "mentorship",      label: "Mentorship System",    to: "/mentorship",      status: "coming-soon", description: "Guide apprentices and develop future Shipbuilders." },
+      { key: "ownership",       label: "Ownership System",     to: "/ownership",       status: "coming-soon", description: "Your long-term journey toward becoming a partner, shareholder, or founder." },
     ],
   },
   {
     key: "profile",
     label: "Profile",
+    glyph: "👤",
+    subtitle: "Who am I?",
     blurb: "Everything that makes your character yours.",
     entries: [
-      { key: "character",     label: "Character Profile", to: "/profile",           status: "live",        description: "Identity, assignment, and legacy at a glance." },
-      { key: "legacy",        label: "Legacy",            to: "/profile",           status: "live",        description: "Stars, Moons, Suns — the lifetime record.", dataModel: "achievement_records aggregates" },
-      { key: "achievements",  label: "Achievements",      to: "/achievements",      status: "planned",     description: "Every star earned, every claim submitted.", dataModel: "achievements + achievement_records" },
-      { key: "collections",   label: "Collections",       to: "/collections",       status: "planned",     description: "Portraits, emblems, frames, and cosmetics you've collected." },
-      { key: "statistics",    label: "Statistics",        to: "/statistics",        status: "planned",     description: "Career metrics, grade history, streaks, and averages.", dataModel: "derived aggregates over monthly_evaluations" },
-      { key: "inventory",     label: "Inventory",         to: "/inventory",         status: "coming-soon", description: "Consumables, tokens, and time-limited perks.", dataModel: "inventory_items(owner_id, kind, qty, expires_at)" },
-      { key: "journal",       label: "Journal",           to: "/journal",           status: "coming-soon", description: "Your voyage log — milestones, notes, and reflections.", dataModel: "journal_entries(author_id, kind, body, occurred_at)" },
+      { key: "character",   label: "Character Profile", to: "/profile",     status: "live",        description: "Identity, assignment, and legacy at a glance." },
+      { key: "identity",    label: "Identity",          to: "/profile",     status: "live",        description: "Your Classes, Roles, and Ranks — the identities you carry." },
+      { key: "legacy",      label: "Legacy",            to: "/achievements", status: "live",       description: "Stars, Moons, Suns, and every achievement earned across your journey." },
+      { key: "records",     label: "Records",           to: "/statistics",  status: "planned",     description: "Career metrics, grade history, streaks, and averages." },
+      { key: "collections", label: "Collections",       to: "/collections", status: "planned",     description: "Portraits, emblems, frames, titles, and cosmetics you've collected." },
     ],
   },
   {
-    key: "collections",
-    label: "Collections",
-    blurb: "Every collectable Odyssey will offer — cosmetic, seasonal, and honorary.",
+    key: "guild",
+    label: "Guild",
+    glyph: "⚓",
+    subtitle: "Where do I belong?",
+    blurb: "Your crew, your ship, and the world you operate in.",
     entries: [
-      { key: "portraits",    label: "Portraits",             to: "/collections/portraits",    status: "planned",     description: "Default avatars unlocked through the voyage.", dataModel: "collection_items(kind='portrait')" },
-      { key: "emblems",      label: "Guild Emblems",         to: "/collections/emblems",      status: "planned",     description: "Sigils earned through faction service.", dataModel: "collection_items(kind='emblem')" },
-      { key: "frames",       label: "Portrait Frames",       to: "/collections/frames",       status: "planned",     description: "Ornamental borders that ring your portrait.", dataModel: "collection_items(kind='frame')" },
-      { key: "cosmetics",    label: "Cosmetic Collections",  to: "/collections/cosmetics",    status: "planned",     description: "Purely decorative sets curated by season." },
-      { key: "seasonal",     label: "Seasonal Collections",  to: "/collections/seasonal",     status: "coming-soon", description: "Time-boxed sets tied to Odyssey seasons.", dataModel: "collection_sets(season_id)" },
-      { key: "events",       label: "Event Collections",     to: "/collections/events",       status: "coming-soon", description: "Rewards from one-off guild events.", dataModel: "collection_sets(event_id)" },
-      { key: "founder",      label: "Founder Collections",   to: "/collections/founder",      status: "planned",     description: "Reserved for those who sailed the first voyage." },
-      { key: "titles",       label: "Titles",                to: "/collections/titles",       status: "planned",     description: "Honorifics you can display beside your name.", dataModel: "collection_items(kind='title')" },
-      { key: "backgrounds",  label: "Backgrounds",           to: "/collections/backgrounds",  status: "planned",     description: "Scenes that frame your character page.", dataModel: "collection_items(kind='background')" },
-      { key: "effects",      label: "Profile Effects",       to: "/collections/effects",      status: "coming-soon", description: "Animated glows and particle effects for your portrait.", dataModel: "collection_items(kind='effect')" },
+      { key: "fleet",     label: "Fleet",          to: "/fleet",           status: "live",        description: "Your ship, your crew, and the vessels that sail beside you." },
+      { key: "registry",  label: "Guild Registry", to: "/guild/registry",  status: "coming-soon", description: "The full roll of members across every ship in the guild." },
+      { key: "economy",   label: "Economy",        to: "/guild/economy",   status: "coming-soon", description: "Sales, revenue, and the ledgers that keep the fleet sailing." },
+      { key: "locations", label: "Locations",      to: "/guild/locations", status: "coming-soon", description: "Ports, offices, and every place the guild calls home." },
+    ],
+  },
+  {
+    key: "world",
+    label: "World",
+    glyph: "🌍",
+    subtitle: "What exists in Odyssey?",
+    blurb: "The encyclopedia of Odyssey.",
+    entries: [
+      { key: "codex",     label: "Codex",     to: "/world/codex",     status: "coming-soon", description: "The master index of everything documented in Odyssey." },
+      { key: "classes",   label: "Classes",   to: "/world/classes",   status: "coming-soon", description: "Every Class that exists — their purpose, powers, and paths." },
+      { key: "roles",     label: "Roles",     to: "/world/roles",     status: "coming-soon", description: "Every Role a Class can take, and what each demands." },
+      { key: "influence", label: "Influence", to: "/world/influence", status: "coming-soon", description: "The factions, houses, and forces that shape the guild." },
+      { key: "lore",      label: "Lore",      to: "/world/lore",      status: "coming-soon", description: "The stories, legends, and history of the Odyssey world." },
     ],
   },
   {
     key: "system",
     label: "System",
-    blurb: "Account, preferences, and guild-wide tools.",
+    glyph: "⚙️",
+    subtitle: "How do I manage everything?",
+    blurb: "Account, preferences, and controls.",
     entries: [
-      { key: "notifications",     label: "Notifications",     to: "/system/notifications",     status: "planned",     description: "Claim reviews, promotions, mentions.", dataModel: "notifications(user_id, kind, payload, read_at)" },
-      { key: "settings",          label: "Settings",          to: "/system/settings",          status: "planned",     description: "Account, security, and integrations." },
-      { key: "preferences",       label: "Preferences",       to: "/system/preferences",       status: "planned",     description: "Theme, motion, sound, and privacy.", dataModel: "user_preferences(user_id, key, value)" },
-      { key: "guild-collection",  label: "Guild Collection",  to: "/system/guild-collection",  status: "coming-soon", description: "Shared trophies and records for the whole guild." },
+      { key: "notifications", label: "Notifications", to: "/system/notifications", status: "planned", description: "Claim reviews, promotions, mentions." },
+      { key: "settings",      label: "Settings",      to: "/system/settings",      status: "planned", description: "Account and integrations." },
+      { key: "preferences",   label: "Preferences",   to: "/system/preferences",   status: "planned", description: "Theme, motion, sound, and privacy." },
+      { key: "security",      label: "Security",      to: "/system/security",      status: "planned", description: "Password, sessions, and account protection." },
     ],
   },
 ];
