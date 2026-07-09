@@ -1,5 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { CODEX_CATEGORIES, getArticle, getStatusMeta } from "@/lib/codex";
+import { CODEX_CATEGORIES, getArticle, getStatusMeta, type CodexSection } from "@/lib/codex";
 import { CodexMarkdown } from "@/components/codex-markdown";
 
 export const Route = createFileRoute("/codex/$category/$slug")({
