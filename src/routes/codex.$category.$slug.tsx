@@ -79,9 +79,35 @@ function ArticlePage() {
               </p>
             </div>
           ) : (
-            <article>
-              <CodexMarkdown>{article.body}</CodexMarkdown>
-            </article>
+            <div className="space-y-6">
+              {article.intro && (
+                <div className="rounded-md border border-gold/20 bg-ink/40 p-5">
+                  <CodexMarkdown>{article.intro}</CodexMarkdown>
+                </div>
+              )}
+              {article.sections.length === 0 && !article.intro && (
+                <CodexMarkdown>{article.body}</CodexMarkdown>
+              )}
+              {article.sections.map((s, i) => (
+                <section
+                  key={`${s.title}-${i}`}
+                  className="rounded-lg border border-border bg-ink/40 p-6 transition hover:border-gold/30"
+                >
+                  <header className="flex items-center gap-3 border-b border-gold/20 pb-3">
+                    <span className="text-xl leading-none">{s.icon}</span>
+                    <h2
+                      className="font-display text-sm uppercase tracking-[0.3em] text-gold"
+                      style={{ fontFamily: "'Cinzel', serif" }}
+                    >
+                      {s.title}
+                    </h2>
+                  </header>
+                  <div className="pt-2">
+                    <CodexMarkdown>{s.body}</CodexMarkdown>
+                  </div>
+                </section>
+              ))}
+            </div>
           )}
         </div>
 
