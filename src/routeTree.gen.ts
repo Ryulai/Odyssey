@@ -53,6 +53,7 @@ import { Route as CollectionsEmblemsRouteImport } from './routes/collections.emb
 import { Route as CollectionsEffectsRouteImport } from './routes/collections.effects'
 import { Route as CollectionsCosmeticsRouteImport } from './routes/collections.cosmetics'
 import { Route as CollectionsBackgroundsRouteImport } from './routes/collections.backgrounds'
+import { Route as CodexCategoryRouteImport } from './routes/codex.$category'
 
 const SystemRoute = SystemRouteImport.update({
   id: '/system',
@@ -274,6 +275,11 @@ const CollectionsBackgroundsRoute = CollectionsBackgroundsRouteImport.update({
   path: '/backgrounds',
   getParentRoute: () => CollectionsRoute,
 } as any)
+const CodexCategoryRoute = CodexCategoryRouteImport.update({
+  id: '/codex/$category',
+  path: '/codex/$category',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -303,6 +309,7 @@ export interface FileRoutesByFullPath {
   '/secondary-class': typeof SecondaryClassRoute
   '/statistics': typeof StatisticsRoute
   '/system': typeof SystemRouteWithChildren
+  '/codex/$category': typeof CodexCategoryRoute
   '/collections/backgrounds': typeof CollectionsBackgroundsRoute
   '/collections/cosmetics': typeof CollectionsCosmeticsRoute
   '/collections/effects': typeof CollectionsEffectsRoute
@@ -347,6 +354,7 @@ export interface FileRoutesByTo {
   '/sales-review': typeof SalesReviewRoute
   '/secondary-class': typeof SecondaryClassRoute
   '/statistics': typeof StatisticsRoute
+  '/codex/$category': typeof CodexCategoryRoute
   '/collections/backgrounds': typeof CollectionsBackgroundsRoute
   '/collections/cosmetics': typeof CollectionsCosmeticsRoute
   '/collections/effects': typeof CollectionsEffectsRoute
@@ -394,6 +402,7 @@ export interface FileRoutesById {
   '/secondary-class': typeof SecondaryClassRoute
   '/statistics': typeof StatisticsRoute
   '/system': typeof SystemRouteWithChildren
+  '/codex/$category': typeof CodexCategoryRoute
   '/collections/backgrounds': typeof CollectionsBackgroundsRoute
   '/collections/cosmetics': typeof CollectionsCosmeticsRoute
   '/collections/effects': typeof CollectionsEffectsRoute
@@ -442,6 +451,7 @@ export interface FileRouteTypes {
     | '/secondary-class'
     | '/statistics'
     | '/system'
+    | '/codex/$category'
     | '/collections/backgrounds'
     | '/collections/cosmetics'
     | '/collections/effects'
@@ -486,6 +496,7 @@ export interface FileRouteTypes {
     | '/sales-review'
     | '/secondary-class'
     | '/statistics'
+    | '/codex/$category'
     | '/collections/backgrounds'
     | '/collections/cosmetics'
     | '/collections/effects'
@@ -532,6 +543,7 @@ export interface FileRouteTypes {
     | '/secondary-class'
     | '/statistics'
     | '/system'
+    | '/codex/$category'
     | '/collections/backgrounds'
     | '/collections/cosmetics'
     | '/collections/effects'
@@ -579,6 +591,7 @@ export interface RootRouteChildren {
   SecondaryClassRoute: typeof SecondaryClassRoute
   StatisticsRoute: typeof StatisticsRoute
   SystemRoute: typeof SystemRouteWithChildren
+  CodexCategoryRoute: typeof CodexCategoryRoute
   CodexIndexRoute: typeof CodexIndexRoute
 }
 
@@ -892,6 +905,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CollectionsBackgroundsRouteImport
       parentRoute: typeof CollectionsRoute
     }
+    '/codex/$category': {
+      id: '/codex/$category'
+      path: '/codex/$category'
+      fullPath: '/codex/$category'
+      preLoaderRoute: typeof CodexCategoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -974,6 +994,7 @@ const rootRouteChildren: RootRouteChildren = {
   SecondaryClassRoute: SecondaryClassRoute,
   StatisticsRoute: StatisticsRoute,
   SystemRoute: SystemRouteWithChildren,
+  CodexCategoryRoute: CodexCategoryRoute,
   CodexIndexRoute: CodexIndexRoute,
 }
 export const routeTree = rootRouteImport

@@ -50,7 +50,7 @@ function CategoryPage() {
           </div>
         ) : (
           <ul className="grid gap-3 sm:grid-cols-2">
-            {articles.map((a) => (
+            {articles.map((a: CodexArticle) => (
               <ArticleCard key={a.slug} article={a} category={category.key} />
             ))}
           </ul>
