@@ -1,52 +1,103 @@
 /**
- * Odyssey Codex — in-app knowledge library.
+ * Odyssey Codex — the official knowledge base and design authority of the
+ * Odyssey Operating System.
  *
- * Article contents are sourced from Markdown files under /odyssey-codex/.
- * They are bundled at build time via Vite's import.meta.glob (?raw).
+ * Every core system inside Odyssey has a Codex page. Content is sourced from
+ * Markdown files under /odyssey-codex/ (the GitHub-synced source of truth).
+ * When a system does not yet have a frozen Markdown file, a placeholder page
+ * still appears in the Codex using the official Odyssey lifecycle status:
  *
- * The app is read-only. Editing happens in the Markdown source of truth
- * (future: synced from GitHub). Do NOT hardcode article bodies.
+ *   🟢 Frozen        Official version synchronized with GitHub.
+ *   🟠 In Progress   Currently being implemented.
+ *   🟡 Draft         Currently under discussion and design.
+ *   🔒 Locked        Reserved for future development.
+ *   🅿️ Parking Lot   Approved future enhancement, intentionally postponed.
  */
 
 export type CodexStatus =
   | "frozen"
-  | "discussed"
   | "in-progress"
-  | "concept"
+  | "draft"
   | "locked"
+  | "parking"
+  // legacy statuses kept so historical articles keep rendering
+  | "discussed"
+  | "concept"
   | "rejected"
   | "unknown";
 
 export type CodexCategoryKey =
   | "foundation"
+  | "systems"
+  | "organization"
+  | "economy"
   | "design-engine"
-  | "core-systems"
   | "language"
   | "knowledge"
   | "roadmap";
 
 export type CodexCategoryDef = {
   key: CodexCategoryKey;
-  /** Directory under /odyssey-codex to scan. Empty = no source yet. */
-  folder: string;
+  /** Directories under /odyssey-codex to include in this category. */
+  folders: string[];
   title: string;
   description: string;
 };
 
 export const CODEX_CATEGORIES: CodexCategoryDef[] = [
-  { key: "foundation",    folder: "foundation",    title: "Foundation",    description: "The philosophy and principles of Odyssey." },
-  { key: "design-engine", folder: "design-engine", title: "Design Engine", description: "The framework used to design every system." },
-  { key: "core-systems",  folder: "core-systems",  title: "Core Systems",  description: "The five progression systems of the Odyssey universe." },
-  { key: "language",      folder: "language",      title: "Language",      description: "The shared vocabulary that keeps the guild aligned." },
-  { key: "knowledge",     folder: "knowledge",     title: "Knowledge",     description: "Decision logs, parking slots, and rejected ideas." },
-  { key: "roadmap",       folder: "roadmap",       title: "Roadmap",       description: "Current development and future expansion." },
+  {
+    key: "foundation",
+    folders: ["foundation"],
+    title: "Foundation",
+    description: "Philosophy, vision, mission and the core values of Odyssey.",
+  },
+  {
+    key: "systems",
+    folders: ["core-systems", "systems"],
+    title: "Systems",
+    description: "The progression systems that power every member's journey.",
+  },
+  {
+    key: "organization",
+    folders: ["organization"],
+    title: "Organization",
+    description: "How the guild, fleet and staff are structured and operated.",
+  },
+  {
+    key: "economy",
+    folders: ["economy"],
+    title: "Economy",
+    description: "Legacy, currency and reward mechanics of the Odyssey world.",
+  },
+  {
+    key: "design-engine",
+    folders: ["design-engine"],
+    title: "Design Engine",
+    description: "The framework used to design every Odyssey system.",
+  },
+  {
+    key: "language",
+    folders: ["language"],
+    title: "Language",
+    description: "The shared vocabulary that keeps the guild aligned.",
+  },
+  {
+    key: "knowledge",
+    folders: ["knowledge"],
+    title: "Knowledge",
+    description: "Decision logs, parking slots and rejected ideas.",
+  },
+  {
+    key: "roadmap",
+    folders: ["roadmap"],
+    title: "Roadmap",
+    description: "Current development and future expansion.",
+  },
 ];
 
 export type CodexSection = {
   title: string;
-  /** Icon glyph derived from title keyword. */
   icon: string;
-  /** Body markdown for this section (no leading heading). */
   body: string;
 };
 
@@ -59,13 +110,10 @@ export type CodexArticle = {
   version: string | null;
   priority: string | null;
   lastUpdated: string | null;
-  /** Original body markdown (kept for search + fallback). */
   body: string;
-  /** Optional intro paragraph before the first section header. */
   intro: string;
-  /** Parsed premium sections (# Header … until next # Header). */
   sections: CodexSection[];
-  /** Frozen or Discussed articles render full body. Others show preview only. */
+  /** Locked / Parking / Concept articles show preview only. */
   locked: boolean;
 };
 
@@ -94,11 +142,15 @@ function normalizeStatus(raw: string): CodexStatus {
   if (!s) return "unknown";
   if (s.includes("reject")) return "rejected";
   if (s.includes("frozen")) return "frozen";
+  if (s.includes("parking")) return "parking";
+  if (s.includes("lock")) return "locked";
+  if (s.includes("in progress") || s.includes("in-progress")) return "in-progress";
+  if (s.includes("draft")) return "draft";
   if (s.includes("discuss")) return "discussed";
   if (s.includes("progress")) return "in-progress";
   if (s.includes("design")) return "in-progress";
   if (s.includes("concept")) return "concept";
-  if (s.includes("planned")) return "concept";
+  if (s.includes("planned")) return "locked";
   return "unknown";
 }
 
@@ -113,10 +165,9 @@ function slugFromFilename(path: string): string {
 }
 
 function categoryFromPath(path: string): CodexCategoryKey | null {
-  // /odyssey-codex/<folder>/<file>.md
   const parts = path.split("/");
   const folder = parts[parts.length - 2];
-  const cat = CODEX_CATEGORIES.find((c) => c.folder === folder);
+  const cat = CODEX_CATEGORIES.find((c) => c.folders.includes(folder));
   return cat ? cat.key : null;
 }
 
@@ -144,11 +195,8 @@ function iconForSection(title: string): string {
 }
 
 function parseSections(body: string): { intro: string; sections: CodexSection[] } {
-  // Strip an initial `# Title` line (already shown as the article header)
   const stripped = body.replace(/^\s*#\s+[^\n]+\n+/, "");
-  // Split on top-level `# ` headers (not `##`)
   const parts = stripped.split(/^#\s+(.+)$/m);
-  // parts[0] = intro before first header, then alternating [title, body, title, body, …]
   const intro = parts[0].trim();
   const sections: CodexSection[] = [];
   for (let i = 1; i < parts.length; i += 2) {
@@ -164,15 +212,14 @@ const ARTICLES: CodexArticle[] = (() => {
   const out: CodexArticle[] = [];
   for (const [path, raw] of Object.entries(RAW_FILES)) {
     const cat = categoryFromPath(path);
-    if (!cat) continue; // skip README, INDEX at root
+    if (!cat) continue;
     const slug = slugFromFilename(path);
     const { data, body } = parseFrontmatter(raw);
     const statusRaw = data["status"] ?? "";
     const status = normalizeStatus(statusRaw);
     const title = extractTitleFromBody(body, slug);
     const { intro, sections } = parseSections(body);
-    // Lock rule: Concept-stage articles show preview only.
-    const locked = status === "concept";
+    const locked = status === "locked" || status === "parking" || status === "concept";
     out.push({
       slug,
       category: cat,
@@ -188,32 +235,25 @@ const ARTICLES: CodexArticle[] = (() => {
       locked,
     });
   }
-  // Stable ordering: by title within category
   out.sort((a, b) => a.title.localeCompare(b.title));
   return out;
 })();
 
 function labelFromStatus(s: CodexStatus): string {
-  switch (s) {
-    case "frozen": return "🧊 Frozen";
-    case "discussed": return "🟢 Discussed";
-    case "in-progress": return "🟡 In Progress";
-    case "concept": return "💡 Concept";
-    case "locked": return "🔒 Locked";
-    case "rejected": return "❌ Rejected";
-    default: return "— Discussing";
-  }
+  return getStatusMeta(s).label;
 }
 
 export function getStatusMeta(s: CodexStatus) {
   switch (s) {
-    case "frozen":      return { label: "🧊 Frozen",      tone: "border-sky-400/50 text-sky-300 bg-sky-500/10" };
-    case "discussed":   return { label: "🟢 Discussed",   tone: "border-emerald-400/50 text-emerald-300 bg-emerald-500/10" };
-    case "in-progress": return { label: "🟡 In Progress", tone: "border-amber-400/50 text-amber-300 bg-amber-500/10" };
-    case "concept":     return { label: "💡 Concept",     tone: "border-purple-400/50 text-purple-300 bg-purple-500/10" };
-    case "locked":      return { label: "🔒 Locked",      tone: "border-border text-muted-foreground bg-muted/20" };
-    case "rejected":    return { label: "❌ Rejected",    tone: "border-red-500/50 text-red-300 bg-red-500/10" };
-    default:            return { label: "— Discussing",   tone: "border-border text-muted-foreground bg-muted/10" };
+    case "frozen":      return { label: "🟢 Frozen",       tone: "border-emerald-400/50 text-emerald-300 bg-emerald-500/10" };
+    case "in-progress": return { label: "🟠 In Progress",  tone: "border-orange-400/50 text-orange-300 bg-orange-500/10" };
+    case "draft":       return { label: "🟡 Draft",        tone: "border-amber-400/50 text-amber-300 bg-amber-500/10" };
+    case "locked":      return { label: "🔒 Locked",       tone: "border-border text-muted-foreground bg-muted/20" };
+    case "parking":     return { label: "🅿️ Parking Lot",  tone: "border-sky-400/40 text-sky-300 bg-sky-500/10" };
+    case "discussed":   return { label: "🟢 Discussed",    tone: "border-emerald-400/50 text-emerald-300 bg-emerald-500/10" };
+    case "concept":     return { label: "💡 Concept",      tone: "border-purple-400/50 text-purple-300 bg-purple-500/10" };
+    case "rejected":    return { label: "❌ Rejected",     tone: "border-red-500/50 text-red-300 bg-red-500/10" };
+    default:            return { label: "— Unclassified",  tone: "border-border text-muted-foreground bg-muted/10" };
   }
 }
 
@@ -231,7 +271,7 @@ export function allArticles(): CodexArticle[] {
 
 export type CodexCategorySummary = CodexCategoryDef & {
   articleCount: number;
-  progressPct: number; // % of articles that are frozen
+  progressPct: number;
 };
 
 export function categorySummaries(): CodexCategorySummary[] {
