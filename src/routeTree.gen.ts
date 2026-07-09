@@ -29,6 +29,7 @@ import { Route as FiveSystemsRouteImport } from './routes/five-systems'
 import { Route as EvaluationsRouteImport } from './routes/evaluations'
 import { Route as DailySalesClaimRouteImport } from './routes/daily-sales-claim'
 import { Route as CollectionsRouteImport } from './routes/collections'
+import { Route as CodexRouteImport } from './routes/codex'
 import { Route as ClaimsRouteImport } from './routes/claims'
 import { Route as CareerRouteImport } from './routes/career'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -151,6 +152,11 @@ const DailySalesClaimRoute = DailySalesClaimRouteImport.update({
 const CollectionsRoute = CollectionsRouteImport.update({
   id: '/collections',
   path: '/collections',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CodexRoute = CodexRouteImport.update({
+  id: '/codex',
+  path: '/codex',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ClaimsRoute = ClaimsRouteImport.update({
@@ -277,6 +283,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/career': typeof CareerRoute
   '/claims': typeof ClaimsRoute
+  '/codex': typeof CodexRoute
   '/collections': typeof CollectionsRouteWithChildren
   '/daily-sales-claim': typeof DailySalesClaimRoute
   '/evaluations': typeof EvaluationsRoute
@@ -322,6 +329,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/career': typeof CareerRoute
   '/claims': typeof ClaimsRoute
+  '/codex': typeof CodexRoute
   '/daily-sales-claim': typeof DailySalesClaimRoute
   '/evaluations': typeof EvaluationsRoute
   '/five-systems': typeof FiveSystemsRoute
@@ -366,6 +374,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/career': typeof CareerRoute
   '/claims': typeof ClaimsRoute
+  '/codex': typeof CodexRoute
   '/collections': typeof CollectionsRouteWithChildren
   '/daily-sales-claim': typeof DailySalesClaimRoute
   '/evaluations': typeof EvaluationsRoute
@@ -413,6 +422,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/career'
     | '/claims'
+    | '/codex'
     | '/collections'
     | '/daily-sales-claim'
     | '/evaluations'
@@ -458,6 +468,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/career'
     | '/claims'
+    | '/codex'
     | '/daily-sales-claim'
     | '/evaluations'
     | '/five-systems'
@@ -501,6 +512,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/career'
     | '/claims'
+    | '/codex'
     | '/collections'
     | '/daily-sales-claim'
     | '/evaluations'
@@ -547,6 +559,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CareerRoute: typeof CareerRoute
   ClaimsRoute: typeof ClaimsRoute
+  CodexRoute: typeof CodexRoute
   CollectionsRoute: typeof CollectionsRouteWithChildren
   DailySalesClaimRoute: typeof DailySalesClaimRoute
   EvaluationsRoute: typeof EvaluationsRoute
@@ -709,6 +722,13 @@ declare module '@tanstack/react-router' {
       path: '/collections'
       fullPath: '/collections'
       preLoaderRoute: typeof CollectionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/codex': {
+      id: '/codex'
+      path: '/codex'
+      fullPath: '/codex'
+      preLoaderRoute: typeof CodexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/claims': {
@@ -934,6 +954,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CareerRoute: CareerRoute,
   ClaimsRoute: ClaimsRoute,
+  CodexRoute: CodexRoute,
   CollectionsRoute: CollectionsRouteWithChildren,
   DailySalesClaimRoute: DailySalesClaimRoute,
   EvaluationsRoute: EvaluationsRoute,
