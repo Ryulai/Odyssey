@@ -8,7 +8,7 @@ import {
   type CodexArticle,
 } from "@/lib/codex";
 
-export const Route = createFileRoute("/codex")({
+export const Route = createFileRoute("/codex/")({
   head: () => ({
     meta: [
       { title: "Odyssey Codex — The Knowledge of Odyssey" },
