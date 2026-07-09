@@ -42,6 +42,14 @@ export const CODEX_CATEGORIES: CodexCategoryDef[] = [
   { key: "roadmap",       folder: "roadmap",       title: "Roadmap",       description: "Current development and future expansion." },
 ];
 
+export type CodexSection = {
+  title: string;
+  /** Icon glyph derived from title keyword. */
+  icon: string;
+  /** Body markdown for this section (no leading heading). */
+  body: string;
+};
+
 export type CodexArticle = {
   slug: string;
   category: CodexCategoryKey;
@@ -51,7 +59,12 @@ export type CodexArticle = {
   version: string | null;
   priority: string | null;
   lastUpdated: string | null;
+  /** Original body markdown (kept for search + fallback). */
   body: string;
+  /** Optional intro paragraph before the first section header. */
+  intro: string;
+  /** Parsed premium sections (# Header … until next # Header). */
+  sections: CodexSection[];
   /** Frozen or Discussed articles render full body. Others show preview only. */
   locked: boolean;
 };
@@ -107,6 +120,46 @@ function categoryFromPath(path: string): CodexCategoryKey | null {
   return cat ? cat.key : null;
 }
 
+function iconForSection(title: string): string {
+  const t = title.toLowerCase();
+  if (/(definition|what is$|^what$)/.test(t)) return "📖";
+  if (/purpose/.test(t)) return "🎯";
+  if (/^why/.test(t)) return "💡";
+  if (/what is not|not$/.test(t)) return "🚫";
+  if (/philosoph|belief|principle/.test(t)) return "✨";
+  if (/architect|structure|framework|current design/.test(t)) return "🏛";
+  if (/formula|calculation|grade/.test(t)) return "🧮";
+  if (/relationship/.test(t)) return "🔗";
+  if (/history/.test(t)) return "📜";
+  if (/parking/.test(t)) return "🅿️";
+  if (/recovery|note/.test(t)) return "🧭";
+  if (/status/.test(t)) return "🧊";
+  if (/discussion|current discussion/.test(t)) return "💬";
+  if (/rank|path|growth path|journey/.test(t)) return "🗺";
+  if (/hunter|class|role/.test(t)) return "⚔️";
+  if (/five|systems/.test(t)) return "🌐";
+  if (/next step|future/.test(t)) return "➡️";
+  if (/concept/.test(t)) return "🌱";
+  return "◆";
+}
+
+function parseSections(body: string): { intro: string; sections: CodexSection[] } {
+  // Strip an initial `# Title` line (already shown as the article header)
+  const stripped = body.replace(/^\s*#\s+[^\n]+\n+/, "");
+  // Split on top-level `# ` headers (not `##`)
+  const parts = stripped.split(/^#\s+(.+)$/m);
+  // parts[0] = intro before first header, then alternating [title, body, title, body, …]
+  const intro = parts[0].trim();
+  const sections: CodexSection[] = [];
+  for (let i = 1; i < parts.length; i += 2) {
+    const title = parts[i].trim();
+    const sectionBody = (parts[i + 1] ?? "").trim();
+    if (!title) continue;
+    sections.push({ title, icon: iconForSection(title), body: sectionBody });
+  }
+  return { intro, sections };
+}
+
 const ARTICLES: CodexArticle[] = (() => {
   const out: CodexArticle[] = [];
   for (const [path, raw] of Object.entries(RAW_FILES)) {
@@ -117,6 +170,7 @@ const ARTICLES: CodexArticle[] = (() => {
     const statusRaw = data["status"] ?? "";
     const status = normalizeStatus(statusRaw);
     const title = extractTitleFromBody(body, slug);
+    const { intro, sections } = parseSections(body);
     // Lock rule: Concept-stage articles show preview only.
     const locked = status === "concept";
     out.push({
@@ -129,6 +183,8 @@ const ARTICLES: CodexArticle[] = (() => {
       priority: data["priority"] ?? null,
       lastUpdated: data["last updated"] ?? null,
       body,
+      intro,
+      sections,
       locked,
     });
   }
