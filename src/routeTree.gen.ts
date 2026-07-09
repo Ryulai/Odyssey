@@ -38,6 +38,7 @@ import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SystemIndexRouteImport } from './routes/system.index'
 import { Route as CollectionsIndexRouteImport } from './routes/collections.index'
+import { Route as CodexIndexRouteImport } from './routes/codex.index'
 import { Route as SystemSettingsRouteImport } from './routes/system.settings'
 import { Route as SystemPreferencesRouteImport } from './routes/system.preferences'
 import { Route as SystemNotificationsRouteImport } from './routes/system.notifications'
@@ -52,6 +53,8 @@ import { Route as CollectionsEmblemsRouteImport } from './routes/collections.emb
 import { Route as CollectionsEffectsRouteImport } from './routes/collections.effects'
 import { Route as CollectionsCosmeticsRouteImport } from './routes/collections.cosmetics'
 import { Route as CollectionsBackgroundsRouteImport } from './routes/collections.backgrounds'
+import { Route as CodexCategoryRouteImport } from './routes/codex.$category'
+import { Route as CodexCategorySlugRouteImport } from './routes/codex.$category.$slug'
 
 const SystemRoute = SystemRouteImport.update({
   id: '/system',
@@ -198,6 +201,11 @@ const CollectionsIndexRoute = CollectionsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => CollectionsRoute,
 } as any)
+const CodexIndexRoute = CodexIndexRouteImport.update({
+  id: '/codex/',
+  path: '/codex/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SystemSettingsRoute = SystemSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -268,6 +276,16 @@ const CollectionsBackgroundsRoute = CollectionsBackgroundsRouteImport.update({
   path: '/backgrounds',
   getParentRoute: () => CollectionsRoute,
 } as any)
+const CodexCategoryRoute = CodexCategoryRouteImport.update({
+  id: '/codex/$category',
+  path: '/codex/$category',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CodexCategorySlugRoute = CodexCategorySlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => CodexCategoryRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -297,6 +315,7 @@ export interface FileRoutesByFullPath {
   '/secondary-class': typeof SecondaryClassRoute
   '/statistics': typeof StatisticsRoute
   '/system': typeof SystemRouteWithChildren
+  '/codex/$category': typeof CodexCategoryRouteWithChildren
   '/collections/backgrounds': typeof CollectionsBackgroundsRoute
   '/collections/cosmetics': typeof CollectionsCosmeticsRoute
   '/collections/effects': typeof CollectionsEffectsRoute
@@ -311,8 +330,10 @@ export interface FileRoutesByFullPath {
   '/system/notifications': typeof SystemNotificationsRoute
   '/system/preferences': typeof SystemPreferencesRoute
   '/system/settings': typeof SystemSettingsRoute
+  '/codex/': typeof CodexIndexRoute
   '/collections/': typeof CollectionsIndexRoute
   '/system/': typeof SystemIndexRoute
+  '/codex/$category/$slug': typeof CodexCategorySlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -340,6 +361,7 @@ export interface FileRoutesByTo {
   '/sales-review': typeof SalesReviewRoute
   '/secondary-class': typeof SecondaryClassRoute
   '/statistics': typeof StatisticsRoute
+  '/codex/$category': typeof CodexCategoryRouteWithChildren
   '/collections/backgrounds': typeof CollectionsBackgroundsRoute
   '/collections/cosmetics': typeof CollectionsCosmeticsRoute
   '/collections/effects': typeof CollectionsEffectsRoute
@@ -354,8 +376,10 @@ export interface FileRoutesByTo {
   '/system/notifications': typeof SystemNotificationsRoute
   '/system/preferences': typeof SystemPreferencesRoute
   '/system/settings': typeof SystemSettingsRoute
+  '/codex': typeof CodexIndexRoute
   '/collections': typeof CollectionsIndexRoute
   '/system': typeof SystemIndexRoute
+  '/codex/$category/$slug': typeof CodexCategorySlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -386,6 +410,7 @@ export interface FileRoutesById {
   '/secondary-class': typeof SecondaryClassRoute
   '/statistics': typeof StatisticsRoute
   '/system': typeof SystemRouteWithChildren
+  '/codex/$category': typeof CodexCategoryRouteWithChildren
   '/collections/backgrounds': typeof CollectionsBackgroundsRoute
   '/collections/cosmetics': typeof CollectionsCosmeticsRoute
   '/collections/effects': typeof CollectionsEffectsRoute
@@ -400,8 +425,10 @@ export interface FileRoutesById {
   '/system/notifications': typeof SystemNotificationsRoute
   '/system/preferences': typeof SystemPreferencesRoute
   '/system/settings': typeof SystemSettingsRoute
+  '/codex/': typeof CodexIndexRoute
   '/collections/': typeof CollectionsIndexRoute
   '/system/': typeof SystemIndexRoute
+  '/codex/$category/$slug': typeof CodexCategorySlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -433,6 +460,7 @@ export interface FileRouteTypes {
     | '/secondary-class'
     | '/statistics'
     | '/system'
+    | '/codex/$category'
     | '/collections/backgrounds'
     | '/collections/cosmetics'
     | '/collections/effects'
@@ -447,8 +475,10 @@ export interface FileRouteTypes {
     | '/system/notifications'
     | '/system/preferences'
     | '/system/settings'
+    | '/codex/'
     | '/collections/'
     | '/system/'
+    | '/codex/$category/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -476,6 +506,7 @@ export interface FileRouteTypes {
     | '/sales-review'
     | '/secondary-class'
     | '/statistics'
+    | '/codex/$category'
     | '/collections/backgrounds'
     | '/collections/cosmetics'
     | '/collections/effects'
@@ -490,8 +521,10 @@ export interface FileRouteTypes {
     | '/system/notifications'
     | '/system/preferences'
     | '/system/settings'
+    | '/codex'
     | '/collections'
     | '/system'
+    | '/codex/$category/$slug'
   id:
     | '__root__'
     | '/'
@@ -521,6 +554,7 @@ export interface FileRouteTypes {
     | '/secondary-class'
     | '/statistics'
     | '/system'
+    | '/codex/$category'
     | '/collections/backgrounds'
     | '/collections/cosmetics'
     | '/collections/effects'
@@ -535,8 +569,10 @@ export interface FileRouteTypes {
     | '/system/notifications'
     | '/system/preferences'
     | '/system/settings'
+    | '/codex/'
     | '/collections/'
     | '/system/'
+    | '/codex/$category/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -567,6 +603,8 @@ export interface RootRouteChildren {
   SecondaryClassRoute: typeof SecondaryClassRoute
   StatisticsRoute: typeof StatisticsRoute
   SystemRoute: typeof SystemRouteWithChildren
+  CodexCategoryRoute: typeof CodexCategoryRouteWithChildren
+  CodexIndexRoute: typeof CodexIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -774,6 +812,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CollectionsIndexRouteImport
       parentRoute: typeof CollectionsRoute
     }
+    '/codex/': {
+      id: '/codex/'
+      path: '/codex'
+      fullPath: '/codex/'
+      preLoaderRoute: typeof CodexIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/system/settings': {
       id: '/system/settings'
       path: '/settings'
@@ -872,6 +917,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CollectionsBackgroundsRouteImport
       parentRoute: typeof CollectionsRoute
     }
+    '/codex/$category': {
+      id: '/codex/$category'
+      path: '/codex/$category'
+      fullPath: '/codex/$category'
+      preLoaderRoute: typeof CodexCategoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/codex/$category/$slug': {
+      id: '/codex/$category/$slug'
+      path: '/$slug'
+      fullPath: '/codex/$category/$slug'
+      preLoaderRoute: typeof CodexCategorySlugRouteImport
+      parentRoute: typeof CodexCategoryRoute
+    }
   }
 }
 
@@ -926,6 +985,18 @@ const SystemRouteChildren: SystemRouteChildren = {
 const SystemRouteWithChildren =
   SystemRoute._addFileChildren(SystemRouteChildren)
 
+interface CodexCategoryRouteChildren {
+  CodexCategorySlugRoute: typeof CodexCategorySlugRoute
+}
+
+const CodexCategoryRouteChildren: CodexCategoryRouteChildren = {
+  CodexCategorySlugRoute: CodexCategorySlugRoute,
+}
+
+const CodexCategoryRouteWithChildren = CodexCategoryRoute._addFileChildren(
+  CodexCategoryRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AchievementsRoute: AchievementsRoute,
@@ -954,17 +1025,9 @@ const rootRouteChildren: RootRouteChildren = {
   SecondaryClassRoute: SecondaryClassRoute,
   StatisticsRoute: StatisticsRoute,
   SystemRoute: SystemRouteWithChildren,
+  CodexCategoryRoute: CodexCategoryRouteWithChildren,
+  CodexIndexRoute: CodexIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
