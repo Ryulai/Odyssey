@@ -12,10 +12,10 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { RoleProvider } from "../lib/roles";
-import { PrototypeToggle } from "../components/prototype/prototype-toggle";
 import { DirectorModeProvider } from "../lib/director-mode";
-import { DirectorModeToggle, DirectorModeBanner } from "../components/director-mode-toggle";
-import { Toaster } from "../components/ui/sonner";
+import { DirectorModeBanner } from "../components/director-mode-toggle";
+import { TopRightControls } from "../components/top-right-controls";
+import { Toaster } from "../components/ui/sonter";
 
 
 
