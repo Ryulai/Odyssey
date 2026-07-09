@@ -11,29 +11,27 @@ export function DirectorModeToggle() {
   if (!eligible) return null;
 
   return (
-    <div className="pointer-events-none fixed right-3 top-3 z-[60] flex flex-col items-end gap-2 sm:right-4 sm:top-4">
-      <button
-        type="button"
-        onClick={toggle}
-        aria-pressed={enabled}
-        aria-label={enabled ? "Turn Director Mode off" : "Turn Director Mode on"}
+    <button
+      type="button"
+      onClick={toggle}
+      aria-pressed={enabled}
+      aria-label={enabled ? "Turn Director Mode off" : "Turn Director Mode on"}
+      className={[
+        "pointer-events-auto inline-flex items-center gap-2 rounded-full border px-3 py-1.5 font-display text-[10px] uppercase tracking-[0.25em] shadow-sm transition-colors",
+        enabled
+          ? "border-red-400/70 bg-red-500/20 text-red-100 hover:bg-red-500/30"
+          : "border-border/70 bg-ink/70 text-muted-foreground hover:border-gold/50 hover:text-gold",
+      ].join(" ")}
+    >
+      <span
+        aria-hidden
         className={[
-          "pointer-events-auto inline-flex items-center gap-2 rounded-full border px-3 py-1.5 font-display text-[10px] uppercase tracking-[0.25em] shadow-sm transition-colors",
-          enabled
-            ? "border-red-400/70 bg-red-500/20 text-red-100 hover:bg-red-500/30"
-            : "border-border/70 bg-ink/70 text-muted-foreground hover:border-gold/50 hover:text-gold",
+          "inline-block h-2 w-2 rounded-full",
+          enabled ? "bg-red-300 shadow-[0_0_8px_currentColor]" : "bg-muted-foreground/60",
         ].join(" ")}
-      >
-        <span
-          aria-hidden
-          className={[
-            "inline-block h-2 w-2 rounded-full",
-            enabled ? "bg-red-300 shadow-[0_0_8px_currentColor]" : "bg-muted-foreground/60",
-          ].join(" ")}
-        />
-        Director Mode {enabled ? "ON" : "OFF"}
-      </button>
-    </div>
+      />
+      Director Mode {enabled ? "ON" : "OFF"}
+    </button>
   );
 }
 
