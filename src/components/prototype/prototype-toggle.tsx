@@ -9,7 +9,7 @@ export function PrototypeToggle() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className={`fixed right-3 top-3 z-50 rounded-full border px-3 py-1.5 text-[10px] font-display uppercase tracking-[0.3em] shadow-lg backdrop-blur transition ${
+        className={`rounded-full border px-3 py-1.5 text-[10px] font-display uppercase tracking-[0.3em] shadow-lg backdrop-blur transition ${
           enabled
             ? "border-amber-400 bg-amber-500/20 text-amber-200 shadow-amber-500/30"
             : "border-border bg-black/50 text-muted-foreground hover:text-amber-200"
