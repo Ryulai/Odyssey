@@ -160,11 +160,17 @@ function parseSections(body: string): { intro: string; sections: CodexSection[] 
   return { intro, sections };
 }
 
-
+const ARTICLES: CodexArticle[] = (() => {
+  const out: CodexArticle[] = [];
+  for (const [path, raw] of Object.entries(RAW_FILES)) {
+    const cat = categoryFromPath(path);
+    if (!cat) continue; // skip README, INDEX at root
+    const slug = slugFromFilename(path);
     const { data, body } = parseFrontmatter(raw);
     const statusRaw = data["status"] ?? "";
     const status = normalizeStatus(statusRaw);
     const title = extractTitleFromBody(body, slug);
+    const { intro, sections } = parseSections(body);
     // Lock rule: Concept-stage articles show preview only.
     const locked = status === "concept";
     out.push({
@@ -177,6 +183,8 @@ function parseSections(body: string): { intro: string; sections: CodexSection[] 
       priority: data["priority"] ?? null,
       lastUpdated: data["last updated"] ?? null,
       body,
+      intro,
+      sections,
       locked,
     });
   }
