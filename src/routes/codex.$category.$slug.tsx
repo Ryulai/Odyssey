@@ -88,7 +88,7 @@ function ArticlePage() {
               {article.sections.length === 0 && !article.intro && (
                 <CodexMarkdown>{article.body}</CodexMarkdown>
               )}
-              {article.sections.map((s, i) => (
+              {article.sections.map((s: { title: string; icon: string; body: string }, i: number) => (
                 <section
                   key={`${s.title}-${i}`}
                   className="rounded-lg border border-border bg-ink/40 p-6 transition hover:border-gold/30"
