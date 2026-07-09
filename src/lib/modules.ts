@@ -82,7 +82,7 @@ export const MODULE_GROUPS: ModuleGroup[] = [
     subtitle: "What exists in Odyssey?",
     blurb: "The encyclopedia of Odyssey.",
     entries: [
-      { key: "codex",     label: "Codex",     to: "/world/codex",     status: "coming-soon", description: "The master index of everything documented in Odyssey." },
+      { key: "codex",     label: "Odyssey Codex", to: "/codex",           status: "live",        description: "The official knowledge library — philosophy, systems, language, and design." },
       { key: "classes",   label: "Classes",   to: "/world/classes",   status: "coming-soon", description: "Every Class that exists — their purpose, powers, and paths." },
       { key: "roles",     label: "Roles",     to: "/world/roles",     status: "coming-soon", description: "Every Role a Class can take, and what each demands." },
       { key: "influence", label: "Influence", to: "/world/influence", status: "coming-soon", description: "The factions, houses, and forces that shape the guild." },
