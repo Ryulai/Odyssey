@@ -42,6 +42,14 @@ export const CODEX_CATEGORIES: CodexCategoryDef[] = [
   { key: "roadmap",       folder: "roadmap",       title: "Roadmap",       description: "Current development and future expansion." },
 ];
 
+export type CodexSection = {
+  title: string;
+  /** Icon glyph derived from title keyword. */
+  icon: string;
+  /** Body markdown for this section (no leading heading). */
+  body: string;
+};
+
 export type CodexArticle = {
   slug: string;
   category: CodexCategoryKey;
@@ -51,7 +59,12 @@ export type CodexArticle = {
   version: string | null;
   priority: string | null;
   lastUpdated: string | null;
+  /** Original body markdown (kept for search + fallback). */
   body: string;
+  /** Optional intro paragraph before the first section header. */
+  intro: string;
+  /** Parsed premium sections (# Header … until next # Header). */
+  sections: CodexSection[];
   /** Frozen or Discussed articles render full body. Others show preview only. */
   locked: boolean;
 };
