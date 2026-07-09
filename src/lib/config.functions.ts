@@ -357,7 +357,6 @@ export const upsertStaff = createServerFn({ method: "POST" })
             statistics: idn.statistics ?? {},
             source: directorOverride ? "director_override" : "manual",
           };
-          if (idn.id) base.id = idn.id;
           return base;
         });
         const { error: identityErr } = await context.supabase
