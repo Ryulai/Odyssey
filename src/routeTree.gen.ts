@@ -54,6 +54,7 @@ import { Route as CollectionsEffectsRouteImport } from './routes/collections.eff
 import { Route as CollectionsCosmeticsRouteImport } from './routes/collections.cosmetics'
 import { Route as CollectionsBackgroundsRouteImport } from './routes/collections.backgrounds'
 import { Route as CodexCategoryRouteImport } from './routes/codex.$category'
+import { Route as CodexCategoryIndexRouteImport } from './routes/codex.$category.index'
 import { Route as CodexCategorySlugRouteImport } from './routes/codex.$category.$slug'
 
 const SystemRoute = SystemRouteImport.update({
@@ -281,6 +282,11 @@ const CodexCategoryRoute = CodexCategoryRouteImport.update({
   path: '/codex/$category',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CodexCategoryIndexRoute = CodexCategoryIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CodexCategoryRoute,
+} as any)
 const CodexCategorySlugRoute = CodexCategorySlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
@@ -334,6 +340,7 @@ export interface FileRoutesByFullPath {
   '/collections/': typeof CollectionsIndexRoute
   '/system/': typeof SystemIndexRoute
   '/codex/$category/$slug': typeof CodexCategorySlugRoute
+  '/codex/$category/': typeof CodexCategoryIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -361,7 +368,6 @@ export interface FileRoutesByTo {
   '/sales-review': typeof SalesReviewRoute
   '/secondary-class': typeof SecondaryClassRoute
   '/statistics': typeof StatisticsRoute
-  '/codex/$category': typeof CodexCategoryRouteWithChildren
   '/collections/backgrounds': typeof CollectionsBackgroundsRoute
   '/collections/cosmetics': typeof CollectionsCosmeticsRoute
   '/collections/effects': typeof CollectionsEffectsRoute
@@ -380,6 +386,7 @@ export interface FileRoutesByTo {
   '/collections': typeof CollectionsIndexRoute
   '/system': typeof SystemIndexRoute
   '/codex/$category/$slug': typeof CodexCategorySlugRoute
+  '/codex/$category': typeof CodexCategoryIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -429,6 +436,7 @@ export interface FileRoutesById {
   '/collections/': typeof CollectionsIndexRoute
   '/system/': typeof SystemIndexRoute
   '/codex/$category/$slug': typeof CodexCategorySlugRoute
+  '/codex/$category/': typeof CodexCategoryIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -479,6 +487,7 @@ export interface FileRouteTypes {
     | '/collections/'
     | '/system/'
     | '/codex/$category/$slug'
+    | '/codex/$category/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -506,7 +515,6 @@ export interface FileRouteTypes {
     | '/sales-review'
     | '/secondary-class'
     | '/statistics'
-    | '/codex/$category'
     | '/collections/backgrounds'
     | '/collections/cosmetics'
     | '/collections/effects'
@@ -525,6 +533,7 @@ export interface FileRouteTypes {
     | '/collections'
     | '/system'
     | '/codex/$category/$slug'
+    | '/codex/$category'
   id:
     | '__root__'
     | '/'
@@ -573,6 +582,7 @@ export interface FileRouteTypes {
     | '/collections/'
     | '/system/'
     | '/codex/$category/$slug'
+    | '/codex/$category/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -924,6 +934,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CodexCategoryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/codex/$category/': {
+      id: '/codex/$category/'
+      path: '/'
+      fullPath: '/codex/$category/'
+      preLoaderRoute: typeof CodexCategoryIndexRouteImport
+      parentRoute: typeof CodexCategoryRoute
+    }
     '/codex/$category/$slug': {
       id: '/codex/$category/$slug'
       path: '/$slug'
@@ -987,10 +1004,12 @@ const SystemRouteWithChildren =
 
 interface CodexCategoryRouteChildren {
   CodexCategorySlugRoute: typeof CodexCategorySlugRoute
+  CodexCategoryIndexRoute: typeof CodexCategoryIndexRoute
 }
 
 const CodexCategoryRouteChildren: CodexCategoryRouteChildren = {
   CodexCategorySlugRoute: CodexCategorySlugRoute,
+  CodexCategoryIndexRoute: CodexCategoryIndexRoute,
 }
 
 const CodexCategoryRouteWithChildren = CodexCategoryRoute._addFileChildren(
