@@ -53,6 +53,7 @@ import { Route as CollectionsEmblemsRouteImport } from './routes/collections.emb
 import { Route as CollectionsEffectsRouteImport } from './routes/collections.effects'
 import { Route as CollectionsCosmeticsRouteImport } from './routes/collections.cosmetics'
 import { Route as CollectionsBackgroundsRouteImport } from './routes/collections.backgrounds'
+import { Route as CodexCategoryRouteImport } from './routes/codex.$category'
 import { Route as CodexCategoryIndexRouteImport } from './routes/codex.$category.index'
 import { Route as CodexCategorySlugRouteImport } from './routes/codex.$category.$slug'
 
@@ -276,15 +277,20 @@ const CollectionsBackgroundsRoute = CollectionsBackgroundsRouteImport.update({
   path: '/backgrounds',
   getParentRoute: () => CollectionsRoute,
 } as any)
-const CodexCategoryIndexRoute = CodexCategoryIndexRouteImport.update({
-  id: '/codex/$category/',
-  path: '/codex/$category/',
+const CodexCategoryRoute = CodexCategoryRouteImport.update({
+  id: '/codex/$category',
+  path: '/codex/$category',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CodexCategoryIndexRoute = CodexCategoryIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CodexCategoryRoute,
+} as any)
 const CodexCategorySlugRoute = CodexCategorySlugRouteImport.update({
-  id: '/codex/$category/$slug',
-  path: '/codex/$category/$slug',
-  getParentRoute: () => rootRouteImport,
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => CodexCategoryRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -315,6 +321,7 @@ export interface FileRoutesByFullPath {
   '/secondary-class': typeof SecondaryClassRoute
   '/statistics': typeof StatisticsRoute
   '/system': typeof SystemRouteWithChildren
+  '/codex/$category': typeof CodexCategoryRouteWithChildren
   '/collections/backgrounds': typeof CollectionsBackgroundsRoute
   '/collections/cosmetics': typeof CollectionsCosmeticsRoute
   '/collections/effects': typeof CollectionsEffectsRoute
@@ -410,6 +417,7 @@ export interface FileRoutesById {
   '/secondary-class': typeof SecondaryClassRoute
   '/statistics': typeof StatisticsRoute
   '/system': typeof SystemRouteWithChildren
+  '/codex/$category': typeof CodexCategoryRouteWithChildren
   '/collections/backgrounds': typeof CollectionsBackgroundsRoute
   '/collections/cosmetics': typeof CollectionsCosmeticsRoute
   '/collections/effects': typeof CollectionsEffectsRoute
@@ -460,6 +468,7 @@ export interface FileRouteTypes {
     | '/secondary-class'
     | '/statistics'
     | '/system'
+    | '/codex/$category'
     | '/collections/backgrounds'
     | '/collections/cosmetics'
     | '/collections/effects'
@@ -554,6 +563,7 @@ export interface FileRouteTypes {
     | '/secondary-class'
     | '/statistics'
     | '/system'
+    | '/codex/$category'
     | '/collections/backgrounds'
     | '/collections/cosmetics'
     | '/collections/effects'
@@ -603,9 +613,8 @@ export interface RootRouteChildren {
   SecondaryClassRoute: typeof SecondaryClassRoute
   StatisticsRoute: typeof StatisticsRoute
   SystemRoute: typeof SystemRouteWithChildren
+  CodexCategoryRoute: typeof CodexCategoryRouteWithChildren
   CodexIndexRoute: typeof CodexIndexRoute
-  CodexCategorySlugRoute: typeof CodexCategorySlugRoute
-  CodexCategoryIndexRoute: typeof CodexCategoryIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -918,19 +927,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CollectionsBackgroundsRouteImport
       parentRoute: typeof CollectionsRoute
     }
+    '/codex/$category': {
+      id: '/codex/$category'
+      path: '/codex/$category'
+      fullPath: '/codex/$category'
+      preLoaderRoute: typeof CodexCategoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/codex/$category/': {
       id: '/codex/$category/'
-      path: '/codex/$category'
+      path: '/'
       fullPath: '/codex/$category/'
       preLoaderRoute: typeof CodexCategoryIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof CodexCategoryRoute
     }
     '/codex/$category/$slug': {
       id: '/codex/$category/$slug'
-      path: '/codex/$category/$slug'
+      path: '/$slug'
       fullPath: '/codex/$category/$slug'
       preLoaderRoute: typeof CodexCategorySlugRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof CodexCategoryRoute
     }
   }
 }
@@ -986,6 +1002,20 @@ const SystemRouteChildren: SystemRouteChildren = {
 const SystemRouteWithChildren =
   SystemRoute._addFileChildren(SystemRouteChildren)
 
+interface CodexCategoryRouteChildren {
+  CodexCategorySlugRoute: typeof CodexCategorySlugRoute
+  CodexCategoryIndexRoute: typeof CodexCategoryIndexRoute
+}
+
+const CodexCategoryRouteChildren: CodexCategoryRouteChildren = {
+  CodexCategorySlugRoute: CodexCategorySlugRoute,
+  CodexCategoryIndexRoute: CodexCategoryIndexRoute,
+}
+
+const CodexCategoryRouteWithChildren = CodexCategoryRoute._addFileChildren(
+  CodexCategoryRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AchievementsRoute: AchievementsRoute,
@@ -1014,9 +1044,8 @@ const rootRouteChildren: RootRouteChildren = {
   SecondaryClassRoute: SecondaryClassRoute,
   StatisticsRoute: StatisticsRoute,
   SystemRoute: SystemRouteWithChildren,
+  CodexCategoryRoute: CodexCategoryRouteWithChildren,
   CodexIndexRoute: CodexIndexRoute,
-  CodexCategorySlugRoute: CodexCategorySlugRoute,
-  CodexCategoryIndexRoute: CodexCategoryIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
