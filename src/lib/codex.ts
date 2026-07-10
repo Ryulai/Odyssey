@@ -235,7 +235,7 @@ const ARTICLES: CodexArticle[] = (() => {
     const status = normalizeStatus(statusRaw);
     const title = extractTitleFromBody(body, slug);
     const { intro, sections } = parseSections(body);
-    const locked = status === "locked" || status === "parking" || status === "concept";
+    const locked = status === "locked";
     out.push({
       slug,
       category: cat,
@@ -244,7 +244,9 @@ const ARTICLES: CodexArticle[] = (() => {
       statusRaw: statusRaw || labelFromStatus(status),
       version: data["version"] ?? null,
       priority: data["priority"] ?? null,
+      owner: data["owner"] ?? null,
       lastUpdated: data["last updated"] ?? null,
+      completionPct: completionForStatus(status),
       body,
       intro,
       sections,
