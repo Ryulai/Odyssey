@@ -7,7 +7,7 @@ import {
   type CodexCategoryKey,
 } from "@/lib/codex";
 
-export const Route = createFileRoute("/codex/$category")({
+export const Route = createFileRoute("/codex/$category/")({
   loader: ({ params }) => {
     const cat = CODEX_CATEGORIES.find((c) => c.key === params.category);
     if (!cat) throw notFound();
