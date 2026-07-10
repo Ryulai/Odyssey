@@ -109,13 +109,29 @@ export type CodexArticle = {
   statusRaw: string;
   version: string | null;
   priority: string | null;
+  owner: string | null;
   lastUpdated: string | null;
+  completionPct: number;
   body: string;
   intro: string;
   sections: CodexSection[];
-  /** Locked / Parking / Concept articles show preview only. */
+  /** Only true when status === "locked" — page cannot be opened. */
   locked: boolean;
 };
+
+export function completionForStatus(s: CodexStatus): number {
+  switch (s) {
+    case "frozen":      return 100;
+    case "discussed":   return 80;
+    case "in-progress": return 60;
+    case "draft":       return 30;
+    case "concept":     return 15;
+    case "parking":     return 10;
+    case "rejected":    return 0;
+    case "locked":      return 0;
+    default:            return 0;
+  }
+}
 
 const RAW_FILES = import.meta.glob("/odyssey-codex/**/*.md", {
   query: "?raw",
@@ -219,7 +235,7 @@ const ARTICLES: CodexArticle[] = (() => {
     const status = normalizeStatus(statusRaw);
     const title = extractTitleFromBody(body, slug);
     const { intro, sections } = parseSections(body);
-    const locked = status === "locked" || status === "parking" || status === "concept";
+    const locked = status === "locked";
     out.push({
       slug,
       category: cat,
@@ -228,7 +244,9 @@ const ARTICLES: CodexArticle[] = (() => {
       statusRaw: statusRaw || labelFromStatus(status),
       version: data["version"] ?? null,
       priority: data["priority"] ?? null,
+      owner: data["owner"] ?? null,
       lastUpdated: data["last updated"] ?? null,
+      completionPct: completionForStatus(status),
       body,
       intro,
       sections,

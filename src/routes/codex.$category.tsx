@@ -62,6 +62,45 @@ function CategoryPage() {
 
 function ArticleCard({ article, category }: { article: CodexArticle; category: CodexCategoryKey }) {
   const meta = getStatusMeta(article.status);
+
+  const inner = (
+    <>
+      <div className="flex items-center justify-between gap-2">
+        <span className={`rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-widest ${meta.tone}`}>
+          {meta.label}
+        </span>
+        <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
+          {article.completionPct}%
+        </span>
+      </div>
+      <h2 className="mt-3 font-display text-lg tracking-[0.05em] text-foreground" style={{ fontFamily: "'Cinzel', serif" }}>
+        {article.title}
+      </h2>
+      <div className="mt-1 flex items-center gap-3 text-[10px] uppercase tracking-widest text-muted-foreground">
+        {article.version && <span>v{article.version}</span>}
+        {article.lastUpdated && <span>· {article.lastUpdated}</span>}
+      </div>
+      {article.locked && (
+        <div className="mt-3 rounded-md border border-dashed border-border bg-ink/50 p-3 text-[11px] italic text-muted-foreground">
+          🔒 This article has not been started yet.
+        </div>
+      )}
+    </>
+  );
+
+  if (article.locked) {
+    return (
+      <li>
+        <div
+          aria-disabled="true"
+          className="flex h-full cursor-not-allowed flex-col rounded-lg border border-border/60 bg-ink/20 p-5 opacity-70"
+        >
+          {inner}
+        </div>
+      </li>
+    );
+  }
+
   return (
     <li>
       <Link
@@ -69,20 +108,7 @@ function ArticleCard({ article, category }: { article: CodexArticle; category: C
         params={{ category, slug: article.slug }}
         className="group flex h-full flex-col rounded-lg border border-border bg-ink/30 p-5 transition hover:border-gold/50 hover:bg-ink/50"
       >
-        <div className="flex items-center justify-between gap-2">
-          <span className={`rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-widest ${meta.tone}`}>
-            {meta.label}
-          </span>
-          {article.locked && (
-            <span className="text-[10px] uppercase tracking-widest text-muted-foreground/70">🔒 Locked</span>
-          )}
-        </div>
-        <h2 className="mt-3 font-display text-lg tracking-[0.05em] text-foreground" style={{ fontFamily: "'Cinzel', serif" }}>
-          {article.title}
-        </h2>
-        {article.version && (
-          <div className="mt-1 text-[10px] uppercase tracking-widest text-muted-foreground">Version {article.version}</div>
-        )}
+        {inner}
       </Link>
     </li>
   );
