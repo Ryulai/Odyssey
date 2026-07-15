@@ -239,13 +239,14 @@ restore the Class System before rebuilding any profession-specific design.
 
 Every future profession should inherit this structure.
 
+---
+
 ## Secondary Class
 
 The Secondary Class System extends a Guild Member's professional identity.
 
 It does not replace the Main Class.
 
-Members may unlock a Secondary Class after meeting the required conditions.
+It allows Guild Members to expand into additional professional disciplines while maintaining their primary identity.
 
-For implementation details, see:
-**Secondary-Class.md**
+For implementation details, see: Secondary-Class.md
