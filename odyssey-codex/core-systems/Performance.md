@@ -99,29 +99,25 @@ Ranking Input
 
 ---
 
-# Current Formula
+# Performance Structure
 
-Current design:
-
-50%
+Total Performance (100%)
 
 ↓
 
-Main Class Performance
+Class Performance (50%)
 
 +
 
-50%
+Guild Performance (50%)
 
-↓
+Class Performance evaluates professional capability within a member's own Class.
 
-Additional Performance
+Guild Performance evaluates contribution beyond a member's Class responsibilities.
 
 Status:
 
-🟢 Discussed
-
-Future profession-specific formulas will inherit this structure.
+🧊 Frozen.
 
 ---
 
