@@ -106,14 +106,12 @@ Total Performance (100%)
 ↓
 
 Class Performance (50%)
+Professional performance within a member's own Class.
 
 +
 
 Guild Performance (50%)
-
-Class Performance evaluates professional capability within a member's own Class.
-
-Guild Performance evaluates contribution beyond a member's Class responsibilities.
+Contribution beyond a member's Class responsibilities.
 
 Status:
 
