@@ -256,11 +256,11 @@ Compass Protocol
 
 ↓
 
-Definition
+Framework
 
 ↓
 
-Framework
+System
 
 ↓
 
