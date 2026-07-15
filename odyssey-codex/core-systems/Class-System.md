@@ -238,3 +238,14 @@ If Odyssey must be rebuilt,
 restore the Class System before rebuilding any profession-specific design.
 
 Every future profession should inherit this structure.
+
+## Secondary Class
+
+The Secondary Class System extends a Guild Member's professional identity.
+
+It does not replace the Main Class.
+
+Members may unlock a Secondary Class after meeting the required conditions.
+
+For implementation details, see:
+**Secondary-Class.md**
