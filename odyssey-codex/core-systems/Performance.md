@@ -113,9 +113,16 @@ Professional performance within a member's own Class.
 Guild Performance (50%)
 Contribution beyond a member's Class responsibilities.
 
+
+Performance Structure is shared across all professions.
+
+Only the evaluation criteria inside Class Performance change between professions.
+
+Guild Performance remains standardized across frontline professions unless explicitly stated otherwise.
+
 Status:
 
-🧊 Frozen.
+🧊 Frozen
 
 ---
 
