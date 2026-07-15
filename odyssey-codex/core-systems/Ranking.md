@@ -36,11 +36,18 @@ Ranking represents the journey.
 
 # Why
 
-Many organizations reward only short-term results.
+Many organizations promote employees based only on short-term performance.
 
-Odyssey believes true growth is built through continuous improvement over time.
+Odyssey believes promotion should represent long-term trust rather than temporary success.
 
-Ranking encourages members to become better people, not only better performers.
+Members earn Rank by consistently demonstrating:
+
+- Professional capability
+- Responsibility
+- Positive influence
+- Long-term reliability
+
+Ranking represents the Guild's trust in a member's ability to take on greater responsibility.
 
 ---
 
@@ -186,51 +193,61 @@ Ranking normally does not decrease.
 
 Temporary poor performance should not erase years of growth.
 
+Ranking is not awarded for performance alone.
+
+It represents the Guild's long-term confidence in a member.
+
+Members must demonstrate capability, consistency, responsibility, and positive influence before advancing.
+
 Status:
 
 🧊 Frozen
 
 ---
-
 # Promotion
 
-Promotion is determined by accumulated Performance over time.
+Promotion is determined through long-term Performance history.
 
-Exact promotion formulas are still under development.
+Performance provides the evidence.
+
+Guild trust determines promotion.
+
+Members are not promoted simply because they achieve high scores.
+
+Promotion represents the Guild's confidence that a member is ready for greater responsibility.
 
 Status:
 
-🟡 In Progress
+🟢 Discussed
 
 ---
 
 # Relationship
 
+```text
 Performance
-
-↓
-
-Accumulation
-
-↓
-
-Promotion
-
-↓
-
-Ranking
-
-↓
-
+      │
+      ▼
+Performance History
+      │
+      ▼
+Promotion Eligibility
+      │
+      ▼
+Guild Approval
+      │
+      ▼
+Rank
+      │
+      ▼
 Secondary Class
-
-↓
-
+      │
+      ▼
 Mentorship
-
-↓
-
+      │
+      ▼
 Ownership
+```
 
 ---
 
