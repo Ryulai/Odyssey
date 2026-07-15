@@ -249,4 +249,6 @@ It does not replace the Main Class.
 
 It allows Guild Members to expand into additional professional disciplines while maintaining their primary identity.
 
-For implementation details, see: Secondary-Class.md
+For implementation details, see:
+
+[Secondary Class System](Secondary-Class.md)
