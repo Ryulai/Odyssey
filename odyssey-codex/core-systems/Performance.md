@@ -102,16 +102,10 @@ Ranking Input
 # Performance Structure
 
 Total Performance (100%)
-
-↓
-
-Class Performance (50%)
-Professional performance within a member's own Class.
-
-+
-
-Guild Performance (50%)
-Contribution beyond a member's Class responsibilities.
+├── Class Performance (50%)
+│   Professional performance within a member's own Class.
+└── Guild Performance (50%)
+    Contribution beyond a member's Class responsibilities.
 
 
 Performance Structure is shared across all professions.
