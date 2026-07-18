@@ -8,7 +8,7 @@ import { listStaff, getGradeConfig } from "@/lib/config.functions";
 import { listEvaluations, submitEvaluation, deleteEvaluation, computeComposite } from "@/lib/evaluations.functions";
 
 export const Route = createFileRoute("/evaluations")({
-  head: () => ({ meta: [{ title: "Performance Review — The Odyssey Guide" }] }),
+  head: () => ({ meta: [{ title: "1111 — The Odyssey Guide" }] }),
   component: () => <AuthGate><EvaluationsPage /></AuthGate>,
 });
 
@@ -51,7 +51,7 @@ function EvaluationsPage() {
       discipline_score: scores.discipline,
       kpi_score: scores.kpi,
     } }),
-    onSuccess: () => { setMsg("Performance Review recorded."); qc.invalidateQueries({ queryKey: ["evaluations"] }); },
+    onSuccess: () => { setMsg("1111 recorded."); qc.invalidateQueries({ queryKey: ["evaluations"] }); },
     onError: (e: any) => setMsg(e.message ?? "Failed"),
   });
   const del = useMutation({ mutationFn: (id: string) => deleteEvaluation({ data: { id } }),
@@ -77,7 +77,7 @@ function EvaluationsPage() {
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
         <header className="mb-8 flex items-center justify-between">
           <div>
-            <div className="font-display text-lg font-semibold uppercase tracking-widest text-gold">Performance Review</div>
+            <div className="font-display text-lg font-semibold uppercase tracking-widest text-gold">1111</div>
             <div className="text-xs text-muted-foreground">
               Grade Engine: 6 factors, weighted average. Edit weights in Admin → Grades.
             </div>
@@ -87,7 +87,7 @@ function EvaluationsPage() {
 
         {canWrite ? (
           <section className="rounded-md border border-border bg-ink/30 p-5">
-            <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">Submit Performance Review</h2>
+            <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">Submit 1111</h2>
             <form onSubmit={(e) => { e.preventDefault(); if (staffId) submit.mutate(); }} className="mt-4 grid gap-3 sm:grid-cols-2">
               <label className="block">
                 <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">Team Member</span>
@@ -142,7 +142,7 @@ function EvaluationsPage() {
           </section>
         ) : (
           <div className="rounded-md border border-border bg-ink/30 p-5 text-xs text-muted-foreground">
-            Only Managers and Directors can submit evaluations. You can view your own grades below.
+            Only Managers and Directors can submit 1111. You can view your own grades below.
           </div>
         )}
 

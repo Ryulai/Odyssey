@@ -8,11 +8,11 @@ import { listStaff } from "@/lib/config.functions";
 export const Route = createFileRoute("/professional-performance")({
   head: () => ({
     meta: [
-      { title: "Monthly Review — Odyssey" },
+      { title: "Performance Review — Odyssey" },
       {
         name: "description",
         content:
-          "One monthly review per team member. Enter sales, judge behaviour, and the system calculates the final monthly performance automatically.",
+          "One performance review per team member. Enter sales, judge behaviour, and the system calculates the final performance automatically.",
       },
     ],
   }),
@@ -417,7 +417,7 @@ function MonthlyReviewPage() {
               {templateLabel}
             </div>
             <h1 className="font-display text-xl font-semibold uppercase tracking-widest text-gold">
-              Monthly Review
+              Performance Review
             </h1>
             <p className="mt-1 max-w-2xl text-xs text-muted-foreground">
               Manager observes. Manager judges behaviour. System calculates. The review
@@ -434,7 +434,7 @@ function MonthlyReviewPage() {
 
         {!canReview ? (
           <div className="rounded-md border border-border bg-ink/30 p-5 text-xs text-muted-foreground">
-            Only Managers and Directors can complete a Monthly Review.
+            Only Managers and Directors can complete a Performance Review.
           </div>
         ) : (
           <>
@@ -650,7 +650,7 @@ function MonthlyReviewPage() {
                         disabled={!canSubmit}
                         className="rounded-md border border-gold bg-gold/10 px-4 py-2 font-display text-xs uppercase tracking-widest text-gold hover:bg-gold/20 disabled:opacity-50"
                       >
-                        {result ? "Resubmit Review" : "Submit Monthly Review"}
+                        {result ? "Resubmit Review" : "Submit Performance Review"}
                       </button>
                     </div>
                   </div>
