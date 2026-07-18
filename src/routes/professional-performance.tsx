@@ -417,7 +417,7 @@ function MonthlyReviewPage() {
               {templateLabel}
             </div>
             <h1 className="font-display text-xl font-semibold uppercase tracking-widest text-gold">
-              Monthly Review
+              Performance Review
             </h1>
             <p className="mt-1 max-w-2xl text-xs text-muted-foreground">
               Manager observes. Manager judges behaviour. System calculates. The review
@@ -434,7 +434,7 @@ function MonthlyReviewPage() {
 
         {!canReview ? (
           <div className="rounded-md border border-border bg-ink/30 p-5 text-xs text-muted-foreground">
-            Only Managers and Directors can complete a Monthly Review.
+            Only Managers and Directors can complete a Performance Review.
           </div>
         ) : (
           <>
