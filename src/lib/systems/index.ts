@@ -53,8 +53,8 @@ export const SYSTEMS: Record<SystemId, SystemDef> = {
     name: "Class Performance",
     purpose: "Monthly ABCD grade + composite score for the Class.",
     status: "active",
-    hostedOn: ["/performance", "/career", "/evaluations"],
-    engineModules: ["src/lib/evaluations.functions.ts"],
+    hostedOn: ["/performance", "/career", "/professional-performance"],
+    engineModules: ["src/routes/professional-performance.tsx"],
   },
   ranking: {
     id: "ranking",

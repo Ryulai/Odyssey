@@ -26,7 +26,6 @@ import { Route as JournalRouteImport } from './routes/journal'
 import { Route as InventoryRouteImport } from './routes/inventory'
 import { Route as FleetRouteImport } from './routes/fleet'
 import { Route as FiveSystemsRouteImport } from './routes/five-systems'
-import { Route as EvaluationsRouteImport } from './routes/evaluations'
 import { Route as DailySalesClaimRouteImport } from './routes/daily-sales-claim'
 import { Route as CollectionsRouteImport } from './routes/collections'
 import { Route as ClaimsRouteImport } from './routes/claims'
@@ -140,11 +139,6 @@ const FleetRoute = FleetRouteImport.update({
 const FiveSystemsRoute = FiveSystemsRouteImport.update({
   id: '/five-systems',
   path: '/five-systems',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EvaluationsRoute = EvaluationsRouteImport.update({
-  id: '/evaluations',
-  path: '/evaluations',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DailySalesClaimRoute = DailySalesClaimRouteImport.update({
@@ -303,7 +297,6 @@ export interface FileRoutesByFullPath {
   '/claims': typeof ClaimsRoute
   '/collections': typeof CollectionsRouteWithChildren
   '/daily-sales-claim': typeof DailySalesClaimRoute
-  '/evaluations': typeof EvaluationsRoute
   '/five-systems': typeof FiveSystemsRoute
   '/fleet': typeof FleetRoute
   '/inventory': typeof InventoryRoute
@@ -351,7 +344,6 @@ export interface FileRoutesByTo {
   '/career': typeof CareerRoute
   '/claims': typeof ClaimsRoute
   '/daily-sales-claim': typeof DailySalesClaimRoute
-  '/evaluations': typeof EvaluationsRoute
   '/five-systems': typeof FiveSystemsRoute
   '/fleet': typeof FleetRoute
   '/inventory': typeof InventoryRoute
@@ -399,7 +391,6 @@ export interface FileRoutesById {
   '/claims': typeof ClaimsRoute
   '/collections': typeof CollectionsRouteWithChildren
   '/daily-sales-claim': typeof DailySalesClaimRoute
-  '/evaluations': typeof EvaluationsRoute
   '/five-systems': typeof FiveSystemsRoute
   '/fleet': typeof FleetRoute
   '/inventory': typeof InventoryRoute
@@ -450,7 +441,6 @@ export interface FileRouteTypes {
     | '/claims'
     | '/collections'
     | '/daily-sales-claim'
-    | '/evaluations'
     | '/five-systems'
     | '/fleet'
     | '/inventory'
@@ -498,7 +488,6 @@ export interface FileRouteTypes {
     | '/career'
     | '/claims'
     | '/daily-sales-claim'
-    | '/evaluations'
     | '/five-systems'
     | '/fleet'
     | '/inventory'
@@ -545,7 +534,6 @@ export interface FileRouteTypes {
     | '/claims'
     | '/collections'
     | '/daily-sales-claim'
-    | '/evaluations'
     | '/five-systems'
     | '/fleet'
     | '/inventory'
@@ -595,7 +583,6 @@ export interface RootRouteChildren {
   ClaimsRoute: typeof ClaimsRoute
   CollectionsRoute: typeof CollectionsRouteWithChildren
   DailySalesClaimRoute: typeof DailySalesClaimRoute
-  EvaluationsRoute: typeof EvaluationsRoute
   FiveSystemsRoute: typeof FiveSystemsRoute
   FleetRoute: typeof FleetRoute
   InventoryRoute: typeof InventoryRoute
@@ -736,13 +723,6 @@ declare module '@tanstack/react-router' {
       path: '/five-systems'
       fullPath: '/five-systems'
       preLoaderRoute: typeof FiveSystemsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/evaluations': {
-      id: '/evaluations'
-      path: '/evaluations'
-      fullPath: '/evaluations'
-      preLoaderRoute: typeof EvaluationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/daily-sales-claim': {
@@ -1026,7 +1006,6 @@ const rootRouteChildren: RootRouteChildren = {
   ClaimsRoute: ClaimsRoute,
   CollectionsRoute: CollectionsRouteWithChildren,
   DailySalesClaimRoute: DailySalesClaimRoute,
-  EvaluationsRoute: EvaluationsRoute,
   FiveSystemsRoute: FiveSystemsRoute,
   FleetRoute: FleetRoute,
   InventoryRoute: InventoryRoute,

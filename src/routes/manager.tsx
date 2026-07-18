@@ -99,7 +99,7 @@ function ManagerContent({ data }: { data: any }) {
                     <td className="py-2 pr-3">
                       {reviewed
                         ? <span className="text-emerald-400 text-xs">Reviewed</span>
-                        : <Link to="/evaluations" className="text-amber-300 text-xs underline">Pending →</Link>}
+                        : <Link to="/professional-performance" className="text-amber-300 text-xs underline">Pending →</Link>}
                     </td>
                     <td className="py-2 pr-3">
                       {ev?.eligible
