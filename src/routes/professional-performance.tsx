@@ -584,11 +584,14 @@ function MonthlyReviewPage() {
                   {resolved.classKey ? (
                     <> (<code className="rounded bg-black/40 px-1">{resolved.classKey}</code>)</>
                   ) : null}
-                  . They cannot be reviewed until their template is built.
+                  .
                 </p>
-                <p className="mt-2 text-[10px] uppercase tracking-widest text-muted-foreground">
-                  Every Class in Odyssey has its own unique review template. Do not use
-                  another Class's form.
+                <p className="mt-2 text-xs text-amber-100/80">
+                  They cannot be reviewed until the {className} template is completed.
+                </p>
+                <p className="mt-3 text-[10px] uppercase tracking-widest text-muted-foreground">
+                  Every Class in Odyssey has its own unique Performance Review Template.
+                  Please do not substitute another Class's review form.
                 </p>
               </div>
             )}
