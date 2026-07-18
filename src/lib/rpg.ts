@@ -21,7 +21,7 @@ export const CLASS_ROLES: Record<PrimaryClass, LabeledKey[]> = {
     { key: "beacon",  label: "Beacon" },
   ],
   warrior: [
-    { key: "tanker",     label: "Tanker" },
+    { key: "tanker",     label: "Vanguard" },
     { key: "alchemist",  label: "Alchemist" },
     { key: "blacksmith", label: "Blacksmith" },
     { key: "tinker",     label: "Tinker" },
