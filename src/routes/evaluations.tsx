@@ -51,7 +51,7 @@ function EvaluationsPage() {
       discipline_score: scores.discipline,
       kpi_score: scores.kpi,
     } }),
-    onSuccess: () => { setMsg("Performance Review recorded."); qc.invalidateQueries({ queryKey: ["evaluations"] }); },
+    onSuccess: () => { setMsg("1111 recorded."); qc.invalidateQueries({ queryKey: ["evaluations"] }); },
     onError: (e: any) => setMsg(e.message ?? "Failed"),
   });
   const del = useMutation({ mutationFn: (id: string) => deleteEvaluation({ data: { id } }),
