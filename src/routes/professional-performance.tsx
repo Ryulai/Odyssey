@@ -8,11 +8,11 @@ import { listStaff } from "@/lib/config.functions";
 export const Route = createFileRoute("/professional-performance")({
   head: () => ({
     meta: [
-      { title: "Monthly Review — Odyssey" },
+      { title: "Performance Review — Odyssey" },
       {
         name: "description",
         content:
-          "One monthly review per team member. Enter sales, judge behaviour, and the system calculates the final monthly performance automatically.",
+          "One performance review per team member. Enter sales, judge behaviour, and the system calculates the final performance automatically.",
       },
     ],
   }),
