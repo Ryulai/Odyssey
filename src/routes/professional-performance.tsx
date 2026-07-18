@@ -163,16 +163,95 @@ const HUNTER_TEMPLATE: ReviewTemplate = {
   ],
 };
 
+// TEMPORARY placeholder Warrior template.
+// The Warrior template is unlocked but its final behaviour categories and
+// objective KPI have not yet been designed. These categories are intentionally
+// generic placeholders — replace them when the Warrior template is finalised.
+// This template is fully independent from Hunter: edits here must NEVER be
+// copied back into Hunter, and vice versa. Every Class owns its own template.
+const WARRIOR_TEMPLATE: ReviewTemplate = {
+  id: "warrior_review_v1",
+  classKey: "warrior",
+  className: "Warrior",
+  behaviourWeight: 0.5,
+  objective: {
+    kind: "sales_vs_target",
+    label: "Sales",
+    inputLabel: "Sales this month",
+    monthlyTarget: 50000,
+    targetNote: "temporary placeholder — Warrior KPI pending final design",
+  },
+  referenceNote:
+    "Choose the ONE description that best represents the employee's overall behaviour throughout the month. The examples below are references, not items to count.",
+  categories: [
+    {
+      key: "customer",
+      label: "Customer Focus",
+      description:
+        "Serves customers with care and consistently delivers a professional experience.",
+      behaviourExamples: [
+        "Greets customers warmly.",
+        "Listens to customer needs.",
+        "Handles requests with patience.",
+        "Recovers gracefully from mistakes.",
+        "Leaves customers feeling respected.",
+      ],
+    },
+    {
+      key: "team",
+      label: "Team Collaboration",
+      description: "Works constructively with teammates and supports shared goals.",
+      behaviourExamples: [
+        "Communicates clearly with the team.",
+        "Helps teammates without being asked.",
+        "Shares information promptly.",
+        "Respects other roles' work.",
+        "Keeps team morale positive.",
+      ],
+    },
+    {
+      key: "execution",
+      label: "Execution & Discipline",
+      description:
+        "Delivers assigned responsibilities reliably and follows the standard operating procedure.",
+      behaviourExamples: [
+        "Completes tasks on time.",
+        "Follows SOP consistently.",
+        "Maintains a clean, organised workspace.",
+        "Reports issues instead of hiding them.",
+        "Takes ownership of results.",
+      ],
+    },
+    {
+      key: "growth",
+      label: "Growth & Learning",
+      description: "Continuously improves and lifts the standard of those around them.",
+      behaviourExamples: [
+        "Learns new skills willingly.",
+        "Accepts feedback without defensiveness.",
+        "Applies improvements consistently.",
+        "Shares what they learn with others.",
+        "Sets a good example for teammates.",
+      ],
+    },
+  ],
+};
+
 // Register templates here. Only add — never rewrite an existing one to fit
 // a new Class. Missing Classes intentionally render an "under development"
 // placeholder so nobody is evaluated with the wrong form.
 const TEMPLATES: Record<string, ReviewTemplate> = {
-  hunter: HUNTER_TEMPLATE,
+  hunter:  HUNTER_TEMPLATE,
+  warrior: WARRIOR_TEMPLATE,
 };
 
 // Classes recognised by Odyssey but without a template yet. Anything not
 // listed here AND not in TEMPLATES falls back to the same placeholder.
+// Note: `tanker` is the stable database key for the Class now displayed as
+// "Vanguard" (renamed from Tanker). The DB key is intentionally preserved to
+// avoid a data migration; only the display label changes.
 const KNOWN_CLASSES_WITHOUT_TEMPLATE: Record<string, string> = {
+  tanker:    "Vanguard",
   vanguard:  "Vanguard",
   alchemist: "Alchemist",
   mage:      "Mage",
