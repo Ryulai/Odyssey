@@ -612,8 +612,8 @@ function OdysseyHeader() {
         {(role === "manager" || role === "director") && <Link to="/manager" className={navLink}>Team Dashboard</Link>}
         {role === "director" && <Link to="/fleet" className={navLink}>Fleet Overview</Link>}
         {can(role, "team.recommendPromotion") && <Link to="/promotions" className={navLink}>Promotions</Link>}
-        {can(role, "evaluations.write") && <Link to="/evaluations" className={navLink}>Performance Review</Link>}
-        {can(role, "evaluations.write") && <Link to="/professional-performance" className={navLink}>Monthly Review</Link>}
+        {can(role, "evaluations.write") && <Link to="/evaluations" className={navLink}>1111</Link>}
+        {can(role, "evaluations.write") && <Link to="/professional-performance" className={navLink}>Performance Review</Link>}
 
         {role === "director" && (
           <Link to="/codex" className="rounded-md border border-gold/40 px-3 py-2 font-display text-[10px] uppercase tracking-widest text-gold hover:bg-gold/10">
