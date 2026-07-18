@@ -8,7 +8,7 @@ import { listStaff, getGradeConfig } from "@/lib/config.functions";
 import { listEvaluations, submitEvaluation, deleteEvaluation, computeComposite } from "@/lib/evaluations.functions";
 
 export const Route = createFileRoute("/evaluations")({
-  head: () => ({ meta: [{ title: "Performance Review — The Odyssey Guide" }] }),
+  head: () => ({ meta: [{ title: "1111 — The Odyssey Guide" }] }),
   component: () => <AuthGate><EvaluationsPage /></AuthGate>,
 });
 
