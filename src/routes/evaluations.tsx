@@ -77,7 +77,7 @@ function EvaluationsPage() {
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
         <header className="mb-8 flex items-center justify-between">
           <div>
-            <div className="font-display text-lg font-semibold uppercase tracking-widest text-gold">Performance Review</div>
+            <div className="font-display text-lg font-semibold uppercase tracking-widest text-gold">1111</div>
             <div className="text-xs text-muted-foreground">
               Grade Engine: 6 factors, weighted average. Edit weights in Admin → Grades.
             </div>
@@ -87,7 +87,7 @@ function EvaluationsPage() {
 
         {canWrite ? (
           <section className="rounded-md border border-border bg-ink/30 p-5">
-            <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">Submit Performance Review</h2>
+            <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">Submit 1111</h2>
             <form onSubmit={(e) => { e.preventDefault(); if (staffId) submit.mutate(); }} className="mt-4 grid gap-3 sm:grid-cols-2">
               <label className="block">
                 <span className="mb-1 block text-[10px] uppercase tracking-widest text-muted-foreground">Team Member</span>
