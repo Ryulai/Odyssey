@@ -142,7 +142,7 @@ function EvaluationsPage() {
           </section>
         ) : (
           <div className="rounded-md border border-border bg-ink/30 p-5 text-xs text-muted-foreground">
-            Only Managers and Directors can submit evaluations. You can view your own grades below.
+            Only Managers and Directors can submit 1111. You can view your own grades below.
           </div>
         )}
 
