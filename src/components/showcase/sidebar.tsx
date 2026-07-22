@@ -34,7 +34,7 @@ export function ShowcaseSidebar() {
           return (
             <Link
               key={item.to}
-              to={item.to}
+              to={item.to as string as "/showcase"}
               className={`group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
                 active
                   ? "bg-gradient-to-r from-[#d4af37]/20 to-transparent text-parchment shadow-[inset_0_0_0_1px_rgba(212,175,55,0.3)]"
