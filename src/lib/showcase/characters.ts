@@ -404,7 +404,7 @@ export const SHOWCASE_CHARACTERS: ShowcaseCharacter[] = [
       content: { level: 3, progress: 60, nextUnlock: "Publish playbook" },
       mixologist: { level: 2, progress: 40, nextUnlock: "Signature menu" },
     }),
-    unlockedBranches: BRANCHES,
+    unlockedBranches: ALL_BRANCHES,
     titles: ["Legend", "Partner", "Shareholder", "Founder Circle"],
     bio: "Seven years. Legend rank. Building the guild's future.",
   },
