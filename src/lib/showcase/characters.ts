@@ -110,21 +110,18 @@ export type ShowcaseCharacter = {
   bio: string;
 };
 
-const BRANCHES = [
-  "Trainer",
-  "Leadership",
-  "Content Creator",
-  "Mixologist",
-  "Operations",
-  "Business",
-  "Ownership",
-  "Partner",
-  "Shareholder",
+export const JOURNEY_TREE = {
+  secondaryClass: ["Trainer", "Leader", "Content Creator", "Mixologist"],
+  mentorship: ["Mentorship"],
+  ownership: ["Partner Candidate", "Partner", "Shareholder"],
+} as const;
+
+const ALL_BRANCHES: string[] = [
+  ...JOURNEY_TREE.secondaryClass,
+  ...JOURNEY_TREE.mentorship,
+  ...JOURNEY_TREE.ownership,
 ];
 
-function fullBranches(upTo: number): string[] {
-  return BRANCHES.slice(0, upTo);
-}
 
 const baseAchievements = (unlocked: string[]): Achievement[] => [
   {
