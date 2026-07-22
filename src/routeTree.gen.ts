@@ -25,6 +25,7 @@ import { Route as MapRouteImport } from './routes/map'
 import { Route as ManagerRouteImport } from './routes/manager'
 import { Route as JournalRouteImport } from './routes/journal'
 import { Route as InventoryRouteImport } from './routes/inventory'
+import { Route as HunterDashboardRouteImport } from './routes/hunter-dashboard'
 import { Route as FleetRouteImport } from './routes/fleet'
 import { Route as FiveSystemsRouteImport } from './routes/five-systems'
 import { Route as DailySalesClaimRouteImport } from './routes/daily-sales-claim'
@@ -147,6 +148,11 @@ const JournalRoute = JournalRouteImport.update({
 const InventoryRoute = InventoryRouteImport.update({
   id: '/inventory',
   path: '/inventory',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HunterDashboardRoute = HunterDashboardRouteImport.update({
+  id: '/hunter-dashboard',
+  path: '/hunter-dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FleetRoute = FleetRouteImport.update({
@@ -377,6 +383,7 @@ export interface FileRoutesByFullPath {
   '/daily-sales-claim': typeof DailySalesClaimRoute
   '/five-systems': typeof FiveSystemsRoute
   '/fleet': typeof FleetRoute
+  '/hunter-dashboard': typeof HunterDashboardRoute
   '/inventory': typeof InventoryRoute
   '/journal': typeof JournalRoute
   '/manager': typeof ManagerRoute
@@ -437,6 +444,7 @@ export interface FileRoutesByTo {
   '/daily-sales-claim': typeof DailySalesClaimRoute
   '/five-systems': typeof FiveSystemsRoute
   '/fleet': typeof FleetRoute
+  '/hunter-dashboard': typeof HunterDashboardRoute
   '/inventory': typeof InventoryRoute
   '/journal': typeof JournalRoute
   '/manager': typeof ManagerRoute
@@ -496,6 +504,7 @@ export interface FileRoutesById {
   '/daily-sales-claim': typeof DailySalesClaimRoute
   '/five-systems': typeof FiveSystemsRoute
   '/fleet': typeof FleetRoute
+  '/hunter-dashboard': typeof HunterDashboardRoute
   '/inventory': typeof InventoryRoute
   '/journal': typeof JournalRoute
   '/manager': typeof ManagerRoute
@@ -559,6 +568,7 @@ export interface FileRouteTypes {
     | '/daily-sales-claim'
     | '/five-systems'
     | '/fleet'
+    | '/hunter-dashboard'
     | '/inventory'
     | '/journal'
     | '/manager'
@@ -619,6 +629,7 @@ export interface FileRouteTypes {
     | '/daily-sales-claim'
     | '/five-systems'
     | '/fleet'
+    | '/hunter-dashboard'
     | '/inventory'
     | '/journal'
     | '/manager'
@@ -677,6 +688,7 @@ export interface FileRouteTypes {
     | '/daily-sales-claim'
     | '/five-systems'
     | '/fleet'
+    | '/hunter-dashboard'
     | '/inventory'
     | '/journal'
     | '/manager'
@@ -739,6 +751,7 @@ export interface RootRouteChildren {
   DailySalesClaimRoute: typeof DailySalesClaimRoute
   FiveSystemsRoute: typeof FiveSystemsRoute
   FleetRoute: typeof FleetRoute
+  HunterDashboardRoute: typeof HunterDashboardRoute
   InventoryRoute: typeof InventoryRoute
   JournalRoute: typeof JournalRoute
   ManagerRoute: typeof ManagerRoute
@@ -871,6 +884,13 @@ declare module '@tanstack/react-router' {
       path: '/inventory'
       fullPath: '/inventory'
       preLoaderRoute: typeof InventoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hunter-dashboard': {
+      id: '/hunter-dashboard'
+      path: '/hunter-dashboard'
+      fullPath: '/hunter-dashboard'
+      preLoaderRoute: typeof HunterDashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/fleet': {
@@ -1288,6 +1308,7 @@ const rootRouteChildren: RootRouteChildren = {
   DailySalesClaimRoute: DailySalesClaimRoute,
   FiveSystemsRoute: FiveSystemsRoute,
   FleetRoute: FleetRoute,
+  HunterDashboardRoute: HunterDashboardRoute,
   InventoryRoute: InventoryRoute,
   JournalRoute: JournalRoute,
   ManagerRoute: ManagerRoute,
@@ -1310,13 +1331,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
