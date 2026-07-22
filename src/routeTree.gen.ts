@@ -52,6 +52,8 @@ import { Route as ShowcasePerformanceRouteImport } from './routes/showcase.perfo
 import { Route as ShowcaseOwnershipRouteImport } from './routes/showcase.ownership'
 import { Route as ShowcaseMentorshipRouteImport } from './routes/showcase.mentorship'
 import { Route as ShowcaseJourneyMapRouteImport } from './routes/showcase.journey-map'
+import { Route as ShowcaseFutureVisionRouteImport } from './routes/showcase.future-vision'
+import { Route as ShowcaseChooseHunterRouteImport } from './routes/showcase.choose-hunter'
 import { Route as ShowcaseAchievementsRouteImport } from './routes/showcase.achievements'
 import { Route as CollectionsTitlesRouteImport } from './routes/collections.titles'
 import { Route as CollectionsSeasonalRouteImport } from './routes/collections.seasonal'
@@ -282,6 +284,16 @@ const ShowcaseJourneyMapRoute = ShowcaseJourneyMapRouteImport.update({
   path: '/journey-map',
   getParentRoute: () => ShowcaseRoute,
 } as any)
+const ShowcaseFutureVisionRoute = ShowcaseFutureVisionRouteImport.update({
+  id: '/future-vision',
+  path: '/future-vision',
+  getParentRoute: () => ShowcaseRoute,
+} as any)
+const ShowcaseChooseHunterRoute = ShowcaseChooseHunterRouteImport.update({
+  id: '/choose-hunter',
+  path: '/choose-hunter',
+  getParentRoute: () => ShowcaseRoute,
+} as any)
 const ShowcaseAchievementsRoute = ShowcaseAchievementsRouteImport.update({
   id: '/achievements',
   path: '/achievements',
@@ -393,6 +405,8 @@ export interface FileRoutesByFullPath {
   '/collections/seasonal': typeof CollectionsSeasonalRoute
   '/collections/titles': typeof CollectionsTitlesRoute
   '/showcase/achievements': typeof ShowcaseAchievementsRoute
+  '/showcase/choose-hunter': typeof ShowcaseChooseHunterRoute
+  '/showcase/future-vision': typeof ShowcaseFutureVisionRoute
   '/showcase/journey-map': typeof ShowcaseJourneyMapRoute
   '/showcase/mentorship': typeof ShowcaseMentorshipRoute
   '/showcase/ownership': typeof ShowcaseOwnershipRoute
@@ -448,6 +462,8 @@ export interface FileRoutesByTo {
   '/collections/seasonal': typeof CollectionsSeasonalRoute
   '/collections/titles': typeof CollectionsTitlesRoute
   '/showcase/achievements': typeof ShowcaseAchievementsRoute
+  '/showcase/choose-hunter': typeof ShowcaseChooseHunterRoute
+  '/showcase/future-vision': typeof ShowcaseFutureVisionRoute
   '/showcase/journey-map': typeof ShowcaseJourneyMapRoute
   '/showcase/mentorship': typeof ShowcaseMentorshipRoute
   '/showcase/ownership': typeof ShowcaseOwnershipRoute
@@ -508,6 +524,8 @@ export interface FileRoutesById {
   '/collections/seasonal': typeof CollectionsSeasonalRoute
   '/collections/titles': typeof CollectionsTitlesRoute
   '/showcase/achievements': typeof ShowcaseAchievementsRoute
+  '/showcase/choose-hunter': typeof ShowcaseChooseHunterRoute
+  '/showcase/future-vision': typeof ShowcaseFutureVisionRoute
   '/showcase/journey-map': typeof ShowcaseJourneyMapRoute
   '/showcase/mentorship': typeof ShowcaseMentorshipRoute
   '/showcase/ownership': typeof ShowcaseOwnershipRoute
@@ -569,6 +587,8 @@ export interface FileRouteTypes {
     | '/collections/seasonal'
     | '/collections/titles'
     | '/showcase/achievements'
+    | '/showcase/choose-hunter'
+    | '/showcase/future-vision'
     | '/showcase/journey-map'
     | '/showcase/mentorship'
     | '/showcase/ownership'
@@ -624,6 +644,8 @@ export interface FileRouteTypes {
     | '/collections/seasonal'
     | '/collections/titles'
     | '/showcase/achievements'
+    | '/showcase/choose-hunter'
+    | '/showcase/future-vision'
     | '/showcase/journey-map'
     | '/showcase/mentorship'
     | '/showcase/ownership'
@@ -683,6 +705,8 @@ export interface FileRouteTypes {
     | '/collections/seasonal'
     | '/collections/titles'
     | '/showcase/achievements'
+    | '/showcase/choose-hunter'
+    | '/showcase/future-vision'
     | '/showcase/journey-map'
     | '/showcase/mentorship'
     | '/showcase/ownership'
@@ -1038,6 +1062,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShowcaseJourneyMapRouteImport
       parentRoute: typeof ShowcaseRoute
     }
+    '/showcase/future-vision': {
+      id: '/showcase/future-vision'
+      path: '/future-vision'
+      fullPath: '/showcase/future-vision'
+      preLoaderRoute: typeof ShowcaseFutureVisionRouteImport
+      parentRoute: typeof ShowcaseRoute
+    }
+    '/showcase/choose-hunter': {
+      id: '/showcase/choose-hunter'
+      path: '/choose-hunter'
+      fullPath: '/showcase/choose-hunter'
+      preLoaderRoute: typeof ShowcaseChooseHunterRouteImport
+      parentRoute: typeof ShowcaseRoute
+    }
     '/showcase/achievements': {
       id: '/showcase/achievements'
       path: '/achievements'
@@ -1173,6 +1211,8 @@ const CollectionsRouteWithChildren = CollectionsRoute._addFileChildren(
 
 interface ShowcaseRouteChildren {
   ShowcaseAchievementsRoute: typeof ShowcaseAchievementsRoute
+  ShowcaseChooseHunterRoute: typeof ShowcaseChooseHunterRoute
+  ShowcaseFutureVisionRoute: typeof ShowcaseFutureVisionRoute
   ShowcaseJourneyMapRoute: typeof ShowcaseJourneyMapRoute
   ShowcaseMentorshipRoute: typeof ShowcaseMentorshipRoute
   ShowcaseOwnershipRoute: typeof ShowcaseOwnershipRoute
@@ -1186,6 +1226,8 @@ interface ShowcaseRouteChildren {
 
 const ShowcaseRouteChildren: ShowcaseRouteChildren = {
   ShowcaseAchievementsRoute: ShowcaseAchievementsRoute,
+  ShowcaseChooseHunterRoute: ShowcaseChooseHunterRoute,
+  ShowcaseFutureVisionRoute: ShowcaseFutureVisionRoute,
   ShowcaseJourneyMapRoute: ShowcaseJourneyMapRoute,
   ShowcaseMentorshipRoute: ShowcaseMentorshipRoute,
   ShowcaseOwnershipRoute: ShowcaseOwnershipRoute,
@@ -1268,13 +1310,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
