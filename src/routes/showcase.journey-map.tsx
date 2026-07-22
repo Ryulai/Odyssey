@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useShowcase } from "@/lib/showcase/context";
 import { GlowCard, SectionTitle, rankColor, rankIndex } from "@/components/showcase/primitives";
-import { JOURNEY_BRANCHES, RANK_ORDER, type ShowcaseRank } from "@/lib/showcase/characters";
+import { JOURNEY_TREE, RANK_ORDER, type ShowcaseRank } from "@/lib/showcase/characters";
 import { Lock } from "lucide-react";
 
 export const Route = createFileRoute("/showcase/journey-map")({
@@ -12,6 +12,7 @@ export const Route = createFileRoute("/showcase/journey-map")({
 function JourneyMap() {
   const { character: c } = useShowcase();
   const currentIdx = rankIndex(c.rank);
+  const goldReached = currentIdx >= rankIndex("Gold" as ShowcaseRank);
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -22,29 +23,50 @@ function JourneyMap() {
       />
 
       <div className="grid md:grid-cols-[1fr_360px] gap-12 items-start">
-        {/* Spine */}
         <div className="relative py-4">
           <div className="absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-[#d4af37]/40 to-transparent" />
           <div className="space-y-6">
             {RANK_ORDER.map((r, i) => {
               const isCurrent = r === c.rank;
               const walked = i <= currentIdx;
-              const color = rankColor(r);
-              const isGold = r === "Gold";
               return (
                 <div key={r} className="relative flex justify-center">
                   <RankNode rank={r} state={isCurrent ? "current" : walked ? "walked" : "future"} />
-                  {isGold && (
-                    <BranchFan
-                      unlocked={c.unlockedBranches}
-                      allUnlocked={currentIdx >= rankIndex("Gold" as ShowcaseRank)}
-                      color={color}
-                    />
-                  )}
                 </div>
               );
             })}
           </div>
+
+          {goldReached && (
+            <div className="mt-12">
+              <div className="text-center text-[10px] uppercase tracking-[0.4em] text-[#d4af37]/70 mb-6">
+                After Gold, the path splits
+              </div>
+              <div className="grid md:grid-cols-3 gap-6">
+                <BranchColumn
+                  title="Secondary Class"
+                  subtitle="New professions"
+                  nodes={JOURNEY_TREE.secondaryClass}
+                  unlocked={c.unlockedBranches}
+                  layout="grid"
+                />
+                <BranchColumn
+                  title="Mentorship"
+                  subtitle="Grow others"
+                  nodes={JOURNEY_TREE.mentorship}
+                  unlocked={c.unlockedBranches}
+                  layout="single"
+                />
+                <BranchColumn
+                  title="Ownership"
+                  subtitle="A path, not a choice"
+                  nodes={JOURNEY_TREE.ownership}
+                  unlocked={c.unlockedBranches}
+                  layout="ladder"
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         <GlowCard className="p-6 sticky top-24">
@@ -55,16 +77,16 @@ function JourneyMap() {
             <LegendRow color="#2a2530" label="Future rank" />
           </div>
           <div className="mt-6 border-t border-white/5 pt-6">
-            <div className="text-[10px] uppercase tracking-[0.3em] text-white/40">Branches</div>
+            <div className="text-[10px] uppercase tracking-[0.3em] text-white/40">After Gold</div>
             <div className="text-white/60 text-sm mt-2 leading-relaxed">
-              At Gold, the single path becomes many. Each branch is a new identity: Trainer, Leader, Content Creator, Business, Ownership.
+              The path splits into three: <span className="text-parchment">Secondary Class</span>, <span className="text-parchment">Mentorship</span>, and <span className="text-parchment">Ownership</span>. Each is its own journey.
             </div>
           </div>
           <div className="mt-6 border-t border-white/5 pt-6">
             <div className="text-[10px] uppercase tracking-[0.3em] text-white/40">Unlocked for {c.name}</div>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {c.unlockedBranches.length === 0 && <span className="text-white/40 text-xs">None yet — reach Gold first.</span>}
-              {c.unlockedBranches.map((b) => (
+              {c.unlockedBranches.map((b: string) => (
                 <span key={b} className="text-[10px] tracking-widest uppercase px-2 py-1 rounded-full bg-[#d4af37]/10 text-[#d4af37] border border-[#d4af37]/30">{b}</span>
               ))}
             </div>
@@ -108,31 +130,65 @@ function RankNode({ rank, state }: { rank: ShowcaseRank; state: "current" | "wal
   );
 }
 
-function BranchFan({ unlocked, allUnlocked, color }: { unlocked: string[]; allUnlocked: boolean; color: string }) {
-  if (!allUnlocked) return null;
-  const items = JOURNEY_BRANCHES;
+type BranchLayout = "grid" | "single" | "ladder";
+
+function BranchColumn({
+  title,
+  subtitle,
+  nodes,
+  unlocked,
+  layout,
+}: {
+  title: string;
+  subtitle: string;
+  nodes: readonly string[];
+  unlocked: string[];
+  layout: BranchLayout;
+}) {
   return (
-    <div className="absolute left-full top-1/2 -translate-y-1/2 ml-8 hidden lg:block">
-      <div className="grid grid-cols-3 gap-2 w-[320px]">
-        {items.map((b) => {
-          const on = unlocked.includes(b);
-          return (
-            <div
-              key={b}
-              className="text-[10px] uppercase tracking-widest px-2 py-2 rounded-lg border flex items-center gap-1.5 justify-center"
-              style={{
-                borderColor: on ? color + "80" : "#2a2530",
-                background: on ? color + "12" : "#0a080f",
-                color: on ? color : "#4a4655",
-                boxShadow: on ? `0 0 20px -6px ${color}90` : "none",
-              }}
-            >
-              {!on && <Lock className="w-2.5 h-2.5" />}
-              {b}
-            </div>
-          );
-        })}
+    <GlowCard className="p-5">
+      <div className="text-[10px] uppercase tracking-[0.3em] text-[#d4af37]/70">{title}</div>
+      <div className="text-white/40 text-[11px] mt-0.5">{subtitle}</div>
+      <div className="mt-4">
+        {layout === "grid" && (
+          <div className="grid grid-cols-2 gap-2">
+            {nodes.map((n) => <Chip key={n} label={n} on={unlocked.includes(n)} />)}
+          </div>
+        )}
+        {layout === "single" && (
+          <div className="flex justify-center">
+            <Chip label={nodes[0]} on={unlocked.includes(nodes[0])} big />
+          </div>
+        )}
+        {layout === "ladder" && (
+          <div className="relative flex flex-col items-stretch gap-2">
+            <div className="absolute left-1/2 top-2 bottom-2 w-px -translate-x-1/2 bg-[#d4af37]/20" />
+            {nodes.map((n) => (
+              <div key={n} className="relative">
+                <Chip label={n} on={unlocked.includes(n)} />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
+    </GlowCard>
+  );
+}
+
+function Chip({ label, on, big = false }: { label: string; on: boolean; big?: boolean }) {
+  const color = "#d4af37";
+  return (
+    <div
+      className={`uppercase tracking-widest rounded-lg border flex items-center gap-1.5 justify-center ${big ? "text-xs px-3 py-3 w-full" : "text-[10px] px-2 py-2"}`}
+      style={{
+        borderColor: on ? color + "80" : "#2a2530",
+        background: on ? color + "12" : "#0a080f",
+        color: on ? color : "#4a4655",
+        boxShadow: on ? `0 0 20px -6px ${color}90` : "none",
+      }}
+    >
+      {!on && <Lock className="w-2.5 h-2.5" />}
+      {label}
     </div>
   );
 }
