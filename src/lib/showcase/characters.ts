@@ -414,4 +414,4 @@ export function getCharacter(id: string): ShowcaseCharacter {
   return SHOWCASE_CHARACTERS.find((c) => c.id === id) ?? SHOWCASE_CHARACTERS[0];
 }
 
-export const JOURNEY_BRANCHES = BRANCHES;
+export const JOURNEY_BRANCHES = ALL_BRANCHES;
