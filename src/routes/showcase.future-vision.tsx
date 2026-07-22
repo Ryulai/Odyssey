@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { GlowCard, SectionTitle } from "@/components/showcase/primitives";
-import { ActNav } from "@/components/showcase/act-nav";
 import { Sparkles, Users, Landmark, RotateCw } from "lucide-react";
 
 export const Route = createFileRoute("/showcase/future-vision")({
@@ -104,8 +103,6 @@ function FutureVision() {
           </Link>
         </div>
       </div>
-
-      <ActNav />
     </div>
   );
 }
