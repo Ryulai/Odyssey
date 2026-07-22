@@ -110,21 +110,18 @@ export type ShowcaseCharacter = {
   bio: string;
 };
 
-const BRANCHES = [
-  "Trainer",
-  "Leadership",
-  "Content Creator",
-  "Mixologist",
-  "Operations",
-  "Business",
-  "Ownership",
-  "Partner",
-  "Shareholder",
+export const JOURNEY_TREE = {
+  secondaryClass: ["Trainer", "Leader", "Content Creator", "Mixologist"],
+  mentorship: ["Mentorship"],
+  ownership: ["Partner Candidate", "Partner", "Shareholder"],
+} as const;
+
+const ALL_BRANCHES: string[] = [
+  ...JOURNEY_TREE.secondaryClass,
+  ...JOURNEY_TREE.mentorship,
+  ...JOURNEY_TREE.ownership,
 ];
 
-function fullBranches(upTo: number): string[] {
-  return BRANCHES.slice(0, upTo);
-}
 
 const baseAchievements = (unlocked: string[]): Achievement[] => [
   {
@@ -318,7 +315,7 @@ export const SHOWCASE_CHARACTERS: ShowcaseCharacter[] = [
     secondaryTrees: baseSecondary(true, {
       trainer: { level: 1, progress: 40, nextUnlock: "Coach 3 hunters to Bronze" },
     }),
-    unlockedBranches: fullBranches(3),
+    unlockedBranches: ["Trainer"],
     titles: ["Gold Hunter", "Mentor", "Trainer I"],
     bio: "Two years in. Ranked Gold. The first branch of the journey is open.",
   },
@@ -360,7 +357,7 @@ export const SHOWCASE_CHARACTERS: ShowcaseCharacter[] = [
       leader: { level: 2, progress: 55, nextUnlock: "Own a full shift" },
       operations: { level: 1, progress: 30, nextUnlock: "Publish weekly report x4" },
     }),
-    unlockedBranches: fullBranches(6),
+    unlockedBranches: ["Trainer", "Leader", "Content Creator", "Mentorship", "Partner Candidate"],
     titles: ["Platinum Hunter", "Team Leader", "Trainer III", "Partner Candidate"],
     bio: "Four years. Leads a team. Grows the next generation.",
   },
@@ -407,7 +404,7 @@ export const SHOWCASE_CHARACTERS: ShowcaseCharacter[] = [
       content: { level: 3, progress: 60, nextUnlock: "Publish playbook" },
       mixologist: { level: 2, progress: 40, nextUnlock: "Signature menu" },
     }),
-    unlockedBranches: BRANCHES,
+    unlockedBranches: ALL_BRANCHES,
     titles: ["Legend", "Partner", "Shareholder", "Founder Circle"],
     bio: "Seven years. Legend rank. Building the guild's future.",
   },
@@ -417,4 +414,4 @@ export function getCharacter(id: string): ShowcaseCharacter {
   return SHOWCASE_CHARACTERS.find((c) => c.id === id) ?? SHOWCASE_CHARACTERS[0];
 }
 
-export const JOURNEY_BRANCHES = BRANCHES;
+export const JOURNEY_BRANCHES = ALL_BRANCHES;
