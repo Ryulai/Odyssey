@@ -315,7 +315,7 @@ export const SHOWCASE_CHARACTERS: ShowcaseCharacter[] = [
     secondaryTrees: baseSecondary(true, {
       trainer: { level: 1, progress: 40, nextUnlock: "Coach 3 hunters to Bronze" },
     }),
-    unlockedBranches: fullBranches(3),
+    unlockedBranches: ["Trainer"],
     titles: ["Gold Hunter", "Mentor", "Trainer I"],
     bio: "Two years in. Ranked Gold. The first branch of the journey is open.",
   },
