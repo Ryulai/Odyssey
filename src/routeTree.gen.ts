@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SystemRouteImport } from './routes/system'
 import { Route as StatisticsRouteImport } from './routes/statistics'
+import { Route as ShowcaseRouteImport } from './routes/showcase'
 import { Route as SecondaryClassRouteImport } from './routes/secondary-class'
 import { Route as SalesReviewRouteImport } from './routes/sales-review'
 import { Route as PromotionsRouteImport } from './routes/promotions'
@@ -36,12 +37,22 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SystemIndexRouteImport } from './routes/system.index'
+import { Route as ShowcaseIndexRouteImport } from './routes/showcase.index'
 import { Route as CollectionsIndexRouteImport } from './routes/collections.index'
 import { Route as CodexIndexRouteImport } from './routes/codex.index'
 import { Route as SystemSettingsRouteImport } from './routes/system.settings'
 import { Route as SystemPreferencesRouteImport } from './routes/system.preferences'
 import { Route as SystemNotificationsRouteImport } from './routes/system.notifications'
 import { Route as SystemGuildCollectionRouteImport } from './routes/system.guild-collection'
+import { Route as ShowcaseTimelineRouteImport } from './routes/showcase.timeline'
+import { Route as ShowcaseSecondaryClassRouteImport } from './routes/showcase.secondary-class'
+import { Route as ShowcaseRankRouteImport } from './routes/showcase.rank'
+import { Route as ShowcaseProfileRouteImport } from './routes/showcase.profile'
+import { Route as ShowcasePerformanceRouteImport } from './routes/showcase.performance'
+import { Route as ShowcaseOwnershipRouteImport } from './routes/showcase.ownership'
+import { Route as ShowcaseMentorshipRouteImport } from './routes/showcase.mentorship'
+import { Route as ShowcaseJourneyMapRouteImport } from './routes/showcase.journey-map'
+import { Route as ShowcaseAchievementsRouteImport } from './routes/showcase.achievements'
 import { Route as CollectionsTitlesRouteImport } from './routes/collections.titles'
 import { Route as CollectionsSeasonalRouteImport } from './routes/collections.seasonal'
 import { Route as CollectionsPortraitsRouteImport } from './routes/collections.portraits'
@@ -64,6 +75,11 @@ const SystemRoute = SystemRouteImport.update({
 const StatisticsRoute = StatisticsRouteImport.update({
   id: '/statistics',
   path: '/statistics',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShowcaseRoute = ShowcaseRouteImport.update({
+  id: '/showcase',
+  path: '/showcase',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SecondaryClassRoute = SecondaryClassRouteImport.update({
@@ -191,6 +207,11 @@ const SystemIndexRoute = SystemIndexRouteImport.update({
   path: '/',
   getParentRoute: () => SystemRoute,
 } as any)
+const ShowcaseIndexRoute = ShowcaseIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ShowcaseRoute,
+} as any)
 const CollectionsIndexRoute = CollectionsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -220,6 +241,51 @@ const SystemGuildCollectionRoute = SystemGuildCollectionRouteImport.update({
   id: '/guild-collection',
   path: '/guild-collection',
   getParentRoute: () => SystemRoute,
+} as any)
+const ShowcaseTimelineRoute = ShowcaseTimelineRouteImport.update({
+  id: '/timeline',
+  path: '/timeline',
+  getParentRoute: () => ShowcaseRoute,
+} as any)
+const ShowcaseSecondaryClassRoute = ShowcaseSecondaryClassRouteImport.update({
+  id: '/secondary-class',
+  path: '/secondary-class',
+  getParentRoute: () => ShowcaseRoute,
+} as any)
+const ShowcaseRankRoute = ShowcaseRankRouteImport.update({
+  id: '/rank',
+  path: '/rank',
+  getParentRoute: () => ShowcaseRoute,
+} as any)
+const ShowcaseProfileRoute = ShowcaseProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => ShowcaseRoute,
+} as any)
+const ShowcasePerformanceRoute = ShowcasePerformanceRouteImport.update({
+  id: '/performance',
+  path: '/performance',
+  getParentRoute: () => ShowcaseRoute,
+} as any)
+const ShowcaseOwnershipRoute = ShowcaseOwnershipRouteImport.update({
+  id: '/ownership',
+  path: '/ownership',
+  getParentRoute: () => ShowcaseRoute,
+} as any)
+const ShowcaseMentorshipRoute = ShowcaseMentorshipRouteImport.update({
+  id: '/mentorship',
+  path: '/mentorship',
+  getParentRoute: () => ShowcaseRoute,
+} as any)
+const ShowcaseJourneyMapRoute = ShowcaseJourneyMapRouteImport.update({
+  id: '/journey-map',
+  path: '/journey-map',
+  getParentRoute: () => ShowcaseRoute,
+} as any)
+const ShowcaseAchievementsRoute = ShowcaseAchievementsRouteImport.update({
+  id: '/achievements',
+  path: '/achievements',
+  getParentRoute: () => ShowcaseRoute,
 } as any)
 const CollectionsTitlesRoute = CollectionsTitlesRouteImport.update({
   id: '/titles',
@@ -312,6 +378,7 @@ export interface FileRoutesByFullPath {
   '/promotions': typeof PromotionsRoute
   '/sales-review': typeof SalesReviewRoute
   '/secondary-class': typeof SecondaryClassRoute
+  '/showcase': typeof ShowcaseRouteWithChildren
   '/statistics': typeof StatisticsRoute
   '/system': typeof SystemRouteWithChildren
   '/codex/$category': typeof CodexCategoryRouteWithChildren
@@ -325,12 +392,22 @@ export interface FileRoutesByFullPath {
   '/collections/portraits': typeof CollectionsPortraitsRoute
   '/collections/seasonal': typeof CollectionsSeasonalRoute
   '/collections/titles': typeof CollectionsTitlesRoute
+  '/showcase/achievements': typeof ShowcaseAchievementsRoute
+  '/showcase/journey-map': typeof ShowcaseJourneyMapRoute
+  '/showcase/mentorship': typeof ShowcaseMentorshipRoute
+  '/showcase/ownership': typeof ShowcaseOwnershipRoute
+  '/showcase/performance': typeof ShowcasePerformanceRoute
+  '/showcase/profile': typeof ShowcaseProfileRoute
+  '/showcase/rank': typeof ShowcaseRankRoute
+  '/showcase/secondary-class': typeof ShowcaseSecondaryClassRoute
+  '/showcase/timeline': typeof ShowcaseTimelineRoute
   '/system/guild-collection': typeof SystemGuildCollectionRoute
   '/system/notifications': typeof SystemNotificationsRoute
   '/system/preferences': typeof SystemPreferencesRoute
   '/system/settings': typeof SystemSettingsRoute
   '/codex/': typeof CodexIndexRoute
   '/collections/': typeof CollectionsIndexRoute
+  '/showcase/': typeof ShowcaseIndexRoute
   '/system/': typeof SystemIndexRoute
   '/codex/$category/$slug': typeof CodexCategorySlugRoute
   '/codex/$category/': typeof CodexCategoryIndexRoute
@@ -370,12 +447,22 @@ export interface FileRoutesByTo {
   '/collections/portraits': typeof CollectionsPortraitsRoute
   '/collections/seasonal': typeof CollectionsSeasonalRoute
   '/collections/titles': typeof CollectionsTitlesRoute
+  '/showcase/achievements': typeof ShowcaseAchievementsRoute
+  '/showcase/journey-map': typeof ShowcaseJourneyMapRoute
+  '/showcase/mentorship': typeof ShowcaseMentorshipRoute
+  '/showcase/ownership': typeof ShowcaseOwnershipRoute
+  '/showcase/performance': typeof ShowcasePerformanceRoute
+  '/showcase/profile': typeof ShowcaseProfileRoute
+  '/showcase/rank': typeof ShowcaseRankRoute
+  '/showcase/secondary-class': typeof ShowcaseSecondaryClassRoute
+  '/showcase/timeline': typeof ShowcaseTimelineRoute
   '/system/guild-collection': typeof SystemGuildCollectionRoute
   '/system/notifications': typeof SystemNotificationsRoute
   '/system/preferences': typeof SystemPreferencesRoute
   '/system/settings': typeof SystemSettingsRoute
   '/codex': typeof CodexIndexRoute
   '/collections': typeof CollectionsIndexRoute
+  '/showcase': typeof ShowcaseIndexRoute
   '/system': typeof SystemIndexRoute
   '/codex/$category/$slug': typeof CodexCategorySlugRoute
   '/codex/$category': typeof CodexCategoryIndexRoute
@@ -406,6 +493,7 @@ export interface FileRoutesById {
   '/promotions': typeof PromotionsRoute
   '/sales-review': typeof SalesReviewRoute
   '/secondary-class': typeof SecondaryClassRoute
+  '/showcase': typeof ShowcaseRouteWithChildren
   '/statistics': typeof StatisticsRoute
   '/system': typeof SystemRouteWithChildren
   '/codex/$category': typeof CodexCategoryRouteWithChildren
@@ -419,12 +507,22 @@ export interface FileRoutesById {
   '/collections/portraits': typeof CollectionsPortraitsRoute
   '/collections/seasonal': typeof CollectionsSeasonalRoute
   '/collections/titles': typeof CollectionsTitlesRoute
+  '/showcase/achievements': typeof ShowcaseAchievementsRoute
+  '/showcase/journey-map': typeof ShowcaseJourneyMapRoute
+  '/showcase/mentorship': typeof ShowcaseMentorshipRoute
+  '/showcase/ownership': typeof ShowcaseOwnershipRoute
+  '/showcase/performance': typeof ShowcasePerformanceRoute
+  '/showcase/profile': typeof ShowcaseProfileRoute
+  '/showcase/rank': typeof ShowcaseRankRoute
+  '/showcase/secondary-class': typeof ShowcaseSecondaryClassRoute
+  '/showcase/timeline': typeof ShowcaseTimelineRoute
   '/system/guild-collection': typeof SystemGuildCollectionRoute
   '/system/notifications': typeof SystemNotificationsRoute
   '/system/preferences': typeof SystemPreferencesRoute
   '/system/settings': typeof SystemSettingsRoute
   '/codex/': typeof CodexIndexRoute
   '/collections/': typeof CollectionsIndexRoute
+  '/showcase/': typeof ShowcaseIndexRoute
   '/system/': typeof SystemIndexRoute
   '/codex/$category/$slug': typeof CodexCategorySlugRoute
   '/codex/$category/': typeof CodexCategoryIndexRoute
@@ -456,6 +554,7 @@ export interface FileRouteTypes {
     | '/promotions'
     | '/sales-review'
     | '/secondary-class'
+    | '/showcase'
     | '/statistics'
     | '/system'
     | '/codex/$category'
@@ -469,12 +568,22 @@ export interface FileRouteTypes {
     | '/collections/portraits'
     | '/collections/seasonal'
     | '/collections/titles'
+    | '/showcase/achievements'
+    | '/showcase/journey-map'
+    | '/showcase/mentorship'
+    | '/showcase/ownership'
+    | '/showcase/performance'
+    | '/showcase/profile'
+    | '/showcase/rank'
+    | '/showcase/secondary-class'
+    | '/showcase/timeline'
     | '/system/guild-collection'
     | '/system/notifications'
     | '/system/preferences'
     | '/system/settings'
     | '/codex/'
     | '/collections/'
+    | '/showcase/'
     | '/system/'
     | '/codex/$category/$slug'
     | '/codex/$category/'
@@ -514,12 +623,22 @@ export interface FileRouteTypes {
     | '/collections/portraits'
     | '/collections/seasonal'
     | '/collections/titles'
+    | '/showcase/achievements'
+    | '/showcase/journey-map'
+    | '/showcase/mentorship'
+    | '/showcase/ownership'
+    | '/showcase/performance'
+    | '/showcase/profile'
+    | '/showcase/rank'
+    | '/showcase/secondary-class'
+    | '/showcase/timeline'
     | '/system/guild-collection'
     | '/system/notifications'
     | '/system/preferences'
     | '/system/settings'
     | '/codex'
     | '/collections'
+    | '/showcase'
     | '/system'
     | '/codex/$category/$slug'
     | '/codex/$category'
@@ -549,6 +668,7 @@ export interface FileRouteTypes {
     | '/promotions'
     | '/sales-review'
     | '/secondary-class'
+    | '/showcase'
     | '/statistics'
     | '/system'
     | '/codex/$category'
@@ -562,12 +682,22 @@ export interface FileRouteTypes {
     | '/collections/portraits'
     | '/collections/seasonal'
     | '/collections/titles'
+    | '/showcase/achievements'
+    | '/showcase/journey-map'
+    | '/showcase/mentorship'
+    | '/showcase/ownership'
+    | '/showcase/performance'
+    | '/showcase/profile'
+    | '/showcase/rank'
+    | '/showcase/secondary-class'
+    | '/showcase/timeline'
     | '/system/guild-collection'
     | '/system/notifications'
     | '/system/preferences'
     | '/system/settings'
     | '/codex/'
     | '/collections/'
+    | '/showcase/'
     | '/system/'
     | '/codex/$category/$slug'
     | '/codex/$category/'
@@ -598,6 +728,7 @@ export interface RootRouteChildren {
   PromotionsRoute: typeof PromotionsRoute
   SalesReviewRoute: typeof SalesReviewRoute
   SecondaryClassRoute: typeof SecondaryClassRoute
+  ShowcaseRoute: typeof ShowcaseRouteWithChildren
   StatisticsRoute: typeof StatisticsRoute
   SystemRoute: typeof SystemRouteWithChildren
   CodexCategoryRoute: typeof CodexCategoryRouteWithChildren
@@ -618,6 +749,13 @@ declare module '@tanstack/react-router' {
       path: '/statistics'
       fullPath: '/statistics'
       preLoaderRoute: typeof StatisticsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/showcase': {
+      id: '/showcase'
+      path: '/showcase'
+      fullPath: '/showcase'
+      preLoaderRoute: typeof ShowcaseRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/secondary-class': {
@@ -795,6 +933,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SystemIndexRouteImport
       parentRoute: typeof SystemRoute
     }
+    '/showcase/': {
+      id: '/showcase/'
+      path: '/'
+      fullPath: '/showcase/'
+      preLoaderRoute: typeof ShowcaseIndexRouteImport
+      parentRoute: typeof ShowcaseRoute
+    }
     '/collections/': {
       id: '/collections/'
       path: '/'
@@ -836,6 +981,69 @@ declare module '@tanstack/react-router' {
       fullPath: '/system/guild-collection'
       preLoaderRoute: typeof SystemGuildCollectionRouteImport
       parentRoute: typeof SystemRoute
+    }
+    '/showcase/timeline': {
+      id: '/showcase/timeline'
+      path: '/timeline'
+      fullPath: '/showcase/timeline'
+      preLoaderRoute: typeof ShowcaseTimelineRouteImport
+      parentRoute: typeof ShowcaseRoute
+    }
+    '/showcase/secondary-class': {
+      id: '/showcase/secondary-class'
+      path: '/secondary-class'
+      fullPath: '/showcase/secondary-class'
+      preLoaderRoute: typeof ShowcaseSecondaryClassRouteImport
+      parentRoute: typeof ShowcaseRoute
+    }
+    '/showcase/rank': {
+      id: '/showcase/rank'
+      path: '/rank'
+      fullPath: '/showcase/rank'
+      preLoaderRoute: typeof ShowcaseRankRouteImport
+      parentRoute: typeof ShowcaseRoute
+    }
+    '/showcase/profile': {
+      id: '/showcase/profile'
+      path: '/profile'
+      fullPath: '/showcase/profile'
+      preLoaderRoute: typeof ShowcaseProfileRouteImport
+      parentRoute: typeof ShowcaseRoute
+    }
+    '/showcase/performance': {
+      id: '/showcase/performance'
+      path: '/performance'
+      fullPath: '/showcase/performance'
+      preLoaderRoute: typeof ShowcasePerformanceRouteImport
+      parentRoute: typeof ShowcaseRoute
+    }
+    '/showcase/ownership': {
+      id: '/showcase/ownership'
+      path: '/ownership'
+      fullPath: '/showcase/ownership'
+      preLoaderRoute: typeof ShowcaseOwnershipRouteImport
+      parentRoute: typeof ShowcaseRoute
+    }
+    '/showcase/mentorship': {
+      id: '/showcase/mentorship'
+      path: '/mentorship'
+      fullPath: '/showcase/mentorship'
+      preLoaderRoute: typeof ShowcaseMentorshipRouteImport
+      parentRoute: typeof ShowcaseRoute
+    }
+    '/showcase/journey-map': {
+      id: '/showcase/journey-map'
+      path: '/journey-map'
+      fullPath: '/showcase/journey-map'
+      preLoaderRoute: typeof ShowcaseJourneyMapRouteImport
+      parentRoute: typeof ShowcaseRoute
+    }
+    '/showcase/achievements': {
+      id: '/showcase/achievements'
+      path: '/achievements'
+      fullPath: '/showcase/achievements'
+      preLoaderRoute: typeof ShowcaseAchievementsRouteImport
+      parentRoute: typeof ShowcaseRoute
     }
     '/collections/titles': {
       id: '/collections/titles'
@@ -963,6 +1171,36 @@ const CollectionsRouteWithChildren = CollectionsRoute._addFileChildren(
   CollectionsRouteChildren,
 )
 
+interface ShowcaseRouteChildren {
+  ShowcaseAchievementsRoute: typeof ShowcaseAchievementsRoute
+  ShowcaseJourneyMapRoute: typeof ShowcaseJourneyMapRoute
+  ShowcaseMentorshipRoute: typeof ShowcaseMentorshipRoute
+  ShowcaseOwnershipRoute: typeof ShowcaseOwnershipRoute
+  ShowcasePerformanceRoute: typeof ShowcasePerformanceRoute
+  ShowcaseProfileRoute: typeof ShowcaseProfileRoute
+  ShowcaseRankRoute: typeof ShowcaseRankRoute
+  ShowcaseSecondaryClassRoute: typeof ShowcaseSecondaryClassRoute
+  ShowcaseTimelineRoute: typeof ShowcaseTimelineRoute
+  ShowcaseIndexRoute: typeof ShowcaseIndexRoute
+}
+
+const ShowcaseRouteChildren: ShowcaseRouteChildren = {
+  ShowcaseAchievementsRoute: ShowcaseAchievementsRoute,
+  ShowcaseJourneyMapRoute: ShowcaseJourneyMapRoute,
+  ShowcaseMentorshipRoute: ShowcaseMentorshipRoute,
+  ShowcaseOwnershipRoute: ShowcaseOwnershipRoute,
+  ShowcasePerformanceRoute: ShowcasePerformanceRoute,
+  ShowcaseProfileRoute: ShowcaseProfileRoute,
+  ShowcaseRankRoute: ShowcaseRankRoute,
+  ShowcaseSecondaryClassRoute: ShowcaseSecondaryClassRoute,
+  ShowcaseTimelineRoute: ShowcaseTimelineRoute,
+  ShowcaseIndexRoute: ShowcaseIndexRoute,
+}
+
+const ShowcaseRouteWithChildren = ShowcaseRoute._addFileChildren(
+  ShowcaseRouteChildren,
+)
+
 interface SystemRouteChildren {
   SystemGuildCollectionRoute: typeof SystemGuildCollectionRoute
   SystemNotificationsRoute: typeof SystemNotificationsRoute
@@ -1021,6 +1259,7 @@ const rootRouteChildren: RootRouteChildren = {
   PromotionsRoute: PromotionsRoute,
   SalesReviewRoute: SalesReviewRoute,
   SecondaryClassRoute: SecondaryClassRoute,
+  ShowcaseRoute: ShowcaseRouteWithChildren,
   StatisticsRoute: StatisticsRoute,
   SystemRoute: SystemRouteWithChildren,
   CodexCategoryRoute: CodexCategoryRouteWithChildren,

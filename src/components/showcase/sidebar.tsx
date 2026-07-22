@@ -3,7 +3,8 @@ import {
   Home, Map, User, Trophy, Gauge, Crown, Sparkles, Compass, Landmark, Clock,
 } from "lucide-react";
 
-const NAV = [
+type NavItem = { to: string; label: string; icon: typeof Home; exact?: boolean };
+const NAV: NavItem[] = [
   { to: "/showcase", label: "Home", icon: Home, exact: true },
   { to: "/showcase/journey-map", label: "Journey Map", icon: Map },
   { to: "/showcase/profile", label: "Hunter Profile", icon: User },
@@ -14,7 +15,7 @@ const NAV = [
   { to: "/showcase/mentorship", label: "Mentorship", icon: Compass },
   { to: "/showcase/ownership", label: "Ownership", icon: Landmark },
   { to: "/showcase/timeline", label: "Journey Timeline", icon: Clock },
-] as const;
+];
 
 export function ShowcaseSidebar() {
   const path = useRouterState({ select: (s) => s.location.pathname });
