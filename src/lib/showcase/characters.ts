@@ -357,7 +357,7 @@ export const SHOWCASE_CHARACTERS: ShowcaseCharacter[] = [
       leader: { level: 2, progress: 55, nextUnlock: "Own a full shift" },
       operations: { level: 1, progress: 30, nextUnlock: "Publish weekly report x4" },
     }),
-    unlockedBranches: fullBranches(6),
+    unlockedBranches: ["Trainer", "Leader", "Content Creator", "Mentorship", "Partner Candidate"],
     titles: ["Platinum Hunter", "Team Leader", "Trainer III", "Partner Candidate"],
     bio: "Four years. Leads a team. Grows the next generation.",
   },
