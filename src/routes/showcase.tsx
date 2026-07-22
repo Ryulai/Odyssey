@@ -3,6 +3,7 @@ import { ShowcaseProvider } from "@/lib/showcase/context";
 import { ShowcaseSidebar } from "@/components/showcase/sidebar";
 import { CharacterSwitcher } from "@/components/showcase/character-switcher";
 import { ActProgress } from "@/components/showcase/act-progress";
+import { ActNav } from "@/components/showcase/act-nav";
 import { findAct } from "@/lib/showcase/acts";
 
 export const Route = createFileRoute("/showcase")({
@@ -60,6 +61,9 @@ function ShowcaseChrome() {
             </header>
             <div className="px-6 md:px-10 pb-24 pt-4">
               <Outlet />
+              <div className="max-w-7xl mx-auto">
+                <ActNav />
+              </div>
             </div>
           </main>
         </div>
