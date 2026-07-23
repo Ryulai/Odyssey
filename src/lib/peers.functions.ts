@@ -20,10 +20,17 @@ export type PeerRow = {
   is_me: boolean;
 };
 
+export type PeerScope =
+  | { kind: "hunter"; label: string }
+  | { kind: "direct_reports"; label: string }
+  | { kind: "department"; label: string }
+  | { kind: "organization"; label: string };
+
 export type PeerInsightsPayload = {
-  me: { staff_id: string; name: string; rank_key: string | null; location_id: string | null; location_name: string | null } | null;
-  month: string; // YYYY-MM
+  me: { staff_id: string; name: string; rank_key: string | null; location_id: string | null; location_name: string | null; role: "director" | "manager" | "staff" } | null;
+  month: string;
   peers: PeerRow[];
+  scope: PeerScope;
   notice?: string;
 };
 
@@ -37,55 +44,128 @@ function prevMonthStart(d = new Date()) {
 export const getPeerInsights = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<PeerInsightsPayload> => {
-    // Resolve current user's staff row (fleet + rank).
+    // Resolve caller role from user_roles (highest privilege wins).
+    const rolesRes = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId);
+    if (rolesRes.error) throw new Error(rolesRes.error.message);
+    const roleSet = new Set((rolesRes.data ?? []).map(r => r.role as string));
+    const callerRole: "director" | "manager" | "staff" = roleSet.has("director")
+      ? "director"
+      : roleSet.has("manager")
+        ? "manager"
+        : "staff";
+
+    // Resolve caller's own staff row.
     const meRes = await context.supabase
       .from("staff")
-      .select("id, name, current_rank_key, location_id, role_family")
+      .select("id, name, current_rank_key, location_id, business_unit")
       .eq("user_id", context.userId)
       .order("updated_at", { ascending: false })
       .limit(1)
       .maybeSingle();
     if (meRes.error) throw new Error(meRes.error.message);
     const meStaff = meRes.data;
-    if (!meStaff) {
-      return { me: null, month: monthStart(), peers: [], notice: "You aren't on the crew manifest yet — Peer Insights unlocks once a Director adds you." };
-    }
 
-    // Same-fleet + same-rank scope. Use admin client to read peer summaries
-    // (RLS blocks cross-user reads); we deliberately project only non-sensitive fields.
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
-    const [peersRes, locRes] = await Promise.all([
-      meStaff.location_id && meStaff.current_rank_key
-        ? supabaseAdmin
-            .from("staff")
-            .select("id, name, current_rank_key, location_id")
-            .eq("location_id", meStaff.location_id)
-            .eq("current_rank_key", meStaff.current_rank_key)
-            .neq("status", "inactive")
-        : Promise.resolve({ data: [], error: null } as any),
-      meStaff.location_id
-        ? supabaseAdmin.from("locations").select("id, name").eq("id", meStaff.location_id).maybeSingle()
-        : Promise.resolve({ data: null, error: null } as any),
-    ]);
-    if ((peersRes as any).error) throw new Error((peersRes as any).error.message);
-    if ((locRes as any).error) throw new Error((locRes as any).error.message);
-
-    const peerStaff = (peersRes.data ?? []) as Array<{ id: string; name: string; current_rank_key: string | null; location_id: string | null }>;
-    const peerIds = peerStaff.map(p => p.id);
     const currentMonth = monthStart();
     const previousMonth = prevMonthStart();
-    const locationName = (locRes as any).data?.name ?? null;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    if (!peerIds.length) {
+    // Determine scope + peer query based on role.
+    let peerQuery: any;
+    let scope: PeerScope;
+
+    if (callerRole === "director") {
+      scope = { kind: "organization", label: "Entire organization" };
+      peerQuery = supabaseAdmin
+        .from("staff")
+        .select("id, name, current_rank_key, location_id, business_unit, manager_id")
+        .neq("status", "inactive");
+    } else if (callerRole === "manager") {
+      if (!meStaff) {
+        return {
+          me: null,
+          month: currentMonth,
+          peers: [],
+          scope: { kind: "direct_reports", label: "Your team" },
+          notice: "You aren't linked to a staff record yet — ask a Director to add you.",
+        };
+      }
+      // Department manager: has a business_unit → see everyone in it.
+      // Direct manager: no business_unit → see direct reports only.
+      if (meStaff.business_unit) {
+        scope = { kind: "department", label: `Department · ${meStaff.business_unit}` };
+        peerQuery = supabaseAdmin
+          .from("staff")
+          .select("id, name, current_rank_key, location_id, business_unit, manager_id")
+          .eq("business_unit", meStaff.business_unit)
+          .neq("status", "inactive");
+      } else {
+        scope = { kind: "direct_reports", label: "Your direct reports" };
+        peerQuery = supabaseAdmin
+          .from("staff")
+          .select("id, name, current_rank_key, location_id, business_unit, manager_id")
+          .eq("manager_id", meStaff.id)
+          .neq("status", "inactive");
+      }
+    } else {
+      // Hunter: same fleet + same rank only.
+      if (!meStaff) {
+        return {
+          me: null,
+          month: currentMonth,
+          peers: [],
+          scope: { kind: "hunter", label: "Same fleet · same rank" },
+          notice: "You aren't on the crew manifest yet — Peer Insights unlocks once a Director adds you.",
+        };
+      }
+      scope = { kind: "hunter", label: "Same fleet · same rank" };
+      if (!meStaff.location_id || !meStaff.current_rank_key) {
+        return {
+          me: { staff_id: meStaff.id, name: meStaff.name, rank_key: meStaff.current_rank_key, location_id: meStaff.location_id, location_name: null, role: callerRole },
+          month: currentMonth,
+          peers: [],
+          scope,
+          notice: "Your fleet or rank isn't set yet — ask a Director to complete your profile.",
+        };
+      }
+      peerQuery = supabaseAdmin
+        .from("staff")
+        .select("id, name, current_rank_key, location_id, business_unit, manager_id")
+        .eq("location_id", meStaff.location_id)
+        .eq("current_rank_key", meStaff.current_rank_key)
+        .neq("status", "inactive");
+    }
+
+    const peersRes = await peerQuery;
+    if (peersRes.error) throw new Error(peersRes.error.message);
+    const peerStaff = (peersRes.data ?? []) as Array<{ id: string; name: string; current_rank_key: string | null; location_id: string | null; business_unit: string | null; manager_id: string | null }>;
+
+    // Location names for display.
+    const locationIds = Array.from(new Set(peerStaff.map(p => p.location_id).filter(Boolean))) as string[];
+    const locRes = locationIds.length
+      ? await supabaseAdmin.from("locations").select("id, name").in("id", locationIds)
+      : { data: [], error: null } as any;
+    if ((locRes as any).error) throw new Error((locRes as any).error.message);
+    const locMap = new Map<string, string>();
+    for (const l of (locRes as any).data ?? []) locMap.set(l.id, l.name);
+
+    const myLocationName = meStaff?.location_id ? locMap.get(meStaff.location_id) ?? null : null;
+
+    if (!peerStaff.length) {
       return {
-        me: { staff_id: meStaff.id, name: meStaff.name, rank_key: meStaff.current_rank_key, location_id: meStaff.location_id, location_name: locationName },
+        me: meStaff ? { staff_id: meStaff.id, name: meStaff.name, rank_key: meStaff.current_rank_key, location_id: meStaff.location_id, location_name: myLocationName, role: callerRole } : null,
         month: currentMonth,
         peers: [],
-        notice: "No peers of your rank in your fleet this month.",
+        scope,
+        notice: callerRole === "staff"
+          ? "No peers of your rank in your fleet this month."
+          : "No Hunters in your scope yet.",
       };
     }
 
+    const peerIds = peerStaff.map(p => p.id);
     const [evalsRes, prevEvalsRes, achRes] = await Promise.all([
       supabaseAdmin
         .from("monthly_evaluations")
@@ -135,7 +215,7 @@ export const getPeerInsights = createServerFn({ method: "GET" })
         name: p.name,
         rank_key: p.current_rank_key,
         location_id: p.location_id,
-        location_name: locationName,
+        location_name: p.location_id ? locMap.get(p.location_id) ?? null : null,
         overall,
         grade: e?.grade ?? null,
         a_behaviour: a,
@@ -146,15 +226,16 @@ export const getPeerInsights = createServerFn({ method: "GET" })
         trend,
         top_strength: e ? (strong?.[0] ?? null) : null,
         achievements_count: achMap.get(p.id) ?? 0,
-        is_me: p.id === meStaff.id,
+        is_me: !!meStaff && p.id === meStaff.id,
       };
     });
 
     peers.sort((x, y) => y.overall - x.overall);
 
     return {
-      me: { staff_id: meStaff.id, name: meStaff.name, rank_key: meStaff.current_rank_key, location_id: meStaff.location_id, location_name: locationName },
+      me: meStaff ? { staff_id: meStaff.id, name: meStaff.name, rank_key: meStaff.current_rank_key, location_id: meStaff.location_id, location_name: myLocationName, role: callerRole } : null,
       month: currentMonth,
       peers,
+      scope,
     };
   });
