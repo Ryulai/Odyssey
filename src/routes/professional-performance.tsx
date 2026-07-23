@@ -500,10 +500,11 @@ function MonthlyReviewPage() {
       setResult(submitted);
       saveDraft(staffId, month, { salesAmount, selections, notes, submitted });
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["staff-dashboard"] }),
+        queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
         queryClient.invalidateQueries({ queryKey: ["peer-insights"] }),
         queryClient.invalidateQueries({ queryKey: ["staff"] }),
       ]);
+
       toast.success(`Review saved · Grade ${g.grade}`);
     } catch (e: any) {
       toast.error(e?.message ?? "Failed to save review");
