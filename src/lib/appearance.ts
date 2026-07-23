@@ -41,16 +41,37 @@ export const GUILD_EMBLEMS: EmblemOption[] = [
   { id: "navigator", label: "Navigator", glyph: "✧", tone: "#B9F2FF" },
 ];
 
+// ─── Portrait Frames (cosmetic, freely selectable in this prototype) ────
+
+export type FrameId = "none" | "bronze" | "silver" | "gold" | "diamond";
+
+export type FrameOption = {
+  id: FrameId;
+  label: string;
+  ring: string;          // primary border colour
+  accent: string;        // inner accent ring colour
+  glow: string;          // outer glow colour (rgba)
+  style: "solid" | "double" | "engraved" | "prismatic";
+};
+
+export const PORTRAIT_FRAMES: FrameOption[] = [
+  { id: "none",    label: "No Frame",       ring: "rgba(197,160,89,0.35)", accent: "transparent",        glow: "rgba(0,0,0,0)",         style: "solid" },
+  { id: "bronze",  label: "Bronze Frame",   ring: "#B87333",               accent: "#7A4A22",            glow: "rgba(184,115,51,0.45)", style: "solid" },
+  { id: "silver",  label: "Silver Frame",   ring: "#D9DCE1",               accent: "#8892A6",            glow: "rgba(217,220,225,0.45)",style: "double" },
+  { id: "gold",    label: "Gold Frame",     ring: "#F5C46B",               accent: "#8A5A1A",            glow: "rgba(245,196,107,0.55)",style: "engraved" },
+  { id: "diamond", label: "Diamond Frame",  ring: "#B9F2FF",               accent: "#C9A6FF",            glow: "rgba(185,242,255,0.60)",style: "prismatic" },
+];
+
+export function findFrame(id: string | null | undefined): FrameOption {
+  return PORTRAIT_FRAMES.find((f) => f.id === id) ?? PORTRAIT_FRAMES[0];
+}
+
 // ─── Future locked cosmetics ────────────────────────────────────────────
 
 export type LockedCosmetic = { id: string; label: string; category: string; hint: string };
 
 export const LOCKED_COSMETICS: LockedCosmetic[] = [
-  { id: "frame-bronze",     label: "Bronze Frame",       category: "Portrait Frame", hint: "Reach Bronze Rank" },
-  { id: "frame-silver",     label: "Silver Frame",       category: "Portrait Frame", hint: "Reach Silver Rank" },
-  { id: "frame-gold",       label: "Gold Frame",         category: "Portrait Frame", hint: "Reach Gold Rank" },
   { id: "frame-black-gold", label: "Black Gold Frame",   category: "Portrait Frame", hint: "Reach Black Rank" },
-  { id: "frame-diamond",    label: "Diamond Frame",      category: "Portrait Frame", hint: "Reach Diamond Rank" },
   { id: "frame-founder",    label: "Founder Frame",      category: "Legacy",         hint: "Shipbuilder title" },
   { id: "frame-top-sales",  label: "Top Sales Frame",    category: "Seasonal",       hint: "#1 quarterly performer" },
   { id: "frame-seasonal",   label: "Seasonal Frame",     category: "Event",          hint: "Limited-time event reward" },
