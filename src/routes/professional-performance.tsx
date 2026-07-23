@@ -1,9 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
 import { AuthGate } from "@/components/auth-gate";
 import { useRole, can } from "@/lib/roles";
 import { listStaff } from "@/lib/config.functions";
+import { submitMonthlyReview } from "@/lib/reviews.functions";
+
 
 export const Route = createFileRoute("/professional-performance")({
   head: () => ({
@@ -384,6 +388,9 @@ function saveDraft(staffId: string, month: string, draft: Draft) {
 function MonthlyReviewPage() {
   const { role } = useRole();
   const canReview = can(role, "evaluations.write");
+  const queryClient = useQueryClient();
+  const submitReview = useServerFn(submitMonthlyReview);
+  const [saving, setSaving] = useState(false);
 
   const [month, setMonth] = useState(monthKey());
   const [staffId, setStaffId] = useState<string>("");
@@ -397,6 +404,7 @@ function MonthlyReviewPage() {
     queryFn: () => listStaff(),
     enabled: canReview,
   });
+
 
   const selectedStaff = useMemo(
     () => (staff as any[]).find((s: any) => s.id === staffId) ?? null,
@@ -441,15 +449,15 @@ function MonthlyReviewPage() {
     setSelections((s) => ({ ...s, [key]: tier }));
   }
 
-  function handleSubmit() {
-    if (!canSubmit || !template) return;
+  async function handleSubmit() {
+    if (!canSubmit || !template || saving) return;
 
+    const tierScores = template.categories.map((c) => {
+      const tierKey = selections[c.key] as TierKey;
+      return TIERS.find((t) => t.key === tierKey)!.score;
+    });
     const behaviourScore =
-      template.categories.reduce((sum, c) => {
-        const tierKey = selections[c.key] as TierKey;
-        const tier = TIERS.find((t) => t.key === tierKey)!;
-        return sum + tier.score;
-      }, 0) / template.categories.length;
+      tierScores.reduce((s, n) => s + n, 0) / tierScores.length;
 
     const salesScore = hasSalesKPI
       ? Math.min(100, Math.round((salesAmount / salesTarget) * 100))
@@ -470,9 +478,41 @@ function MonthlyReviewPage() {
       finalScore,
       grade: g.grade,
     };
-    setResult(submitted);
-    saveDraft(staffId, month, { salesAmount, selections, notes, submitted });
+
+    setSaving(true);
+    try {
+      await submitReview({
+        data: {
+          staff_id: staffId,
+          month,
+          sales_amount: salesAmount,
+          sales_target: salesTarget,
+          sales_score: salesScore,
+          behaviour_score: +behaviourScore.toFixed(2),
+          final_score: finalScore,
+          grade: g.grade,
+          behaviour_a: tierScores[0] ?? 0,
+          behaviour_b: tierScores[1] ?? 0,
+          behaviour_c: tierScores[2] ?? 0,
+          notes,
+        },
+      });
+      setResult(submitted);
+      saveDraft(staffId, month, { salesAmount, selections, notes, submitted });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
+        queryClient.invalidateQueries({ queryKey: ["peer-insights"] }),
+        queryClient.invalidateQueries({ queryKey: ["staff"] }),
+      ]);
+
+      toast.success(`Review saved · Grade ${g.grade}`);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to save review");
+    } finally {
+      setSaving(false);
+    }
   }
+
 
   function handleReset() {
     setSalesAmount(0);
@@ -729,11 +769,12 @@ function MonthlyReviewPage() {
                       </button>
                       <button
                         onClick={handleSubmit}
-                        disabled={!canSubmit}
+                        disabled={!canSubmit || saving}
                         className="rounded-md border border-gold bg-gold/10 px-4 py-2 font-display text-xs uppercase tracking-widest text-gold hover:bg-gold/20 disabled:opacity-50"
                       >
-                        {result ? "Resubmit Review" : "Submit Performance Review"}
+                        {saving ? "Saving…" : result ? "Resubmit Review" : "Submit Performance Review"}
                       </button>
+
                     </div>
                   </div>
 
