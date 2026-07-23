@@ -394,25 +394,25 @@ function EmperorFortuneDecor({ size }: { size: number }) {
         );
       })}
       {/* Red gems N/S/E/W */}
-      {[
-        { top: 2, left: "50%", tx: "-50%" },
-        { bottom: 2, left: "50%", tx: "-50%" },
-        { left: 2, top: "50%", ty: "-50%" },
-        { right: 2, top: "50%", ty: "-50%" },
-      ].map((pos, i) => {
-        const { tx, ty, ...p } = pos as Record<string, number | string>;
+      {([
+        { top: 2 as number | string, left: "50%" as number | string, tx: "-50%", ty: "0" },
+        { bottom: 2 as number | string, left: "50%" as number | string, tx: "-50%", ty: "0" },
+        { left: 2 as number | string, top: "50%" as number | string, tx: "0", ty: "-50%" },
+        { right: 2 as number | string, top: "50%" as number | string, tx: "0", ty: "-50%" },
+      ]).map((pos, i) => {
+        const { tx, ty, ...p } = pos;
         return (
           <span
             key={`g${i}`}
             style={{
               position: "absolute",
-              ...p,
+              ...(p as React.CSSProperties),
               width: size * 0.05,
               height: size * 0.05,
               borderRadius: "9999px",
               background: "radial-gradient(circle at 30% 30%, #FF6A6A, #7B0A0A)",
               boxShadow: "0 0 6px rgba(255,80,80,0.85), 0 0 12px rgba(232,184,74,0.5)",
-              transform: `translate(${tx ?? 0}, ${ty ?? 0})`,
+              transform: `translate(${tx}, ${ty})`,
             }}
           />
         );
