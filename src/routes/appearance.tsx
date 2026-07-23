@@ -85,7 +85,7 @@ function AppearancePage() {
           </div>
           {(portrait.kind !== "default" || frameId !== "none") && (
             <button
-              onClick={() => resetPortrait()}
+              onClick={() => { resetPortrait(); setFrame("none"); }}
               className="text-[10px] uppercase tracking-widest text-muted-foreground hover:text-gold"
             >
               Reset to default
