@@ -79,8 +79,11 @@ function AppearancePage() {
             <div className="text-[10px] uppercase tracking-[0.35em] text-muted-foreground">Preview</div>
             <div className="mt-1 font-display text-sm text-foreground/90">{s?.name ?? "Adventurer"}</div>
             <div className="text-[10px] uppercase tracking-[0.3em]" style={{ color: rankColor }}>{rankName}</div>
+            <div className="mt-1 text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+              Frame · <span style={{ color: currentFrame.ring }}>{currentFrame.label}</span>
+            </div>
           </div>
-          {portrait.kind !== "default" && (
+          {(portrait.kind !== "default" || frameId !== "none") && (
             <button
               onClick={() => resetPortrait()}
               className="text-[10px] uppercase tracking-widest text-muted-foreground hover:text-gold"
