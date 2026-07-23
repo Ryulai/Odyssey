@@ -165,3 +165,29 @@
     inset 0 1px 0 oklch(0.78 0.15 78 / 0.2),
     0 10px 30px -10px oklch(0.78 0.15 78 / 0.2);
 }
+
+/* ─── Seasonal Portrait Frames ─── */
+@keyframes frame-snow-fall {
+  0%   { transform: translateY(-10%) translateX(0); opacity: 0; }
+  15%  { opacity: 1; }
+  85%  { opacity: 1; }
+  100% { transform: translateY(110%) translateX(6px); opacity: 0; }
+}
+@keyframes frame-twinkle {
+  0%, 100% { opacity: 0.35; transform: scale(0.85); filter: drop-shadow(0 0 2px #FFF6C2); }
+  50%      { opacity: 1;    transform: scale(1.15); filter: drop-shadow(0 0 10px #FFE58A) drop-shadow(0 0 18px #F5D07A); }
+}
+@keyframes frame-golden-spin {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes frame-dust-float {
+  0%   { transform: translate(0, 0) scale(1);   opacity: 0; }
+  20%  { opacity: 1; }
+  80%  { opacity: 1; }
+  100% { transform: translate(6px, -30px) scale(1.2); opacity: 0; }
+}
+@keyframes frame-tassel-sway {
+  0%, 100% { transform: rotate(-4deg); }
+  50%      { transform: rotate(4deg); }
+}

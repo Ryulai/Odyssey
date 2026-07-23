@@ -4,7 +4,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { AuthGate } from "@/components/auth-gate";
 import { getStaffDashboard } from "@/lib/workflow.functions";
 import {
-  DEFAULT_AVATARS, GUILD_EMBLEMS, LOCKED_COSMETICS, PORTRAIT_FRAMES,
+  DEFAULT_AVATARS, GUILD_EMBLEMS, LOCKED_COSMETICS, PORTRAIT_FRAMES, SEASONAL_FRAMES,
   usePortrait, setPortrait, resetPortrait,
   useFrame, setFrame, findFrame,
 } from "@/lib/appearance";
@@ -155,7 +155,7 @@ function AppearancePage() {
           blurb="A frame surrounds your portrait wherever it appears. Tap to try one on — the preview updates immediately."
         >
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
-            {PORTRAIT_FRAMES.map((f) => {
+            {PORTRAIT_FRAMES.filter((f) => f.style !== "seasonal").map((f) => {
               const active = frameId === f.id;
               const ring = f.id === "none" ? "rgba(197,160,89,0.35)" : f.ring;
               return (
@@ -206,12 +206,88 @@ function AppearancePage() {
           title="Future Customization"
           blurb="Reserved for Odyssey's expanding cosmetic economy. Earned through rank, seasons, and legendary deeds."
         >
+          {/* Seasonal frames — fully playable limited editions */}
+          <div className="mb-5">
+            <div className="mb-3 flex items-baseline justify-between">
+              <div
+                className="text-[10px] uppercase tracking-[0.35em]"
+                style={{ color: "#F5D07A", fontFamily: "'Cinzel', serif" }}
+              >
+                Seasonal · Limited Editions
+              </div>
+              <div className="text-[9px] uppercase tracking-[0.3em] text-muted-foreground">
+                Tap to equip
+              </div>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {SEASONAL_FRAMES.map((f) => {
+                const active = frameId === f.id;
+                return (
+                  <button
+                    key={f.id}
+                    onClick={() => setFrame(f.id)}
+                    className="group flex items-center gap-4 rounded-md border p-4 text-left transition-all"
+                    style={{
+                      borderColor: active ? f.ring : "rgba(245,208,122,0.30)",
+                      background: active
+                        ? `linear-gradient(135deg, ${f.ring}18, rgba(10,15,30,0.85))`
+                        : "linear-gradient(135deg, rgba(20,10,30,0.75), rgba(10,15,30,0.85))",
+                      boxShadow: active ? `0 0 28px ${f.glow}` : `0 0 12px rgba(0,0,0,0.4)`,
+                    }}
+                  >
+                    <div className="shrink-0 p-2">
+                      <FrameWrap frame={f} ringColor={f.ring} glow={f.glow} size={92} linkTo={null}>
+                        <span
+                          className="font-bold tracking-widest"
+                          style={{ color: f.ring, fontFamily: "'Cinzel', serif", fontSize: 22 }}
+                        >
+                          {initials}
+                        </span>
+                      </FrameWrap>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div
+                        className="text-[9px] uppercase tracking-[0.3em]"
+                        style={{ color: f.ring }}
+                      >
+                        {f.edition}
+                      </div>
+                      <div
+                        className="mt-0.5 text-sm uppercase tracking-wide"
+                        style={{ fontFamily: "'Cinzel', serif", color: "#E5E7EB" }}
+                      >
+                        {f.label}
+                      </div>
+                      <div
+                        className="mt-1 text-[11px] italic text-muted-foreground"
+                        style={{ fontFamily: "'Cormorant Garamond', serif" }}
+                      >
+                        {f.description}
+                      </div>
+                      <div
+                        className="mt-2 inline-block rounded border px-2 py-0.5 text-[9px] uppercase tracking-[0.3em]"
+                        style={{
+                          color: active ? f.ring : "#F5D07A",
+                          borderColor: active ? f.ring : "rgba(245,208,122,0.4)",
+                          background: active ? `${f.ring}18` : "transparent",
+                        }}
+                      >
+                        {active ? "Equipped" : "Equip"}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
             {LOCKED_COSMETICS.map((c) => (
               <LockedTile key={c.id} label={c.label} category={c.category} hint={c.hint} />
             ))}
           </div>
         </Section>
+
 
 
         <footer className="mt-12 border-t border-border pt-6 text-center text-[10px] uppercase tracking-[0.4em] text-muted-foreground/60">
