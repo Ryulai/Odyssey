@@ -66,25 +66,40 @@ function PeerInsights() {
         <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
           <div>
             <div className="font-display text-[10px] uppercase tracking-[0.3em] text-gold">Peer Insights</div>
-            <h1 className="mt-1 font-display text-2xl text-foreground">Learn from your fleet</h1>
+            <h1 className="mt-1 font-display text-2xl text-foreground">
+              {data?.me?.role === "director"
+                ? "Organization overview"
+                : data?.me?.role === "manager"
+                  ? "Your team"
+                  : "Learn from your fleet"}
+            </h1>
             <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-              Same fleet. Same rank. Current month only. This is a learning window — not a scoreboard.
-              Salaries, notes and manager comments are never shown here.
+              {data?.me?.role === "staff"
+                ? "Same fleet. Same rank. Current month only. This is a learning window — not a scoreboard. Salaries, notes and manager comments are never shown here."
+                : data?.me?.role === "manager"
+                  ? "Monthly performance for the Hunters you're responsible for. Sensitive data (salary, private notes) is never shown."
+                  : "Monthly performance across the organization. Sensitive data (salary, private notes) is never shown."}
             </p>
           </div>
           <div className="flex flex-col items-end gap-1 text-right">
             <Link to="/" className="text-xs uppercase tracking-widest text-gold hover:underline">← Home</Link>
-            {data?.me && (
+            {data && (
               <div className="text-[11px] uppercase tracking-widest text-muted-foreground">
+                Scope: <span className="text-foreground">{data.scope.label}</span>
+                <span className="px-2">·</span>
+                {monthLabel(data.month ?? new Date().toISOString().slice(0,10))}
+              </div>
+            )}
+            {data?.me && data.me.role === "staff" && (
+              <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
                 Fleet: <span className="text-foreground">{data.me.location_name ?? "—"}</span>
                 <span className="px-2">·</span>
                 Rank: <span className="text-foreground">{rankLabel(data.me.rank_key)}</span>
-                <span className="px-2">·</span>
-                {monthLabel(data?.month ?? new Date().toISOString().slice(0,10))}
               </div>
             )}
           </div>
         </header>
+
 
         {isLoading ? (
           <div className="rounded-md border border-border bg-ink/30 p-12 text-center text-xs uppercase tracking-widest text-muted-foreground">
