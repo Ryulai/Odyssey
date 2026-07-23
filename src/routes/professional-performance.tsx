@@ -768,11 +768,12 @@ function MonthlyReviewPage() {
                       </button>
                       <button
                         onClick={handleSubmit}
-                        disabled={!canSubmit}
+                        disabled={!canSubmit || saving}
                         className="rounded-md border border-gold bg-gold/10 px-4 py-2 font-display text-xs uppercase tracking-widest text-gold hover:bg-gold/20 disabled:opacity-50"
                       >
-                        {result ? "Resubmit Review" : "Submit Performance Review"}
+                        {saving ? "Saving…" : result ? "Resubmit Review" : "Submit Performance Review"}
                       </button>
+
                     </div>
                   </div>
 
