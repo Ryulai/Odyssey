@@ -18,6 +18,7 @@ import { Route as PromotionsRouteImport } from './routes/promotions'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ProfessionalPerformanceRouteImport } from './routes/professional-performance'
 import { Route as PerformanceRouteImport } from './routes/performance'
+import { Route as PeerInsightsRouteImport } from './routes/peer-insights'
 import { Route as OwnershipRouteImport } from './routes/ownership'
 import { Route as ObjectivePerformanceRouteImport } from './routes/objective-performance'
 import { Route as MentorshipRouteImport } from './routes/mentorship'
@@ -113,6 +114,11 @@ const ProfessionalPerformanceRoute = ProfessionalPerformanceRouteImport.update({
 const PerformanceRoute = PerformanceRouteImport.update({
   id: '/performance',
   path: '/performance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PeerInsightsRoute = PeerInsightsRouteImport.update({
+  id: '/peer-insights',
+  path: '/peer-insights',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OwnershipRoute = OwnershipRouteImport.update({
@@ -391,6 +397,7 @@ export interface FileRoutesByFullPath {
   '/mentorship': typeof MentorshipRoute
   '/objective-performance': typeof ObjectivePerformanceRoute
   '/ownership': typeof OwnershipRoute
+  '/peer-insights': typeof PeerInsightsRoute
   '/performance': typeof PerformanceRoute
   '/professional-performance': typeof ProfessionalPerformanceRoute
   '/profile': typeof ProfileRoute
@@ -452,6 +459,7 @@ export interface FileRoutesByTo {
   '/mentorship': typeof MentorshipRoute
   '/objective-performance': typeof ObjectivePerformanceRoute
   '/ownership': typeof OwnershipRoute
+  '/peer-insights': typeof PeerInsightsRoute
   '/performance': typeof PerformanceRoute
   '/professional-performance': typeof ProfessionalPerformanceRoute
   '/profile': typeof ProfileRoute
@@ -512,6 +520,7 @@ export interface FileRoutesById {
   '/mentorship': typeof MentorshipRoute
   '/objective-performance': typeof ObjectivePerformanceRoute
   '/ownership': typeof OwnershipRoute
+  '/peer-insights': typeof PeerInsightsRoute
   '/performance': typeof PerformanceRoute
   '/professional-performance': typeof ProfessionalPerformanceRoute
   '/profile': typeof ProfileRoute
@@ -576,6 +585,7 @@ export interface FileRouteTypes {
     | '/mentorship'
     | '/objective-performance'
     | '/ownership'
+    | '/peer-insights'
     | '/performance'
     | '/professional-performance'
     | '/profile'
@@ -637,6 +647,7 @@ export interface FileRouteTypes {
     | '/mentorship'
     | '/objective-performance'
     | '/ownership'
+    | '/peer-insights'
     | '/performance'
     | '/professional-performance'
     | '/profile'
@@ -696,6 +707,7 @@ export interface FileRouteTypes {
     | '/mentorship'
     | '/objective-performance'
     | '/ownership'
+    | '/peer-insights'
     | '/performance'
     | '/professional-performance'
     | '/profile'
@@ -759,6 +771,7 @@ export interface RootRouteChildren {
   MentorshipRoute: typeof MentorshipRoute
   ObjectivePerformanceRoute: typeof ObjectivePerformanceRoute
   OwnershipRoute: typeof OwnershipRoute
+  PeerInsightsRoute: typeof PeerInsightsRoute
   PerformanceRoute: typeof PerformanceRoute
   ProfessionalPerformanceRoute: typeof ProfessionalPerformanceRoute
   ProfileRoute: typeof ProfileRoute
@@ -835,6 +848,13 @@ declare module '@tanstack/react-router' {
       path: '/performance'
       fullPath: '/performance'
       preLoaderRoute: typeof PerformanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/peer-insights': {
+      id: '/peer-insights'
+      path: '/peer-insights'
+      fullPath: '/peer-insights'
+      preLoaderRoute: typeof PeerInsightsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ownership': {
@@ -1316,6 +1336,7 @@ const rootRouteChildren: RootRouteChildren = {
   MentorshipRoute: MentorshipRoute,
   ObjectivePerformanceRoute: ObjectivePerformanceRoute,
   OwnershipRoute: OwnershipRoute,
+  PeerInsightsRoute: PeerInsightsRoute,
   PerformanceRoute: PerformanceRoute,
   ProfessionalPerformanceRoute: ProfessionalPerformanceRoute,
   ProfileRoute: ProfileRoute,
@@ -1331,13 +1352,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
