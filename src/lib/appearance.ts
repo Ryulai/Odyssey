@@ -43,7 +43,16 @@ export const GUILD_EMBLEMS: EmblemOption[] = [
 
 // ─── Portrait Frames (cosmetic, freely selectable in this prototype) ────
 
-export type FrameId = "none" | "bronze" | "silver" | "gold" | "diamond";
+export type FrameId =
+  | "none"
+  | "bronze"
+  | "silver"
+  | "gold"
+  | "diamond"
+  | "winter-king"
+  | "emperor-fortune";
+
+export type FrameStyle = "solid" | "double" | "engraved" | "prismatic" | "seasonal";
 
 export type FrameOption = {
   id: FrameId;
@@ -51,7 +60,10 @@ export type FrameOption = {
   ring: string;          // primary border colour
   accent: string;        // inner accent ring colour
   glow: string;          // outer glow colour (rgba)
-  style: "solid" | "double" | "engraved" | "prismatic";
+  style: FrameStyle;
+  seasonalId?: "winter-king" | "emperor-fortune";
+  edition?: string;      // marketing label for seasonal frames
+  description?: string;  // seasonal description shown on tile
 };
 
 export const PORTRAIT_FRAMES: FrameOption[] = [
@@ -60,7 +72,33 @@ export const PORTRAIT_FRAMES: FrameOption[] = [
   { id: "silver",  label: "Silver Frame",   ring: "#D9DCE1",               accent: "#8892A6",            glow: "rgba(217,220,225,0.45)",style: "double" },
   { id: "gold",    label: "Gold Frame",     ring: "#F5C46B",               accent: "#8A5A1A",            glow: "rgba(245,196,107,0.55)",style: "engraved" },
   { id: "diamond", label: "Diamond Frame",  ring: "#B9F2FF",               accent: "#C9A6FF",            glow: "rgba(185,242,255,0.60)",style: "prismatic" },
+  {
+    id: "winter-king",
+    label: "Winter King's Blessing",
+    ring: "#F5D07A",
+    accent: "#0A1A3A",
+    glow: "rgba(245,208,122,0.55)",
+    style: "seasonal",
+    seasonalId: "winter-king",
+    edition: "Christmas · Limited Edition",
+    description: "Limited Christmas Event Reward.",
+  },
+  {
+    id: "emperor-fortune",
+    label: "Emperor's Fortune",
+    ring: "#E8B84A",
+    accent: "#3A0A0A",
+    glow: "rgba(232,184,74,0.60)",
+    style: "seasonal",
+    seasonalId: "emperor-fortune",
+    edition: "Lunar New Year · Limited Edition",
+    description: "Limited Lunar New Year Event Reward.",
+  },
 ];
+
+export const SEASONAL_FRAMES: FrameOption[] = PORTRAIT_FRAMES.filter(
+  (f) => f.style === "seasonal",
+);
 
 export function findFrame(id: string | null | undefined): FrameOption {
   return PORTRAIT_FRAMES.find((f) => f.id === id) ?? PORTRAIT_FRAMES[0];
