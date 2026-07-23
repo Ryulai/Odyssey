@@ -35,6 +35,8 @@ function AppearancePage() {
   const rankColor = "#D4A84B";
   const rankGlow = "#D4A84B80";
   const portrait = usePortrait();
+  const frameId = useFrame();
+  const currentFrame = findFrame(frameId);
 
   return (
     <div className="min-h-screen text-foreground">
