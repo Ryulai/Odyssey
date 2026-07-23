@@ -162,3 +162,45 @@ export function findAvatar(id: string) {
 export function findEmblem(id: string) {
   return GUILD_EMBLEMS.find((e) => e.id === id);
 }
+
+// ─── Frame storage (per-user localStorage) ──────────────────────────────
+
+const FRAME_KEY = "odyssey.appearance.frame.v1";
+const DEFAULT_FRAME: FrameId = "none";
+
+let cachedFrameRaw: string | null = null;
+let cachedFrame: FrameId = DEFAULT_FRAME;
+
+function isValidFrame(v: unknown): v is FrameId {
+  return typeof v === "string" && PORTRAIT_FRAMES.some((f) => f.id === v);
+}
+
+function readFrame(): FrameId {
+  if (typeof window === "undefined") return DEFAULT_FRAME;
+  let raw: string | null = null;
+  try {
+    raw = window.localStorage.getItem(FRAME_KEY);
+  } catch {
+    return cachedFrame;
+  }
+  if (raw === cachedFrameRaw) return cachedFrame;
+  cachedFrameRaw = raw;
+  cachedFrame = isValidFrame(raw) ? raw : DEFAULT_FRAME;
+  return cachedFrame;
+}
+
+export function setFrame(id: FrameId) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(FRAME_KEY, id);
+    cachedFrameRaw = id;
+    cachedFrame = id;
+    window.dispatchEvent(new Event("odyssey:appearance"));
+  } catch (err) {
+    console.warn("[appearance] failed to persist frame", err);
+  }
+}
+
+export function useFrame(): FrameId {
+  return useSyncExternalStore(subscribe, readFrame, () => DEFAULT_FRAME);
+}
