@@ -503,6 +503,8 @@ function MonthlyReviewPage() {
         queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
         queryClient.invalidateQueries({ queryKey: ["peer-insights"] }),
         queryClient.invalidateQueries({ queryKey: ["staff"] }),
+        queryClient.invalidateQueries({ queryKey: ["promotion-progress"] }),
+        queryClient.invalidateQueries({ queryKey: ["team-promotions"] }),
       ]);
 
       toast.success(`Review saved · Grade ${g.grade}`);
