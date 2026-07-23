@@ -4,10 +4,11 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { AuthGate } from "@/components/auth-gate";
 import { getStaffDashboard } from "@/lib/workflow.functions";
 import {
-  DEFAULT_AVATARS, GUILD_EMBLEMS, LOCKED_COSMETICS,
-  usePortrait, setPortrait, resetPortrait, type Portrait,
+  DEFAULT_AVATARS, GUILD_EMBLEMS, LOCKED_COSMETICS, PORTRAIT_FRAMES,
+  usePortrait, setPortrait, resetPortrait,
+  useFrame, setFrame, findFrame,
 } from "@/lib/appearance";
-import { PortraitBadge } from "@/components/portrait";
+import { PortraitBadge, FrameWrap } from "@/components/portrait";
 import { rankLabel } from "@/lib/rpg";
 
 export const Route = createFileRoute("/appearance")({
@@ -34,6 +35,8 @@ function AppearancePage() {
   const rankColor = "#D4A84B";
   const rankGlow = "#D4A84B80";
   const portrait = usePortrait();
+  const frameId = useFrame();
+  const currentFrame = findFrame(frameId);
 
   return (
     <div className="min-h-screen text-foreground">
@@ -76,10 +79,13 @@ function AppearancePage() {
             <div className="text-[10px] uppercase tracking-[0.35em] text-muted-foreground">Preview</div>
             <div className="mt-1 font-display text-sm text-foreground/90">{s?.name ?? "Adventurer"}</div>
             <div className="text-[10px] uppercase tracking-[0.3em]" style={{ color: rankColor }}>{rankName}</div>
+            <div className="mt-1 text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+              Frame · <span style={{ color: currentFrame.ring }}>{currentFrame.label}</span>
+            </div>
           </div>
-          {portrait.kind !== "default" && (
+          {(portrait.kind !== "default" || frameId !== "none") && (
             <button
-              onClick={() => resetPortrait()}
+              onClick={() => { resetPortrait(); setFrame("none"); }}
               className="text-[10px] uppercase tracking-widest text-muted-foreground hover:text-gold"
             >
               Reset to default
@@ -142,9 +148,61 @@ function AppearancePage() {
           </div>
         </Section>
 
-        {/* 4 · Future Customization */}
+        {/* 4 · Portrait Frames */}
         <Section
           number="IV"
+          title="Portrait Frames"
+          blurb="A frame surrounds your portrait wherever it appears. Tap to try one on — the preview updates immediately."
+        >
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
+            {PORTRAIT_FRAMES.map((f) => {
+              const active = frameId === f.id;
+              const ring = f.id === "none" ? "rgba(197,160,89,0.35)" : f.ring;
+              return (
+                <button
+                  key={f.id}
+                  onClick={() => setFrame(f.id)}
+                  className="group flex flex-col items-center gap-3 rounded-md border p-4 transition-all"
+                  style={{
+                    borderColor: active ? ring : "rgba(197,160,89,0.15)",
+                    background: active ? `${ring}12` : "rgba(10,15,30,0.6)",
+                    boxShadow: active ? `0 0 24px ${f.glow}` : undefined,
+                  }}
+                >
+                  <FrameWrap frame={f} ringColor={ring} glow={f.glow} size={84} linkTo={null}>
+                    <span
+                      className="font-bold tracking-widest"
+                      style={{
+                        color: ring,
+                        fontFamily: "'Cinzel', serif",
+                        fontSize: 22,
+                      }}
+                    >
+                      {initials}
+                    </span>
+                  </FrameWrap>
+                  <div className="text-center">
+                    <div
+                      className="text-[10px] uppercase tracking-[0.3em]"
+                      style={{ color: active ? ring : undefined, fontFamily: "'Cinzel', serif" }}
+                    >
+                      {f.label}
+                    </div>
+                    {active && (
+                      <div className="mt-0.5 text-[9px] uppercase tracking-[0.3em] text-muted-foreground">
+                        Equipped
+                      </div>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </Section>
+
+        {/* 5 · Future Customization */}
+        <Section
+          number="V"
           title="Future Customization"
           blurb="Reserved for Odyssey's expanding cosmetic economy. Earned through rank, seasons, and legendary deeds."
         >
@@ -154,6 +212,7 @@ function AppearancePage() {
             ))}
           </div>
         </Section>
+
 
         <footer className="mt-12 border-t border-border pt-6 text-center text-[10px] uppercase tracking-[0.4em] text-muted-foreground/60">
           The Appearance belongs to the Player
