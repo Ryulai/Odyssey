@@ -4,10 +4,11 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { AuthGate } from "@/components/auth-gate";
 import { getStaffDashboard } from "@/lib/workflow.functions";
 import {
-  DEFAULT_AVATARS, GUILD_EMBLEMS, LOCKED_COSMETICS,
-  usePortrait, setPortrait, resetPortrait, type Portrait,
+  DEFAULT_AVATARS, GUILD_EMBLEMS, LOCKED_COSMETICS, PORTRAIT_FRAMES,
+  usePortrait, setPortrait, resetPortrait,
+  useFrame, setFrame, findFrame,
 } from "@/lib/appearance";
-import { PortraitBadge } from "@/components/portrait";
+import { PortraitBadge, FrameWrap } from "@/components/portrait";
 import { rankLabel } from "@/lib/rpg";
 
 export const Route = createFileRoute("/appearance")({
