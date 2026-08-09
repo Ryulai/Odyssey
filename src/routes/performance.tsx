@@ -11,49 +11,65 @@ export const Route = createFileRoute("/performance")({
   component: () => <AuthGate><PerformancePage /></AuthGate>,
 });
 
-// ─── Placeholder data ──────────────────────────────────────────────
+// ─── Frozen Odyssey model: 50 Class + 50 Guild = 100 ───────────────
+const SALES_TARGET = 50000;
+
 const CURRENT = {
   month: "August",
   year: 2026,
-  grade: "B" as const,
-  score: 86,
-  categories: [
-    { name: "Sales",       percent: 90,  weight: 30, earned: 27.0 },
-    { name: "Attendance",  percent: 100, weight: 15, earned: 15.0 },
-    { name: "Teamwork",    percent: 85,  weight: 15, earned: 12.75 },
-    { name: "SOP",         percent: 70,  weight: 20, earned: 14.0 },
-    { name: "Leadership",  percent: 60,  weight: 10, earned: 6.0 },
-    { name: "Discipline",  percent: 92,  weight: 10, earned: 9.2 },
+  sales: 45000,
+  behaviours: [
+    { key: "professionalism", name: "Professionalism", stars: 4 },
+    { key: "culture", name: "Culture", stars: 3 },
+    { key: "service_excellence", name: "Service Excellence", stars: 4 },
+    { key: "teamwork", name: "Teamwork", stars: 5 },
   ],
   managerNotes: [
-    "Excellent customer handling this month — several guest compliments logged.",
-    "Needs stronger SOP discipline, especially closing checklists.",
-    "Keep mentoring the new Ranger recruits — it's showing.",
+    "Consistent shift discipline and closing standards demonstrated this month.",
+    "Volunteered for two culture sessions and coached a new recruit.",
+    "Service recovery handled calmly on three logged occasions.",
   ],
   captain: "Elder Ryu",
 };
+
+const CLASS_SCORE = Math.min(50, (CURRENT.sales / SALES_TARGET) * 50);
+const BEHAVIOUR_ROWS = CURRENT.behaviours.map((b) => ({
+  ...b,
+  percent: b.stars * 20,
+  earned: (b.stars * 20 / 100) * 12.5,
+}));
+const GUILD_SCORE = BEHAVIOUR_ROWS.reduce((a, b) => a + b.earned, 0);
+const TOTAL_SCORE = Math.round((CLASS_SCORE + GUILD_SCORE) * 10) / 10;
+
+function gradeOf(total: number): "A" | "B" | "C" | "D" {
+  if (total >= 90) return "A";
+  if (total >= 80) return "B";
+  if (total >= 60) return "C";
+  return "D";
+}
 
 const HISTORY = [
   { month: "May 2026",    grade: "A", score: 93, status: "Sealed" },
   { month: "June 2026",   grade: "B", score: 84, status: "Sealed" },
   { month: "July 2026",   grade: "A", score: 91, status: "Sealed" },
-  { month: "August 2026", grade: "B", score: 86, status: "Current" },
+  { month: "August 2026", grade: gradeOf(TOTAL_SCORE), score: TOTAL_SCORE, status: "Current" },
   { month: "September 2026", grade: null, score: null, status: "Pending" },
 ];
 
 const GRADE_INFO: Record<"A" | "B" | "C" | "D", { title: string; blurb: string; color: string; glow: string }> = {
-  A: { title: "Outstanding", blurb: "A voyage worthy of song.",               color: "#F5D07A", glow: "shadow-[0_0_60px_-10px_rgba(245,208,122,0.55)]" },
-  B: { title: "Reliable",    blurb: "Steady hands, steady sails.",            color: "#A8C8FF", glow: "shadow-[0_0_60px_-10px_rgba(168,200,255,0.45)]" },
-  C: { title: "Developing",  blurb: "Winds shifting — adjust the course.",    color: "#E9A26A", glow: "shadow-[0_0_60px_-10px_rgba(233,162,106,0.45)]" },
-  D: { title: "Recovery",    blurb: "Return to harbor. Rebuild. Sail again.", color: "#E07070", glow: "shadow-[0_0_60px_-10px_rgba(224,112,112,0.45)]" },
+  A: { title: "Alpha",          blurb: "A voyage worthy of song.",                     color: "#F5D07A", glow: "shadow-[0_0_60px_-10px_rgba(245,208,122,0.55)]" },
+  B: { title: "Beta",           blurb: "Steady hands, steady sails.",                  color: "#A8C8FF", glow: "shadow-[0_0_60px_-10px_rgba(168,200,255,0.45)]" },
+  C: { title: "Certified",      blurb: "The required standard for this role is met.",  color: "#C8CDD4", glow: "shadow-[0_0_60px_-10px_rgba(200,205,212,0.35)]" },
+  D: { title: "Below Standard", blurb: "Return to harbor. Rebuild. Sail again.",       color: "#E07070", glow: "shadow-[0_0_60px_-10px_rgba(224,112,112,0.45)]" },
 };
 
 const GRADE_REFERENCE: { grade: "A" | "B" | "C" | "D"; short: string }[] = [
-  { grade: "A", short: "Outstanding" },
-  { grade: "B", short: "Reliable" },
-  { grade: "C", short: "Developing" },
-  { grade: "D", short: "Recovery" },
+  { grade: "A", short: "Alpha · 90–100" },
+  { grade: "B", short: "Beta · 80–89" },
+  { grade: "C", short: "Certified · 60–79" },
+  { grade: "D", short: "Below Standard" },
 ];
+
 
 function PerformancePage() {
   const info = GRADE_INFO[CURRENT.grade];
