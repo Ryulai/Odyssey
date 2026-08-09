@@ -113,7 +113,7 @@ function PerformancePage() {
               className="mt-4 font-display text-[7rem] leading-none sm:text-[9rem]"
               style={{ color: info.color, textShadow: `0 0 40px ${info.color}66` }}
             >
-              {CURRENT.grade}
+              {grade}
             </div>
             <div className="mt-2 font-display text-2xl uppercase tracking-[0.3em]" style={{ color: info.color }}>
               {info.title}
