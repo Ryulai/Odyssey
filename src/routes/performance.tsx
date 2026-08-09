@@ -124,30 +124,31 @@ function PerformancePage() {
           </div>
         </section>
 
-        {/* 2. Monthly Score */}
+        {/* 2. Total Performance */}
         <section className="mt-6 rounded-xl border border-border bg-ink/30 p-6">
           <div className="flex items-baseline justify-between">
             <div className="font-display text-xs uppercase tracking-[0.3em] text-gold">
-              Monthly Score
+              Total Performance
             </div>
             <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
-              Determines this month's grade
+              Class 50 + Guild 50
             </div>
           </div>
           <div className="mt-4 flex items-end justify-between gap-4">
             <div className="font-display text-5xl text-foreground">
-              {CURRENT.score}
+              {TOTAL_SCORE}
               <span className="text-2xl text-muted-foreground"> / 100</span>
             </div>
-            <div className="text-xs text-muted-foreground">
-              Next tier at <span className="text-gold">90</span> → Grade A
+            <div className="text-right text-xs text-muted-foreground">
+              <div>Class Performance <span className="text-gold">{CLASS_SCORE.toFixed(1)} / 50</span></div>
+              <div>Guild Performance <span className="text-gold">{GUILD_SCORE.toFixed(1)} / 50</span></div>
             </div>
           </div>
           <div className="mt-4 h-3 w-full overflow-hidden rounded-full border border-border bg-ink/60">
             <div
               className="h-full rounded-full transition-all"
               style={{
-                width: `${CURRENT.score}%`,
+                width: `${TOTAL_SCORE}%`,
                 background: `linear-gradient(90deg, ${info.color}88, ${info.color})`,
                 boxShadow: `0 0 12px ${info.color}88`,
               }}
@@ -156,53 +157,82 @@ function PerformancePage() {
           <div className="mt-2 flex justify-between text-[10px] uppercase tracking-widest text-muted-foreground">
             <span>D · 0</span>
             <span>C · 60</span>
-            <span>B · 75</span>
+            <span>B · 80</span>
             <span>A · 90</span>
             <span>100</span>
           </div>
         </section>
 
-        {/* 3. Performance Breakdown */}
+        {/* 3a. Class Performance */}
         <section className="mt-6 rounded-xl border border-border bg-ink/30 p-6">
           <div className="mb-5 flex items-baseline justify-between">
             <div className="font-display text-xs uppercase tracking-[0.3em] text-gold">
-              Performance Breakdown
+              Class Performance · Sales
             </div>
             <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
-              6 categories · weighted
+              Max 50 points
+            </div>
+          </div>
+          <div className="rounded-lg border border-border/60 bg-ink/40 p-4">
+            <div className="flex items-baseline justify-between">
+              <div className="font-display text-sm uppercase tracking-widest text-foreground">
+                Sales
+              </div>
+              <div className="font-display text-lg text-gold">
+                {CLASS_SCORE.toFixed(1)} / 50
+              </div>
+            </div>
+            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-ink/60">
+              <div className="h-full rounded-full bg-gold/80" style={{ width: `${(CLASS_SCORE / 50) * 100}%` }} />
+            </div>
+            <div className="mt-2 flex justify-between text-[10px] uppercase tracking-widest text-muted-foreground">
+              <span>RM {CURRENT.sales.toLocaleString()} achieved</span>
+              <span>Target RM {SALES_TARGET.toLocaleString()}</span>
+            </div>
+          </div>
+        </section>
+
+        {/* 3b. Guild Performance */}
+        <section className="mt-6 rounded-xl border border-border bg-ink/30 p-6">
+          <div className="mb-5 flex items-baseline justify-between">
+            <div className="font-display text-xs uppercase tracking-[0.3em] text-gold">
+              Guild Performance · Behaviour
+            </div>
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+              4 dimensions · 12.5 pts each
             </div>
           </div>
           <div className="space-y-4">
-            {CURRENT.categories.map((c) => (
-              <div key={c.name} className="rounded-lg border border-border/60 bg-ink/40 p-4">
+            {BEHAVIOUR_ROWS.map((c) => (
+              <div key={c.key} className="rounded-lg border border-border/60 bg-ink/40 p-4">
                 <div className="flex items-baseline justify-between">
                   <div className="font-display text-sm uppercase tracking-widest text-foreground">
                     {c.name}
                   </div>
-                  <div className="font-display text-lg text-gold">{c.percent}%</div>
+                  <div className="font-display text-lg text-gold">
+                    {"★".repeat(c.stars)}
+                    <span className="text-muted-foreground/50">{"★".repeat(5 - c.stars)}</span>
+                  </div>
                 </div>
                 <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-ink/60">
-                  <div
-                    className="h-full rounded-full bg-gold/80"
-                    style={{ width: `${c.percent}%` }}
-                  />
+                  <div className="h-full rounded-full bg-gold/80" style={{ width: `${c.percent}%` }} />
                 </div>
                 <div className="mt-2 flex justify-between text-[10px] uppercase tracking-widest text-muted-foreground">
-                  <span>Weight {c.weight}%</span>
-                  <span>Earned {c.earned.toFixed(2)} pts</span>
+                  <span>{c.percent}%{c.stars === 3 ? " · Meets Standard" : ""}</span>
+                  <span>{c.earned.toFixed(2)} / 12.5 pts</span>
                 </div>
               </div>
             ))}
           </div>
           <div className="mt-4 flex justify-end border-t border-border/50 pt-3 text-xs text-muted-foreground">
-            Total earned:{" "}
+            Guild Performance:{" "}
             <span className="ml-2 font-display text-gold">
-              {CURRENT.categories.reduce((a, c) => a + c.earned, 0).toFixed(2)} / 100
+              {GUILD_SCORE.toFixed(2)} / 50
             </span>
           </div>
         </section>
 
-        {/* 4. Manager Notes */}
+
         <section className="mt-6 rounded-xl border border-border bg-ink/30 p-6">
           <div className="flex items-baseline justify-between">
             <div className="font-display text-xs uppercase tracking-[0.3em] text-gold">
