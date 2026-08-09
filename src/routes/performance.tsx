@@ -72,7 +72,9 @@ const GRADE_REFERENCE: { grade: "A" | "B" | "C" | "D"; short: string }[] = [
 
 
 function PerformancePage() {
-  const info = GRADE_INFO[CURRENT.grade];
+  const grade = gradeOf(TOTAL_SCORE);
+  const info = GRADE_INFO[grade];
+
 
   return (
     <div className="min-h-screen text-foreground">
