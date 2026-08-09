@@ -6,14 +6,18 @@ export type SubmitReviewInput = {
   month: string; // "YYYY-MM"
   sales_amount: number;
   sales_target: number;
-  sales_score: number;
-  behaviour_score: number;
+  /** Class Performance, 0-50 */
+  class_points: number;
+  /** Guild Performance, 0-50 */
+  guild_points: number;
+  /** Total Performance, 0-100 */
   final_score: number;
   grade: "A" | "B" | "C" | "D";
-  // Behaviour sub-scores mapped to leaderboard A/B/C/D breakdown.
-  behaviour_a: number; // -> discipline_score (Behaviour)
-  behaviour_b: number; // -> kpi_score (Direction)
-  behaviour_c: number; // -> achievements_score (Contribution)
+  // Four frozen behaviour dimensions, each stored as a 0-100 percentage.
+  professionalism: number;
+  culture: number;
+  service_excellence: number;
+  teamwork: number;
   notes?: string;
 };
 
@@ -34,16 +38,18 @@ export const submitMonthlyReview = createServerFn({ method: "POST" })
     const row = {
       staff_id: data.staff_id,
       month: monthDate,
-      sales_score: clamp(data.sales_score),
-      review_score: clamp(data.behaviour_score),
+      // Stored as 0-100 equivalents so existing dashboards keep working.
+      sales_score: clamp(data.class_points * 2),
+      review_score: clamp(data.guild_points * 2),
       composite_score: Math.max(0, Math.min(999.99, Number(data.final_score) || 0)),
       grade: data.grade,
       notes: data.notes ?? "",
       evaluator_id: context.userId,
-      attendance_score: clamp(data.behaviour_a),
-      discipline_score: clamp(data.behaviour_a),
-      kpi_score: clamp(data.behaviour_b),
-      achievements_score: clamp(data.behaviour_c),
+      // Behaviour dimensions (percentages).
+      discipline_score: clamp(data.professionalism),
+      kpi_score: clamp(data.culture),
+      achievements_score: clamp(data.service_excellence),
+      attendance_score: clamp(data.teamwork),
     };
 
     const { data: upserted, error } = await context.supabase
