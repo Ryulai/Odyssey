@@ -41,11 +41,12 @@ export const MODULE_GROUPS: ModuleGroup[] = [
     subtitle: "How do I grow?",
     blurb: "The five progression systems that shape your growth.",
     entries: [
-      { key: "performance",     label: "Performance System",   to: "/performance",     status: "live",        description: "Track your monthly performance, ABCD evaluations, reviews, and personal growth." },
-      { key: "ranking",         label: "Ranking System",       to: "/promotions",      status: "live",        description: "View your permanent rank progression from Bronze to Legend." },
-      { key: "secondary",       label: "Second Class System",  to: "/secondary-class", status: "locked",      description: "Unlocked after Gold Rank. Develop a completely independent secondary class and role." },
-      { key: "mentorship",      label: "Mentorship System",    to: "/mentorship",      status: "coming-soon", description: "Guide apprentices and develop future Shipbuilders." },
-      { key: "ownership",       label: "Ownership System",     to: "/ownership",       status: "coming-soon", description: "Your long-term journey toward becoming a partner, shareholder, or founder." },
+      { key: "five-systems",    label: "Five Core Systems",       to: "/five-systems",    status: "live",        description: "The official core architecture of Odyssey — Performance, Ranking, Secondary Class, Mentorship, Ownership." },
+      { key: "performance",     label: "Performance System",      to: "/performance",     status: "live",        description: "Track your monthly performance, ABCD evaluations, reviews, and personal growth." },
+      { key: "ranking",         label: "Ranking System",          to: "/promotions",      status: "live",        description: "View your permanent rank progression from Bronze to Legend." },
+      { key: "secondary",       label: "Secondary Class System",  to: "/secondary-class", status: "locked",      description: "Unlocked after Gold Rank. Develop a completely independent secondary class and role." },
+      { key: "mentorship",      label: "Mentorship System",       to: "/mentorship",      status: "coming-soon", description: "Guide apprentices and develop future Shipbuilders." },
+      { key: "ownership",       label: "Ownership System",        to: "/ownership",       status: "coming-soon", description: "Your long-term journey toward becoming a partner, shareholder, or founder." },
     ],
   },
   {
