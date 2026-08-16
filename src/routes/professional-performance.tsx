@@ -397,6 +397,7 @@ function MonthlyReviewPage() {
         queryClient.invalidateQueries({ queryKey: ["promotion-progress"] }),
         queryClient.invalidateQueries({ queryKey: ["team-promotions"] }),
         queryClient.invalidateQueries({ queryKey: ["ranking-history", staffId] }),
+        queryClient.invalidateQueries({ queryKey: ["performance-overview"] }),
       ]);
       toast.success(`Review saved · Grade ${g.grade}`);
     } catch (e: any) {

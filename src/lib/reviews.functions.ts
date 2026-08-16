@@ -61,3 +61,102 @@ export const submitMonthlyReview = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return upserted;
   });
+
+// -------------------------------------------------------------------
+// Read side — real Performance data for the Performance dashboard.
+// Reads the same monthly_evaluations rows the Ranking system consumes.
+// -------------------------------------------------------------------
+
+export type PerformanceBehaviour = { key: string; name: string; percent: number };
+
+export type PerformanceMonthRecord = {
+  month: string;          // "YYYY-MM-01"
+  label: string;          // "August 2026"
+  grade: "A" | "B" | "C" | "D";
+  total: number;          // 0-100
+  class_points: number;   // 0-50
+  guild_points: number;   // 0-50
+  behaviours: PerformanceBehaviour[];
+  notes: string;
+};
+
+export type PerformanceOverview = {
+  staff: { id: string; name: string } | null;
+  current: PerformanceMonthRecord | null;
+  history: PerformanceMonthRecord[]; // newest first, max 12
+};
+
+function toRecord(r: {
+  month: string;
+  grade: string;
+  composite_score: number | string;
+  sales_score: number | string;
+  review_score: number | string;
+  discipline_score: number | string;
+  kpi_score: number | string;
+  achievements_score: number | string;
+  attendance_score: number | string;
+  notes: string | null;
+}): PerformanceMonthRecord {
+  const n = (v: number | string | null) => Number(v ?? 0) || 0;
+  const d = new Date(`${r.month}T00:00:00Z`);
+  return {
+    month: r.month,
+    label: d.toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" }),
+    grade: (["A", "B", "C", "D"].includes(r.grade) ? r.grade : "D") as "A" | "B" | "C" | "D",
+    total: Math.round(n(r.composite_score) * 10) / 10,
+    class_points: Math.round((n(r.sales_score) / 2) * 100) / 100,
+    guild_points: Math.round((n(r.review_score) / 2) * 100) / 100,
+    behaviours: [
+      { key: "professionalism", name: "Professionalism", percent: n(r.discipline_score) },
+      { key: "culture", name: "Culture", percent: n(r.kpi_score) },
+      { key: "service_excellence", name: "Service Excellence", percent: n(r.achievements_score) },
+      { key: "teamwork", name: "Teamwork", percent: n(r.attendance_score) },
+    ],
+    notes: r.notes ?? "",
+  };
+}
+
+export const getPerformanceOverview = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { staff_id?: string } | undefined) => d ?? {})
+  .handler(async ({ context, data }): Promise<PerformanceOverview> => {
+    let staffId = data.staff_id ?? "";
+    let staffName = "";
+    if (!staffId) {
+      const me = await context.supabase
+        .from("staff")
+        .select("id, name")
+        .eq("user_id", context.userId)
+        .limit(1)
+        .maybeSingle();
+      staffId = me.data?.id ?? "";
+      staffName = me.data?.name ?? "";
+    } else {
+      const s = await context.supabase
+        .from("staff")
+        .select("id, name")
+        .eq("id", staffId)
+        .maybeSingle();
+      staffName = s.data?.name ?? "";
+    }
+    if (!staffId) return { staff: null, current: null, history: [] };
+
+    const { data: rows, error } = await context.supabase
+      .from("monthly_evaluations")
+      .select(
+        "month, grade, composite_score, sales_score, review_score, discipline_score, kpi_score, achievements_score, attendance_score, notes",
+      )
+      .eq("staff_id", staffId)
+      .order("month", { ascending: false })
+      .limit(12);
+
+    if (error) throw new Error(error.message);
+
+    const history = (rows ?? []).map((r) => toRecord(r as never));
+    return {
+      staff: { id: staffId, name: staffName },
+      current: history[0] ?? null,
+      history,
+    };
+  });
