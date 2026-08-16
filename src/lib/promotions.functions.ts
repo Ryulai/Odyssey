@@ -119,7 +119,7 @@ export const getPromotionProgress = createServerFn({ method: "GET" })
         .select("month, grade, composite_score")
         .eq("staff_id", staffId)
         .order("month", { ascending: false })
-        .limit(6),
+        .limit(12),
       context.supabase
         .from("staff_identities")
         .select("id, rank_key, promotion_state, updated_at, created_at")
