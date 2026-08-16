@@ -160,10 +160,20 @@ export const getPromotionProgress = createServerFn({ method: "GET" })
 
     const promotionHistory = readHistory(identity?.promotion_state);
 
-    // Build requirements list only when a next rank exists.
+    const performanceHistory: PerformanceMonth[] = monthly.map((m) => ({
+      month: String(m.month),
+      grade: (m.grade as PerformanceMonth["grade"]) ?? null,
+      score: m.composite_score !== null && m.composite_score !== undefined ? Number(m.composite_score) : null,
+    }));
+
+    // Ranking V1: criteria are confirmed only up to Gold. Beyond that the
+    // requirements are not yet defined and must not be invented.
+    const criteriaDefined = Boolean(ev?.next_rank_key) && DEFINED_NEXT_RANKS.has(String(ev.next_rank_key));
+
+    // Build requirements list only when a next rank exists with defined criteria.
     const requirements: PromotionRequirement[] = [];
 
-    if (ev?.next_rank_key) {
+    if (criteriaDefined) {
       requirements.push({
         key: "overall",
         label: "Overall Performance",
