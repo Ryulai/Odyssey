@@ -39,6 +39,12 @@ export type PromotionEntry = {
   source: string;
 };
 
+export type PerformanceMonth = {
+  month: string; // "YYYY-MM-01"
+  grade: "A" | "B" | "C" | "D" | null;
+  score: number | null;
+};
+
 export type PromotionProgress = {
   staff: { id: string; name: string; role: string | null } | null;
   identity_id: string | null;
@@ -49,6 +55,8 @@ export type PromotionProgress = {
   percent: number;
   eligible: boolean;
   days_in_rank: number | null;
+  /** False when the next Rank's criteria are not yet defined (Gold and above). */
+  criteria_defined: boolean;
   requirements: PromotionRequirement[];
   completed: PromotionRequirement[];
   remaining: PromotionRequirement[];
@@ -59,6 +67,7 @@ export type PromotionProgress = {
     note: string;
   };
   history: PromotionEntry[];
+  performance_history: PerformanceMonth[];
   totals: { total_stars: number; a_grades: number; b_grades: number; unique_achievements: number };
   scores: {
     overall_avg_3mo: number | null;
@@ -67,6 +76,12 @@ export type PromotionProgress = {
     approved_claims: number;
   };
 };
+
+/**
+ * Ranking V1: only these promotions have confirmed criteria. Anything beyond
+ * Gold is intentionally undefined — never invent requirements for it.
+ */
+const DEFINED_NEXT_RANKS = new Set(["apprentice", "bronze", "silver", "gold"]);
 
 // Overall Performance threshold — sales+behaviour composite average.
 const OVERALL_MIN_AVG = 70;
