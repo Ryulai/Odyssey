@@ -299,11 +299,13 @@ export const getPromotionProgress = createServerFn({ method: "GET" })
       percent,
       eligible,
       days_in_rank: daysInRank,
+      criteria_defined: criteriaDefined,
       requirements,
       completed,
       remaining,
       readiness,
       history: promotionHistory,
+      performance_history: performanceHistory,
       totals: {
         total_stars: Number(ev?.total_stars ?? 0),
         a_grades: Number(ev?.a_grades ?? 0),
