@@ -270,17 +270,24 @@ export const getPromotionProgress = createServerFn({ method: "GET" })
     const remaining = requirements.filter((r) => !r.done);
     const weightTotal = requirements.reduce((a, r) => a + r.weight, 0);
     const weightDone = completed.reduce((a, r) => a + r.weight, 0);
-    const percent = weightTotal === 0 ? 100 : Math.round((weightDone / weightTotal) * 100);
+    const percent = !criteriaDefined ? 0 : weightTotal === 0 ? 100 : Math.round((weightDone / weightTotal) * 100);
     const mandatoryPending = remaining.filter((r) => r.mandatory);
     const eligible = requirements.length > 0 && mandatoryPending.length === 0 && percent >= 85;
 
-    const readiness = deriveReadiness({
-      percent,
-      hasNext: Boolean(ev?.next_rank_key),
-      mandatoryPending: mandatoryPending.length,
-      qualifyingLast3,
-      daysInRank,
-    });
+    const readiness = !criteriaDefined && ev?.next_rank_key
+      ? {
+          label: "Building" as const,
+          tone: "info" as const,
+          eta_months: null,
+          note: `Requirements for ${ev.next_rank_name ?? "the next Rank"} are not defined yet.`,
+        }
+      : deriveReadiness({
+          percent,
+          hasNext: Boolean(ev?.next_rank_key),
+          mandatoryPending: mandatoryPending.length,
+          qualifyingLast3,
+          daysInRank,
+        });
 
     return {
       staff: { id: staff.id, name: staff.name, role: staff.role },
