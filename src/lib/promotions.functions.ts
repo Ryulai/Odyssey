@@ -39,6 +39,12 @@ export type PromotionEntry = {
   source: string;
 };
 
+export type PerformanceMonth = {
+  month: string; // "YYYY-MM-01"
+  grade: "A" | "B" | "C" | "D" | null;
+  score: number | null;
+};
+
 export type PromotionProgress = {
   staff: { id: string; name: string; role: string | null } | null;
   identity_id: string | null;
@@ -49,6 +55,8 @@ export type PromotionProgress = {
   percent: number;
   eligible: boolean;
   days_in_rank: number | null;
+  /** False when the next Rank's criteria are not yet defined (Gold and above). */
+  criteria_defined: boolean;
   requirements: PromotionRequirement[];
   completed: PromotionRequirement[];
   remaining: PromotionRequirement[];
@@ -59,6 +67,7 @@ export type PromotionProgress = {
     note: string;
   };
   history: PromotionEntry[];
+  performance_history: PerformanceMonth[];
   totals: { total_stars: number; a_grades: number; b_grades: number; unique_achievements: number };
   scores: {
     overall_avg_3mo: number | null;
@@ -67,6 +76,12 @@ export type PromotionProgress = {
     approved_claims: number;
   };
 };
+
+/**
+ * Ranking V1: only these promotions have confirmed criteria. Anything beyond
+ * Gold is intentionally undefined — never invent requirements for it.
+ */
+const DEFINED_NEXT_RANKS = new Set(["apprentice", "bronze", "silver", "gold"]);
 
 // Overall Performance threshold — sales+behaviour composite average.
 const OVERALL_MIN_AVG = 70;
@@ -104,7 +119,7 @@ export const getPromotionProgress = createServerFn({ method: "GET" })
         .select("month, grade, composite_score")
         .eq("staff_id", staffId)
         .order("month", { ascending: false })
-        .limit(6),
+        .limit(12),
       context.supabase
         .from("staff_identities")
         .select("id, rank_key, promotion_state, updated_at, created_at")
@@ -145,10 +160,20 @@ export const getPromotionProgress = createServerFn({ method: "GET" })
 
     const promotionHistory = readHistory(identity?.promotion_state);
 
-    // Build requirements list only when a next rank exists.
+    const performanceHistory: PerformanceMonth[] = monthly.map((m) => ({
+      month: String(m.month),
+      grade: (m.grade as PerformanceMonth["grade"]) ?? null,
+      score: m.composite_score !== null && m.composite_score !== undefined ? Number(m.composite_score) : null,
+    }));
+
+    // Ranking V1: criteria are confirmed only up to Gold. Beyond that the
+    // requirements are not yet defined and must not be invented.
+    const criteriaDefined = Boolean(ev?.next_rank_key) && DEFINED_NEXT_RANKS.has(String(ev.next_rank_key));
+
+    // Build requirements list only when a next rank exists with defined criteria.
     const requirements: PromotionRequirement[] = [];
 
-    if (ev?.next_rank_key) {
+    if (criteriaDefined) {
       requirements.push({
         key: "overall",
         label: "Overall Performance",
@@ -245,17 +270,24 @@ export const getPromotionProgress = createServerFn({ method: "GET" })
     const remaining = requirements.filter((r) => !r.done);
     const weightTotal = requirements.reduce((a, r) => a + r.weight, 0);
     const weightDone = completed.reduce((a, r) => a + r.weight, 0);
-    const percent = weightTotal === 0 ? 100 : Math.round((weightDone / weightTotal) * 100);
+    const percent = !criteriaDefined ? 0 : weightTotal === 0 ? 100 : Math.round((weightDone / weightTotal) * 100);
     const mandatoryPending = remaining.filter((r) => r.mandatory);
     const eligible = requirements.length > 0 && mandatoryPending.length === 0 && percent >= 85;
 
-    const readiness = deriveReadiness({
-      percent,
-      hasNext: Boolean(ev?.next_rank_key),
-      mandatoryPending: mandatoryPending.length,
-      qualifyingLast3,
-      daysInRank,
-    });
+    const readiness = !criteriaDefined && ev?.next_rank_key
+      ? {
+          label: "Building" as const,
+          tone: "info" as const,
+          eta_months: null,
+          note: `Requirements for ${ev.next_rank_name ?? "the next Rank"} are not defined yet.`,
+        }
+      : deriveReadiness({
+          percent,
+          hasNext: Boolean(ev?.next_rank_key),
+          mandatoryPending: mandatoryPending.length,
+          qualifyingLast3,
+          daysInRank,
+        });
 
     return {
       staff: { id: staff.id, name: staff.name, role: staff.role },
@@ -267,11 +299,13 @@ export const getPromotionProgress = createServerFn({ method: "GET" })
       percent,
       eligible,
       days_in_rank: daysInRank,
+      criteria_defined: criteriaDefined,
       requirements,
       completed,
       remaining,
       readiness,
       history: promotionHistory,
+      performance_history: performanceHistory,
       totals: {
         total_stars: Number(ev?.total_stars ?? 0),
         a_grades: Number(ev?.a_grades ?? 0),
@@ -302,11 +336,13 @@ function empty(): PromotionProgress {
     percent: 0,
     eligible: false,
     days_in_rank: null,
+    criteria_defined: false,
     requirements: [],
     completed: [],
     remaining: [],
     readiness: { label: "Early", tone: "info", eta_months: null, note: "No profile linked yet." },
     history: [],
+    performance_history: [],
     totals: { total_stars: 0, a_grades: 0, b_grades: 0, unique_achievements: 0 },
     scores: { overall_avg_3mo: null, latest_grade: null, qualifying_last3: 0, approved_claims: 0 },
   };

@@ -122,24 +122,86 @@ function MyProgress() {
         </SignalCard>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <RequirementList
-          eyebrow="Ahead"
-          title={`Remaining · ${p.remaining.length}`}
-          items={p.remaining}
-          empty="All requirements met. Awaiting Director approval."
-        />
-        <RequirementList
-          eyebrow="Behind you"
-          title={`Completed · ${p.completed.length}`}
-          items={p.completed}
-          empty="No requirements completed yet — start with next month's review."
-          muted
-        />
-      </div>
+      {p.criteria_defined ? (
+        <div className="grid gap-6 lg:grid-cols-2">
+          <RequirementList
+            eyebrow="Ahead"
+            title={`Remaining · ${p.remaining.length}`}
+            items={p.remaining}
+            empty="All requirements met. Awaiting Director approval."
+          />
+          <RequirementList
+            eyebrow="Behind you"
+            title={`Completed · ${p.completed.length}`}
+            items={p.completed}
+            empty="No requirements completed yet — start with next month's review."
+            muted
+          />
+        </div>
+      ) : p.next_rank_key ? (
+        <ComingSoonCard nextRank={p.next_rank_name ?? p.next_rank_key} />
+      ) : null}
+
+      <PerformanceHistoryCard months={p.performance_history} />
 
       <HistoryCard history={p.history} />
     </div>
+  );
+}
+
+// Ranking V1: criteria are confirmed only up to Gold.
+function ComingSoonCard({ nextRank }: { nextRank: string }) {
+  return (
+    <section className="rounded-xl border border-gold/25 bg-ink/40 p-6 text-center sm:p-8">
+      <div className="font-display text-[11px] uppercase tracking-[0.3em] text-gold">
+        Future Rank Requirements — Coming Soon
+      </div>
+      <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground">
+        The requirements for <span className="text-foreground">{nextRank}</span> are not defined yet.
+        Gold and above are still being designed — keep building Performance history in the meantime;
+        it will always be an input into long-term growth.
+      </p>
+      <div className="mt-4 text-[10px] uppercase tracking-widest text-muted-foreground">
+        Known today: Bronze → Silver · Silver → Gold
+      </div>
+    </section>
+  );
+}
+
+function PerformanceHistoryCard({ months }: { months: PromotionProgress["performance_history"] }) {
+  return (
+    <section className="rounded-xl border border-gold/20 bg-ink/40 p-5 sm:p-6">
+      <div className="mb-3 flex items-end justify-between">
+        <div>
+          <div className="font-display text-[11px] uppercase tracking-[0.3em] text-gold">Performance History</div>
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+            Input into Ranking — never the Rank itself
+          </div>
+        </div>
+        <Link to="/performance" className="text-[10px] uppercase tracking-widest text-muted-foreground hover:text-gold">
+          Performance System →
+        </Link>
+      </div>
+      {months.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          No monthly reviews recorded yet. Your first sealed review will appear here.
+        </p>
+      ) : (
+        <ul className="space-y-2">
+          {months.map((m) => (
+            <li key={m.month} className="flex items-center justify-between rounded-md border border-border/60 bg-ink/40 px-3 py-2">
+              <div className="text-sm text-foreground">
+                {new Date(m.month).toLocaleDateString(undefined, { year: "numeric", month: "long" })}
+              </div>
+              <div className="flex items-center gap-4 tabular-nums">
+                <span className="text-xs text-muted-foreground">{m.score !== null ? Math.round(m.score) : "—"} / 100</span>
+                <span className="font-display text-lg text-gold">{m.grade ?? "—"}</span>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
 
