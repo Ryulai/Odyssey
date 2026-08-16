@@ -336,11 +336,13 @@ function empty(): PromotionProgress {
     percent: 0,
     eligible: false,
     days_in_rank: null,
+    criteria_defined: false,
     requirements: [],
     completed: [],
     remaining: [],
     readiness: { label: "Early", tone: "info", eta_months: null, note: "No profile linked yet." },
     history: [],
+    performance_history: [],
     totals: { total_stars: 0, a_grades: 0, b_grades: 0, unique_achievements: 0 },
     scores: { overall_avg_3mo: null, latest_grade: null, qualifying_last3: 0, approved_claims: 0 },
   };
