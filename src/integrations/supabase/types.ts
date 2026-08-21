@@ -1061,11 +1061,16 @@ export type Database = {
           unique_achievements: number
         }[]
       }
+      has_direct_reports: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_direct_manager: {
+        Args: { _staff_id: string; _user_id: string }
         Returns: boolean
       }
       is_director_bootstrap_email: {
