@@ -8,7 +8,7 @@ import { z } from "zod";
  * Plaintext credentials are never stored or logged; only a SHA-256 hash is kept.
  */
 
-const TEMP_TTL_MINUTES = 30;
+const TEMP_TTL_MINUTES = 15;
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
 
 function generateTempCredential(length = 14) {
@@ -72,11 +72,24 @@ export const resetHunterPassword = createServerFn({ method: "POST" })
     if ((targetCount ?? 0) >= 2) throw new Error("A reset for this account was just issued. Wait a few minutes.");
 
     // Any previously pending credential for this account is revoked.
-    await supabaseAdmin
+    const { data: revoked } = await supabaseAdmin
       .from("password_resets")
       .update({ status: "revoked" })
       .eq("target_user_id", staffRow.user_id)
-      .eq("status", "pending");
+      .eq("status", "pending")
+      .select("id");
+
+    for (const row of revoked ?? []) {
+      await supabaseAdmin.from("director_audit_log").insert({
+        actor_user_id: context.userId,
+        staff_id: staffRow.id,
+        action: "password_reset_invalidated",
+        reason: "Superseded by a newly issued temporary credential",
+        before_state: { reset_id: row.id, status: "pending" },
+        after_state: { reset_id: row.id, status: "revoked" },
+      });
+    }
+
 
     const temporaryCredential = generateTempCredential();
     const credentialHash = await sha256(temporaryCredential);
@@ -141,7 +154,7 @@ export const getPasswordResetState = createServerFn({ method: "POST" })
 
     const { data: reset } = await supabaseAdmin
       .from("password_resets")
-      .select("id, status, expires_at")
+      .select("id, status, expires_at, staff_id")
       .eq("target_user_id", context.userId)
       .eq("status", "pending")
       .order("created_at", { ascending: false })
@@ -151,8 +164,17 @@ export const getPasswordResetState = createServerFn({ method: "POST" })
     const expired = !reset || new Date(reset.expires_at).getTime() < Date.now();
     if (expired && reset) {
       await supabaseAdmin.from("password_resets").update({ status: "expired" }).eq("id", reset.id);
+      await supabaseAdmin.from("director_audit_log").insert({
+        actor_user_id: context.userId,
+        staff_id: reset.staff_id,
+        action: "password_reset_expired",
+        reason: "Temporary credential expired before it was used",
+        before_state: { reset_id: reset.id, status: "pending" },
+        after_state: { reset_id: reset.id, status: "expired" },
+      });
     }
     return { mustChangePassword: true as const, expired };
+
   });
 
 export const completeTemporaryPasswordChange = createServerFn({ method: "POST" })
@@ -175,7 +197,16 @@ export const completeTemporaryPasswordChange = createServerFn({ method: "POST" }
 
     if (meta["must_change_password"] && reset && new Date(reset.expires_at).getTime() < Date.now()) {
       await supabaseAdmin.from("password_resets").update({ status: "expired" }).eq("id", reset.id);
+      await supabaseAdmin.from("director_audit_log").insert({
+        actor_user_id: context.userId,
+        staff_id: reset.staff_id,
+        action: "password_reset_expired",
+        reason: "Temporary credential expired before it was used",
+        before_state: { reset_id: reset.id, status: "pending" },
+        after_state: { reset_id: reset.id, status: "expired" },
+      });
       throw new Error("This temporary credential has expired. Ask your Director to issue a new one.");
+
     }
 
     const nextMeta = { ...meta };
