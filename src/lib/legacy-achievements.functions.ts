@@ -109,7 +109,7 @@ export const updateLegacyAchievementDate = createServerFn({ method: "POST" })
         ? { awarded_at: iso, ...(data.period !== undefined ? { period: data.period } : {}) }
         : { created_at: iso };
 
-    const after = await supabaseAdmin.from(table).update(patch).eq("id", data.id).select().maybeSingle();
+    const after = await (supabaseAdmin.from(table) as any).update(patch).eq("id", data.id).select().maybeSingle();
     if (after.error) throw new Error(after.error.message);
 
     await supabaseAdmin.from("director_audit_log").insert({
