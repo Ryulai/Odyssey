@@ -19,6 +19,7 @@ import {
 } from "@/lib/legacy.functions";
 import { PRIMARY_CLASSES, CLASS_ROLES, TEMPORARY_ROLES, RANKS, STAFF_STATUSES, classLabel, roleLabel, rankLabel, statusLabel, type PrimaryClass } from "@/lib/rpg";
 import { useDirectorMode } from "@/lib/director-mode";
+import { resetHunterPassword } from "@/lib/password-reset.functions";
 
 
 export const Route = createFileRoute("/admin")({
@@ -212,6 +213,12 @@ function StaffModule() {
   const transfer = useMutation({ mutationFn: (d: any) => transferStaff({ data: d }), onSuccess: invalidate });
   const [editing, setEditing] = useState<StaffRow | null>(null);
   const [transferring, setTransferring] = useState<StaffRow | null>(null);
+  const [resetResult, setResetResult] = useState<{ staffName: string; credential: string; expiresAt: string } | null>(null);
+  const resetPassword = useMutation({
+    mutationFn: (d: { staff_id: string }) => resetHunterPassword({ data: d }),
+    onSuccess: (r: any) => setResetResult({ staffName: r.staffName, credential: r.temporaryCredential, expiresAt: r.expiresAt }),
+    onError: (e: any) => toast.error(e?.message ?? "Password reset failed"),
+  });
 
   const blank: StaffRow = {
     id: "", name: "", email: "", role: "", role_family: "hunter", business_unit: "Sales",
@@ -315,6 +322,9 @@ function StaffModule() {
                       {role === "director" && !s.user_id && emailMatchesAccount(s.email, accounts) && (
                         <Btn variant="ghost" onClick={() => link.mutate({ staff_id: s.id, user_id: emailMatchesAccount(s.email, accounts)?.id, app_role: roleToAppRole(s.role) })}>Link</Btn>
                       )}
+                      {role === "director" && s.user_id && (
+                        <Btn variant="ghost" onClick={() => { if (confirm(`Reset the Odyssey password for ${s.name}?`)) resetPassword.mutate({ staff_id: s.id }); }}>Reset Hunter Password</Btn>
+                      )}
                       {role === "director" && <Btn variant="danger" onClick={() => { if (confirm(`Delete ${s.name}?`)) del.mutate(s.id); }}>Delete</Btn>}
                     </div>
                   </td>
@@ -336,6 +346,25 @@ function StaffModule() {
           onSave={(d) => save.mutate(d, { onSuccess: () => setEditing(null) })}
           busy={save.isPending}
         />
+      )}
+      {resetResult && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+          <div className="card-ornate w-full max-w-md p-6">
+            <h3 className="font-display text-sm uppercase tracking-widest text-gold">Temporary access credential</h3>
+            <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+              Temporary access credential generated for {resetResult.staffName}. Share it with the Hunter through a secure internal channel. It will be shown only once.
+            </p>
+            <div className="mt-4 select-all rounded-md border border-gold/50 bg-ink/70 px-3 py-3 text-center font-mono text-lg tracking-widest text-gold">
+              {resetResult.credential}
+            </div>
+            <p className="mt-2 text-[10px] uppercase tracking-widest text-muted-foreground">
+              Expires {new Date(resetResult.expiresAt).toLocaleString()} · single use
+            </p>
+            <div className="mt-5 flex justify-end gap-2">
+              <Btn onClick={() => setResetResult(null)}>Done</Btn>
+            </div>
+          </div>
+        </div>
       )}
       {transferring && (
         <TransferForm
