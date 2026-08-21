@@ -584,6 +584,53 @@ export type Database = {
           },
         ]
       }
+      password_resets: {
+        Row: {
+          created_at: string
+          credential_hash: string
+          expires_at: string
+          id: string
+          initiated_by: string
+          staff_id: string | null
+          status: string
+          target_email: string
+          target_user_id: string
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          credential_hash: string
+          expires_at: string
+          id?: string
+          initiated_by: string
+          staff_id?: string | null
+          status?: string
+          target_email: string
+          target_user_id: string
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          credential_hash?: string
+          expires_at?: string
+          id?: string
+          initiated_by?: string
+          staff_id?: string | null
+          status?: string
+          target_email?: string
+          target_user_id?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "password_resets_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar: string | null
