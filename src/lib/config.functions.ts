@@ -497,7 +497,13 @@ export const updateGradeRule = createServerFn({ method: "POST" })
 export const listAchievements = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data, error } = await context.supabase.from("achievements").select("*").order("name");
+    // Frozen Season One catalogue only: legacy achievements stay in the DB for
+    // historical records/claims, but are never surfaced in the app.
+    const { data, error } = await context.supabase
+      .from("achievements")
+      .select("*")
+      .eq("active", true)
+      .order("position");
     if (error) throw new Error(error.message);
     return data ?? [];
   });
