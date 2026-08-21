@@ -20,6 +20,7 @@ import {
 import { PRIMARY_CLASSES, CLASS_ROLES, TEMPORARY_ROLES, RANKS, STAFF_STATUSES, classLabel, roleLabel, rankLabel, statusLabel, type PrimaryClass } from "@/lib/rpg";
 import { useDirectorMode } from "@/lib/director-mode";
 import { resetHunterPassword } from "@/lib/password-reset.functions";
+import { listLegacyAchievements, updateLegacyAchievementDate } from "@/lib/legacy-achievements.functions";
 
 
 export const Route = createFileRoute("/admin")({
