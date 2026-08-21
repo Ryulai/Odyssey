@@ -12,13 +12,13 @@ Scope: Internal Beta only. No email/OTP delivery exists in this environment.
 3. A Director (authority = `director` only) opens Admin → Staff and uses **Reset Hunter Password**
    on an activated staff row.
 4. The server generates a 14-character random temporary credential, sets it as the account password,
-   and stores only a SHA-256 hash in `public.password_resets` with a 30-minute expiry.
+   and stores only a SHA-256 hash in `public.password_resets` with a 15-minute expiry.
 5. The Director sees the credential **once** in a modal and passes it through a secure internal channel.
 6. The Hunter signs in with their existing email + temporary credential.
 7. `AuthGate` blocks the app and shows *"You're using a temporary password. Create a new password to
    continue."* until a new permanent password is set.
 8. On completion the reset row becomes `used` and the temporary credential no longer works (the
-   password itself is replaced). Unused credentials expire after 30 minutes and are marked `expired`.
+   password itself is replaced). Unused credentials expire after 15 minutes and are marked `expired`.
 9. Audit events are written to `director_audit_log`: `password_reset_issued` and
    `password_reset_completed` (actor, staff account, timestamp, reset id, used flag). No plaintext.
 10. Rate limits: max 10 resets per Director per hour; max 2 resets per target account per 5 minutes;

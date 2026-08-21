@@ -8,7 +8,7 @@ import { z } from "zod";
  * Plaintext credentials are never stored or logged; only a SHA-256 hash is kept.
  */
 
-const TEMP_TTL_MINUTES = 30;
+const TEMP_TTL_MINUTES = 15;
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
 
 function generateTempCredential(length = 14) {
