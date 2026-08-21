@@ -124,13 +124,26 @@ function AuthPage() {
           </form>
 
           <button
-            onClick={() => { setMode(mode === "activate" ? "signin" : "activate"); setError(null); setNotice(null); }}
+            onClick={() => { setMode(mode === "activate" ? "signin" : "activate"); setError(null); setNotice(null); setForgot(false); }}
             className="mt-4 w-full text-center text-xs text-muted-foreground hover:text-gold"
           >
             {mode === "activate"
               ? "Already activated? Sign in"
               : "First time here? Activate your approved account"}
           </button>
+
+          <button
+            onClick={() => setForgot((v) => !v)}
+            className="mt-2 w-full text-center text-xs text-muted-foreground hover:text-gold"
+          >
+            Forgot your password?
+          </button>
+          {forgot && (
+            <div className="mt-3 rounded-md border border-gold/40 bg-gold/10 px-3 py-2 text-center text-[11px] leading-relaxed text-gold">
+              Please contact your Director to reset your Odyssey account.
+            </div>
+          )}
+
 
           <p className="mt-6 text-center text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
             Your Department, Class, Rank and Authority are set by your Staff Identity.
