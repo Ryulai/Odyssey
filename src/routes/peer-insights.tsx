@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AuthGate } from "@/components/auth-gate";
 import { getPeerInsights, type PeerRow } from "@/lib/peers.functions";
@@ -9,7 +9,7 @@ export const Route = createFileRoute("/peer-insights")({
   head: () => ({
     meta: [
       { title: "Peer Insights — The Odyssey Guide" },
-      { name: "description", content: "See how Hunters of your rank in your fleet are performing this month by Overall Score and Overall Grade." },
+      { name: "description", content: "See how Hunters of your own class are performing this month by Overall Score and Overall Grade." },
       { property: "og:title", content: "Peer Insights — The Odyssey Guide" },
       { property: "og:description", content: "A clean, overall-only view of peer performance for the current month." },
       { property: "og:type", content: "website" },
@@ -47,9 +47,13 @@ function GradePill({ grade }: { grade: string | null }) {
 }
 
 function PeerInsights() {
+  // `null` = let the server decide (own class, or the Director's default).
+  const [selectedClass, setSelectedClass] = useState<string | null>(null);
+  const [lockedNotice, setLockedNotice] = useState<string | null>(null);
+
   const { data, isLoading } = useQuery({
-    queryKey: ["peer-insights"],
-    queryFn: () => getPeerInsights({ data: undefined }),
+    queryKey: ["peer-insights", selectedClass],
+    queryFn: () => getPeerInsights({ data: { class_key: selectedClass } }),
   });
 
   const rows = useMemo(() => {
@@ -58,6 +62,8 @@ function PeerInsights() {
     return list;
   }, [data]);
 
+  const activeClass = data?.active_class ?? selectedClass;
+
   return (
     <div className="min-h-screen text-foreground">
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
@@ -65,11 +71,7 @@ function PeerInsights() {
           <div>
             <div className="font-display text-[10px] uppercase tracking-[0.3em] text-gold">Peer Insights</div>
             <h1 className="mt-1 font-display text-2xl text-foreground">
-              {data?.me?.role === "director"
-                ? "Organization overview"
-                : data?.me?.role === "manager"
-                  ? "Your team"
-                  : "Your fleet this month"}
+              {data?.me?.role === "director" ? "Organization overview" : "Your class this month"}
             </h1>
           </div>
           <div className="flex flex-col items-end gap-1 text-right">
@@ -90,6 +92,47 @@ function PeerInsights() {
             )}
           </div>
         </header>
+
+        {/* Class tabs — locked tabs never trigger a fetch. */}
+        <div className="mb-4 flex flex-wrap gap-2">
+          {(data?.tabs ?? []).map((t) => {
+            const isActive = t.key === activeClass;
+            if (!t.unlocked) {
+              return (
+                <button
+                  key={t.key}
+                  type="button"
+                  aria-disabled="true"
+                  onClick={() => setLockedNotice(`${t.label} — locked. Peer Insights is available to your class only.`)}
+                  className="cursor-not-allowed rounded-md border border-border/60 bg-ink/20 px-3 py-1.5 text-[11px] uppercase tracking-widest text-muted-foreground/60"
+                  title="Locked — available to your class only"
+                >
+                  🔒 {t.label}
+                </button>
+              );
+            }
+            return (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => { setLockedNotice(null); setSelectedClass(t.key); }}
+                className={`rounded-md border px-3 py-1.5 text-[11px] uppercase tracking-widest transition ${
+                  isActive
+                    ? "border-gold/60 bg-gold/10 text-gold"
+                    : "border-border bg-ink/30 text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {lockedNotice && (
+          <div className="mb-4 rounded-md border border-border bg-ink/30 px-4 py-2 text-[12px] text-muted-foreground">
+            {lockedNotice}
+          </div>
+        )}
 
         {isLoading ? (
           <div className="rounded-md border border-border bg-ink/30 p-12 text-center text-xs uppercase tracking-widest text-muted-foreground">
@@ -113,6 +156,7 @@ function PeerInsights() {
     </div>
   );
 }
+
 
 function PeerTable({ rows }: { rows: PeerRow[] }) {
   return (
