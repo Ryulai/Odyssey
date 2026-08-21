@@ -3,8 +3,34 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AuthGate } from "@/components/auth-gate";
 import { getStaffDashboard } from "@/lib/workflow.functions";
+import { getMyTeamScope } from "@/lib/team-preview.functions";
 import { classLabel, roleLabel, rankLabel } from "@/lib/rpg";
 import { GRADE_META, type Grade } from "@/lib/employee-data";
+
+/** Shown only when the signed-in user has at least one direct report. */
+function TeamPreviewActions() {
+  const { data } = useQuery({ queryKey: ["team-scope"], queryFn: () => getMyTeamScope() });
+  if (!data?.has_direct_reports) return null;
+  return (
+    <>
+      <Link
+        to="/team-preview"
+        className="flex items-center justify-between rounded-md border border-gold/30 bg-gold/5 px-3 py-2 text-xs text-gold hover:border-gold/60"
+      >
+        <span>Preview Achievement ({data.reports.length} reports)</span>
+        <span>→</span>
+      </Link>
+      <Link
+        to="/team-preview"
+        className="flex items-center justify-between rounded-md border border-gold/30 bg-gold/5 px-3 py-2 text-xs text-gold hover:border-gold/60"
+      >
+        <span>Preview Performance Review</span>
+        <span>→</span>
+      </Link>
+    </>
+  );
+}
+
 
 export const Route = createFileRoute("/hunter-dashboard")({
   head: () => ({
