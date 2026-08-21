@@ -137,39 +137,69 @@ export type Database = {
       }
       achievements: {
         Row: {
+          ability: string
+          ability_zh: string
+          active: boolean
+          approval_required: boolean
+          code: string | null
           created_at: string
           description: string
           difficulty: string
+          icon: string
           id: string
+          max_per_season: number | null
           name: string
+          position: number
+          repeat_rule: string
           requirement: string
           reset_cycle: string
+          season: string | null
           seasonal: boolean
           star_reward: number
           type: string
           updated_at: string
         }
         Insert: {
+          ability?: string
+          ability_zh?: string
+          active?: boolean
+          approval_required?: boolean
+          code?: string | null
           created_at?: string
           description?: string
           difficulty?: string
+          icon?: string
           id?: string
+          max_per_season?: number | null
           name: string
+          position?: number
+          repeat_rule?: string
           requirement?: string
           reset_cycle?: string
+          season?: string | null
           seasonal?: boolean
           star_reward?: number
           type?: string
           updated_at?: string
         }
         Update: {
+          ability?: string
+          ability_zh?: string
+          active?: boolean
+          approval_required?: boolean
+          code?: string | null
           created_at?: string
           description?: string
           difficulty?: string
+          icon?: string
           id?: string
+          max_per_season?: number | null
           name?: string
+          position?: number
+          repeat_rule?: string
           requirement?: string
           reset_cycle?: string
+          season?: string | null
           seasonal?: boolean
           star_reward?: number
           type?: string
