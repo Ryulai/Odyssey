@@ -70,7 +70,9 @@ export const MODULE_GROUPS: ModuleGroup[] = [
     subtitle: "Where do I belong?",
     blurb: "Your crew, your ship, and the world you operate in.",
     entries: [
-      { key: "fleet",     label: "Fleet",          to: "/fleet",           status: "live",        description: "Your ship, your crew, and the vessels that sail beside you." },
+      { key: "fleet",        label: "Fleet",               to: "/fleet",        status: "live",        description: "Your ship, your crew, and the vessels that sail beside you." },
+      { key: "team-preview", label: "Team Review Preview", to: "/team-preview", status: "live",        description: "For accounts with direct reports: read-only preview of your team's achievements and performance reviews." },
+
       { key: "registry",  label: "Guild Registry", to: "/guild/registry",  status: "coming-soon", description: "The full roll of members across every ship in the guild." },
       { key: "economy",   label: "Economy",        to: "/guild/economy",   status: "coming-soon", description: "Sales, revenue, and the ledgers that keep the fleet sailing." },
       { key: "locations", label: "Locations",      to: "/guild/locations", status: "coming-soon", description: "Ports, offices, and every place the guild calls home." },
