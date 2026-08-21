@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TeamPreviewRouteImport } from './routes/team-preview'
 import { Route as SystemRouteImport } from './routes/system'
 import { Route as StatisticsRouteImport } from './routes/statistics'
 import { Route as ShowcaseRouteImport } from './routes/showcase'
@@ -72,6 +73,11 @@ import { Route as CodexCategoryRouteImport } from './routes/codex.$category'
 import { Route as CodexCategoryIndexRouteImport } from './routes/codex.$category.index'
 import { Route as CodexCategorySlugRouteImport } from './routes/codex.$category.$slug'
 
+const TeamPreviewRoute = TeamPreviewRouteImport.update({
+  id: '/team-preview',
+  path: '/team-preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SystemRoute = SystemRouteImport.update({
   id: '/system',
   path: '/system',
@@ -414,6 +420,7 @@ export interface FileRoutesByFullPath {
   '/showcase': typeof ShowcaseRouteWithChildren
   '/statistics': typeof StatisticsRoute
   '/system': typeof SystemRouteWithChildren
+  '/team-preview': typeof TeamPreviewRoute
   '/codex/$category': typeof CodexCategoryRouteWithChildren
   '/collections/backgrounds': typeof CollectionsBackgroundsRoute
   '/collections/cosmetics': typeof CollectionsCosmeticsRoute
@@ -475,6 +482,7 @@ export interface FileRoutesByTo {
   '/sales-review': typeof SalesReviewRoute
   '/secondary-class': typeof SecondaryClassRoute
   '/statistics': typeof StatisticsRoute
+  '/team-preview': typeof TeamPreviewRoute
   '/collections/backgrounds': typeof CollectionsBackgroundsRoute
   '/collections/cosmetics': typeof CollectionsCosmeticsRoute
   '/collections/effects': typeof CollectionsEffectsRoute
@@ -539,6 +547,7 @@ export interface FileRoutesById {
   '/showcase': typeof ShowcaseRouteWithChildren
   '/statistics': typeof StatisticsRoute
   '/system': typeof SystemRouteWithChildren
+  '/team-preview': typeof TeamPreviewRoute
   '/codex/$category': typeof CodexCategoryRouteWithChildren
   '/collections/backgrounds': typeof CollectionsBackgroundsRoute
   '/collections/cosmetics': typeof CollectionsCosmeticsRoute
@@ -605,6 +614,7 @@ export interface FileRouteTypes {
     | '/showcase'
     | '/statistics'
     | '/system'
+    | '/team-preview'
     | '/codex/$category'
     | '/collections/backgrounds'
     | '/collections/cosmetics'
@@ -666,6 +676,7 @@ export interface FileRouteTypes {
     | '/sales-review'
     | '/secondary-class'
     | '/statistics'
+    | '/team-preview'
     | '/collections/backgrounds'
     | '/collections/cosmetics'
     | '/collections/effects'
@@ -729,6 +740,7 @@ export interface FileRouteTypes {
     | '/showcase'
     | '/statistics'
     | '/system'
+    | '/team-preview'
     | '/codex/$category'
     | '/collections/backgrounds'
     | '/collections/cosmetics'
@@ -794,12 +806,20 @@ export interface RootRouteChildren {
   ShowcaseRoute: typeof ShowcaseRouteWithChildren
   StatisticsRoute: typeof StatisticsRoute
   SystemRoute: typeof SystemRouteWithChildren
+  TeamPreviewRoute: typeof TeamPreviewRoute
   CodexCategoryRoute: typeof CodexCategoryRouteWithChildren
   CodexIndexRoute: typeof CodexIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/team-preview': {
+      id: '/team-preview'
+      path: '/team-preview'
+      fullPath: '/team-preview'
+      preLoaderRoute: typeof TeamPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/system': {
       id: '/system'
       path: '/system'
@@ -1367,6 +1387,7 @@ const rootRouteChildren: RootRouteChildren = {
   ShowcaseRoute: ShowcaseRouteWithChildren,
   StatisticsRoute: StatisticsRoute,
   SystemRoute: SystemRouteWithChildren,
+  TeamPreviewRoute: TeamPreviewRoute,
   CodexCategoryRoute: CodexCategoryRouteWithChildren,
   CodexIndexRoute: CodexIndexRoute,
 }
