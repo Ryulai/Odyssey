@@ -43,10 +43,6 @@ function ClaimsPage() {
           <Link to="/" className="rounded-md border border-border px-3 py-2 text-xs uppercase tracking-widest text-muted-foreground hover:border-gold/40 hover:text-gold">← Dashboard</Link>
         </header>
 
-        <MinimalInsertTest />
-
-
-
         <div className="grid gap-6 lg:grid-cols-2">
           <SubmitClaim userId={user?.id ?? null} />
           <MyRecords />
@@ -60,50 +56,6 @@ function ClaimsPage() {
   );
 }
 
-function MinimalInsertTest() {
-  const [result, setResult] = useState<any>(null);
-  const [running, setRunning] = useState(false);
-
-  async function run() {
-    setRunning(true);
-    setResult(null);
-    try {
-      const r = await testMinimalClaimInsert();
-      console.log("[minimal-claim-test]", r);
-      setResult(r);
-    } catch (e: any) {
-      console.error("[minimal-claim-test] threw", e);
-      setResult({ ok: false, step: "threw", error: { message: e?.message ?? String(e) } });
-    } finally {
-      setRunning(false);
-    }
-  }
-
-  return (
-    <section className="mb-6 rounded-md border border-red-500/40 bg-red-500/5 p-5">
-      <h2 className="font-display text-sm uppercase tracking-[0.25em] text-red-200">
-        🧪 Minimal Insert Test
-      </h2>
-      <p className="mt-1 text-xs text-muted-foreground">
-        Inserts the smallest possible row into <code>achievement_claims</code> (staff_id + achievement_id + submitted_by).
-        All other columns fall back to DB defaults. Use this to isolate which field breaks the Achievements submission.
-      </p>
-      <button
-        type="button"
-        onClick={run}
-        disabled={running}
-        className="mt-3 rounded-md border border-red-400 bg-red-500/10 px-4 py-2 font-display text-[11px] uppercase tracking-widest text-red-100 hover:bg-red-500/20 disabled:opacity-50"
-      >
-        {running ? "Running…" : "Run Minimal Insert"}
-      </button>
-      {result && (
-        <pre className="mt-3 overflow-x-auto rounded border border-border bg-black/50 p-3 text-[11px] text-foreground">
-{JSON.stringify(result, null, 2)}
-        </pre>
-      )}
-    </section>
-  );
-}
 
 function SubmitClaim({ userId }: { userId: string | null }) {
   const qc = useQueryClient();
@@ -118,45 +70,6 @@ function SubmitClaim({ userId }: { userId: string | null }) {
   const [files, setFiles] = useState<File[]>([]);
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  // ── 🧪 Structured 14-stage debug tracker ─────────────────────────────────
-  type StageStatus = "waiting" | "running" | "success" | "failed";
-  type Stage = { id: number; label: string; status: StageStatus; t?: string; data?: any; error?: string };
-  const STAGE_DEFS: Array<Omit<Stage, "status">> = [
-    { id: 1,  label: "① Submit button clicked" },
-    { id: 2,  label: "② Form validation passed" },
-    { id: 3,  label: "③ Selected achievement ID" },
-    { id: 4,  label: "④ Selected staff ID" },
-    { id: 5,  label: "⑤ Evidence text" },
-    { id: 6,  label: "⑥ Selected files count" },
-    { id: 7,  label: "⑦ Upload started" },
-    { id: 8,  label: "⑧ Upload progress" },
-    { id: 9,  label: "⑨ Upload finished" },
-    { id: 10, label: "⑩ Uploaded URLs" },
-    { id: 11, label: "⑪ Final payload before insert" },
-    { id: 12, label: "⑫ Insert started" },
-    { id: 13, label: "⑬ Insert response" },
-    { id: 14, label: "⑭ Success or exact error" },
-  ];
-  const freshStages = (): Stage[] => STAGE_DEFS.map((s) => ({ ...s, status: "waiting" }));
-  const [stages, setStages] = useState<Stage[]>(freshStages);
-  const [debugOpen, setDebugOpen] = useState(true);
-
-  function nowT() {
-    return new Date().toISOString().split("T")[1]?.replace("Z", "") ?? "";
-  }
-  function setStage(id: number, patch: Partial<Stage>) {
-    setStages((prev) => prev.map((s) => (s.id === id ? { ...s, t: patch.t ?? nowT(), ...patch } : s)));
-    console.log(`[voyage-submit] stage ${id}`, patch);
-  }
-  function resetStages() { setStages(freshStages()); }
-
-  // legacy free-form log kept as a no-op so any leftover calls don't crash
-  const [debugLog, setDebugLog] = useState<Array<{ t: string; step: string; data?: any }>>([]);
-  function log(step: string, data?: any) {
-    const t = nowT();
-    console.log(`[voyage-submit] ${step}`, data ?? "");
-    setDebugLog((prev) => [...prev, { t, step, data }]);
-  }
 
 
   const effectiveStaffId = staffId || myStaff?.id || "";
@@ -185,78 +98,35 @@ function SubmitClaim({ userId }: { userId: string | null }) {
 
   const submit = useMutation({
     mutationFn: async () => {
-      // Stages 3-6: snapshot inputs
-      setStage(3,  { status: achievementId    ? "success" : "failed", data: achievementId,    error: achievementId    ? undefined : "empty" });
-      setStage(4,  { status: effectiveStaffId ? "success" : "failed", data: effectiveStaffId, error: effectiveStaffId ? undefined : "empty" });
-      setStage(5,  { status: "success", data: { length: evidence.length, preview: evidence.slice(0, 120) } });
-      setStage(6,  { status: "success", data: { count: files.length, files: files.map(f => ({ name: f.name, size: f.size, type: f.type })) } });
-
       const paths: string[] = [];
       if (userId && files.length) {
-        setStage(7, { status: "running", data: { userId, count: files.length } });
-        setStage(8, { status: "running", data: { uploaded: 0, of: files.length } });
-        try {
-          for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            const mime = (file as any).__mime || resolveMime(file);
-            const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-            const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safe}`;
-            setStage(8, { status: "running", data: { uploading: i + 1, of: files.length, name: file.name, size: file.size, mime, path } });
-            const up = await supabase.storage.from("claim-evidence").upload(path, file, { upsert: false, contentType: mime });
-            if (up.error) {
-              setStage(8, { status: "failed", data: { failedAt: i + 1, name: file.name, path }, error: up.error.message });
-              setStage(9, { status: "failed", error: "aborted after upload error" });
-              setStage(10, { status: "failed", error: "no URLs — upload failed" });
-              throw up.error;
-            }
-            paths.push(path);
-            setStage(8, { status: "running", data: { uploaded: i + 1, of: files.length, lastPath: up.data?.path } });
-          }
-          setStage(7, { status: "success", data: { count: files.length } });
-          setStage(8, { status: "success", data: { uploaded: paths.length } });
-          setStage(9, { status: "success", data: { count: paths.length } });
-          setStage(10, { status: "success", data: { paths } });
-        } catch (e: any) {
-          setStage(7, { status: "failed", error: e?.message ?? String(e) });
-          throw e;
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          const mime = (file as any).__mime || resolveMime(file);
+          const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+          const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safe}`;
+          const up = await supabase.storage.from("claim-evidence").upload(path, file, { upsert: false, contentType: mime });
+          if (up.error) throw up.error;
+          paths.push(path);
         }
-      } else {
-        const skipReason = !userId ? "no userId" : "no files";
-        setStage(7,  { status: "success", data: { skipped: true, reason: skipReason } });
-        setStage(8,  { status: "success", data: { skipped: true } });
-        setStage(9,  { status: "success", data: { skipped: true } });
-        setStage(10, { status: "success", data: { paths: [], skipped: true, reason: skipReason } });
       }
 
-      const insertPayload = {
-        staff_id: effectiveStaffId,
-        achievement_id: achievementId,
-        evidence_text: evidence,
-        evidence_files: paths,
-        notes,
-      };
-      setStage(11, { status: "success", data: insertPayload });
-
-      setStage(12, { status: "running" });
-      try {
-        const row = await submitClaim({ data: insertPayload });
-        setStage(12, { status: "success" });
-        setStage(13, { status: "success", data: row });
-        setStage(14, { status: "success", data: { id: (row as any)?.id } });
-        return row;
-      } catch (e: any) {
-        setStage(12, { status: "failed", error: e?.message ?? String(e) });
-        setStage(13, { status: "failed", error: e?.message ?? String(e), data: { name: e?.name, code: (e as any)?.code, details: (e as any)?.details, hint: (e as any)?.hint } });
-        setStage(14, { status: "failed", error: e?.message ?? String(e) });
-        throw e;
-      }
+      return await submitClaim({
+        data: {
+          staff_id: effectiveStaffId,
+          achievement_id: achievementId,
+          evidence_text: evidence,
+          evidence_files: paths,
+          notes,
+        },
+      });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["claims"] });
       qc.invalidateQueries({ queryKey: ["records"] });
       qc.refetchQueries({ queryKey: ["claims"] });
       qc.refetchQueries({ queryKey: ["records"] });
-      setMsg("Voyage recorded. Awaiting harbor review.");
+      setMsg("Achievement submitted. Awaiting review.");
       setEvidence(""); setNotes(""); setFiles([]); setAchievementId("");
     },
     onError: (e: any) => setMsg(e.message ?? "Failed"),
@@ -268,14 +138,10 @@ function SubmitClaim({ userId }: { userId: string | null }) {
       <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">Submit Achievement</h2>
       <form onSubmit={(e) => {
           e.preventDefault();
-          resetStages();
-          setDebugLog([]);
-          setStage(1, { status: "success", data: { achievementId, effectiveStaffId, fileCount: files.length, evidenceLen: evidence.length } });
           if (!achievementId || !effectiveStaffId) {
-            setStage(2, { status: "failed", error: "missing achievement_id or staff_id", data: { achievementId, effectiveStaffId } });
+            setMsg("Select a member and an achievement.");
             return;
           }
-          setStage(2, { status: "success" });
           setBusy(true);
           submit.mutate(undefined, { onSettled: () => setBusy(false) });
         }}
@@ -332,78 +198,6 @@ function SubmitClaim({ userId }: { userId: string | null }) {
           {busy ? "Submitting…" : "Submit Achievement"}
         </button>
       </form>
-      <div className="mt-4 rounded-md border border-red-500/40 bg-black/70 p-3">
-        <div className="mb-2 flex items-center justify-between gap-2">
-          <div className="font-display text-[11px] uppercase tracking-widest text-red-200">
-            🧪 Voyage Submit Debug — 14 stages
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setDebugOpen((v) => !v)}
-              className="text-[10px] uppercase tracking-widest text-muted-foreground hover:text-gold"
-            >
-              {debugOpen ? "hide" : "show"}
-            </button>
-            <button
-              type="button"
-              onClick={resetStages}
-              className="text-[10px] uppercase tracking-widest text-muted-foreground hover:text-red-300"
-            >
-              reset
-            </button>
-          </div>
-        </div>
-        {debugOpen && (() => {
-          const lastSuccess = [...stages].reverse().find(s => s.status === "success");
-          const firstFail   = stages.find(s => s.status === "failed");
-          return (
-            <>
-              <div className="mb-2 flex flex-wrap gap-x-3 gap-y-1 text-[10px]">
-                <span className="text-muted-foreground">Last success:</span>
-                <span className="font-semibold text-emerald-300">{lastSuccess ? lastSuccess.label : "—"}</span>
-                <span className="text-muted-foreground">First failure:</span>
-                <span className="font-semibold text-red-300">{firstFail ? firstFail.label : "—"}</span>
-              </div>
-              <ol className="space-y-1 text-[11px]">
-                {stages.map((s) => {
-                  const badge =
-                    s.status === "success" ? "border-emerald-400/60 bg-emerald-400/10 text-emerald-300" :
-                    s.status === "failed"  ? "border-red-500/60 bg-red-500/10 text-red-300" :
-                    s.status === "running" ? "border-gold/60 bg-gold/10 text-gold animate-pulse" :
-                                              "border-border bg-ink/40 text-muted-foreground";
-                  const labelColor =
-                    s.status === "success" ? "text-emerald-200" :
-                    s.status === "failed"  ? "text-red-200" :
-                    s.status === "running" ? "text-gold" :
-                                              "text-muted-foreground";
-                  return (
-                    <li key={s.id} className="rounded border border-border/50 bg-ink/40 px-2 py-1">
-                      <div className="flex flex-wrap items-baseline gap-2">
-                        <span className={`rounded border px-1.5 py-0.5 font-display text-[9px] uppercase tracking-widest ${badge}`}>
-                          {s.status}
-                        </span>
-                        <span className={`font-semibold ${labelColor}`}>{s.label}</span>
-                        <span className="ml-auto text-[10px] text-muted-foreground">{s.t ?? "—"}</span>
-                      </div>
-                      {s.error && (
-                        <div className="mt-1 rounded border border-red-500/40 bg-red-500/5 px-2 py-1 text-[10px] text-red-200">
-                          ⚠ {s.error}
-                        </div>
-                      )}
-                      {s.data !== undefined && (
-                        <pre className="mt-1 overflow-x-auto whitespace-pre-wrap break-all text-[10px] text-foreground/80">
-{JSON.stringify(s.data, null, 2)}
-                        </pre>
-                      )}
-                    </li>
-                  );
-                })}
-              </ol>
-            </>
-          );
-        })()}
-      </div>
     </section>
   );
 }
