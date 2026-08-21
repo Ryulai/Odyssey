@@ -167,8 +167,9 @@ function Leaderboard() {
                     <th className="px-3 py-3 text-left">Hunter</th>
                     <th className="px-3 py-3 text-left">Class</th>
                     <th className="px-3 py-3 text-left">Rank</th>
-                    <th className="px-3 py-3 text-right">Score</th>
-                    <th className="px-3 py-3 text-center">Grade</th>
+                    <th className="px-3 py-3 text-right">Overall Score</th>
+                    <th className="px-3 py-3 text-center">Overall Grade</th>
+
                     <th className="px-3 py-3 text-left">Next Rank</th>
                     <th className="px-3 py-3 text-left">Progress</th>
                   </tr>
@@ -278,7 +279,7 @@ function PublicProfile({ row, onClose }: { row: LeaderboardRow; onClose: () => v
         </div>
 
         <div className="mt-4 flex items-center justify-between rounded border border-border bg-ink/40 p-3">
-          <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Latest Grade · {monthLabel(row.month)}</span>
+          <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Latest Overall Grade · {monthLabel(row.month)}</span>
           <GradePill grade={row.grade} />
         </div>
 
