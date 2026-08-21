@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AuthGate } from "@/components/auth-gate";
 import { getPeerInsights, type PeerRow } from "@/lib/peers.functions";
 import { rankLabel } from "@/lib/rpg";
+import { AUTHORITY_LABELS, departmentLabel, odysseyClassLabel } from "@/lib/taxonomy";
 
 export const Route = createFileRoute("/peer-insights")({
   head: () => ({
@@ -46,14 +47,60 @@ function GradePill({ grade }: { grade: string | null }) {
   );
 }
 
+function TabRow({
+  tabs,
+  active,
+  onSelect,
+  onLocked,
+}: {
+  tabs: { key: string; label: string; unlocked: boolean }[];
+  active: string | null;
+  onSelect: (key: string) => void;
+  onLocked: (label: string) => void;
+}) {
+  if (!tabs.length) return null;
+  return (
+    <div className="mb-3 flex flex-wrap gap-2">
+      {tabs.map((t) =>
+        t.unlocked ? (
+          <button
+            key={t.key}
+            type="button"
+            onClick={() => onSelect(t.key)}
+            className={`rounded-md border px-3 py-1.5 text-[11px] uppercase tracking-widest transition ${
+              t.key === active
+                ? "border-gold/60 bg-gold/10 text-gold"
+                : "border-border bg-ink/30 text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {t.label}
+          </button>
+        ) : (
+          <button
+            key={t.key}
+            type="button"
+            aria-disabled="true"
+            onClick={() => onLocked(t.label)}
+            title="Locked"
+            className="cursor-not-allowed rounded-md border border-border/60 bg-ink/20 px-3 py-1.5 text-[11px] uppercase tracking-widest text-muted-foreground/60"
+          >
+            🔒 {t.label}
+          </button>
+        ),
+      )}
+    </div>
+  );
+}
+
 function PeerInsights() {
-  // `null` = let the server decide (own class, or the Director's default).
+  // `null` = let the server decide (own department/class, or the Director's default).
+  const [selectedDept, setSelectedDept] = useState<string | null>(null);
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
   const [lockedNotice, setLockedNotice] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["peer-insights", selectedClass],
-    queryFn: () => getPeerInsights({ data: { class_key: selectedClass } }),
+    queryKey: ["peer-insights", selectedDept, selectedClass],
+    queryFn: () => getPeerInsights({ data: { department: selectedDept, class_key: selectedClass } }),
   });
 
   const rows = useMemo(() => {
@@ -62,6 +109,7 @@ function PeerInsights() {
     return list;
   }, [data]);
 
+  const activeDept = data?.active_department ?? selectedDept;
   const activeClass = data?.active_class ?? selectedClass;
 
   return (
@@ -71,7 +119,7 @@ function PeerInsights() {
           <div>
             <div className="font-display text-[10px] uppercase tracking-[0.3em] text-gold">Peer Insights</div>
             <h1 className="mt-1 font-display text-2xl text-foreground">
-              {data?.me?.role === "director" ? "Organization overview" : "Your class this month"}
+              {data?.me?.authority === "director" ? "Organization overview" : "Your class this month"}
             </h1>
           </div>
           <div className="flex flex-col items-end gap-1 text-right">
@@ -83,8 +131,12 @@ function PeerInsights() {
                 {monthLabel(data.month ?? new Date().toISOString().slice(0, 10))}
               </div>
             )}
-            {data?.me && data.me.role === "staff" && (
+            {data?.me && (
               <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                {departmentLabel(data.me.department)} · {odysseyClassLabel(data.me.class_key) || "—"}
+                <span className="px-2">·</span>
+                {AUTHORITY_LABELS[data.me.authority]}
+                <span className="px-2">·</span>
                 Fleet: <span className="text-foreground">{data.me.location_name ?? "—"}</span>
                 <span className="px-2">·</span>
                 Rank: <span className="text-foreground">{rankLabel(data.me.rank_key)}</span>
@@ -93,46 +145,34 @@ function PeerInsights() {
           </div>
         </header>
 
-        {/* Class tabs — locked tabs never trigger a fetch. */}
-        <div className="mb-4 flex flex-wrap gap-2">
-          {(data?.tabs ?? []).map((t) => {
-            const isActive = t.key === activeClass;
-            if (!t.unlocked) {
-              return (
-                <button
-                  key={t.key}
-                  type="button"
-                  aria-disabled="true"
-                  onClick={() => setLockedNotice(`${t.label} — locked. Peer Insights is available to your class only.`)}
-                  className="cursor-not-allowed rounded-md border border-border/60 bg-ink/20 px-3 py-1.5 text-[11px] uppercase tracking-widest text-muted-foreground/60"
-                  title="Locked — available to your class only"
-                >
-                  🔒 {t.label}
-                </button>
-              );
-            }
-            return (
-              <button
-                key={t.key}
-                type="button"
-                onClick={() => { setLockedNotice(null); setSelectedClass(t.key); }}
-                className={`rounded-md border px-3 py-1.5 text-[11px] uppercase tracking-widest transition ${
-                  isActive
-                    ? "border-gold/60 bg-gold/10 text-gold"
-                    : "border-border bg-ink/30 text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {t.label}
-              </button>
-            );
-          })}
-        </div>
+        {/* Departments — Warrior | Mage | Priest | Ranger. Locked tabs never fetch. */}
+        <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Department</div>
+        <TabRow
+          tabs={data?.departments ?? []}
+          active={activeDept}
+          onSelect={(key) => { setLockedNotice(null); setSelectedDept(key); setSelectedClass(null); }}
+          onLocked={(label) => setLockedNotice(`${label} department — locked. Peer Insights is limited to your own department.`)}
+        />
+
+        {/* Classes inside the selected department. */}
+        {(data?.classes?.length ?? 0) > 0 && (
+          <>
+            <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Class</div>
+            <TabRow
+              tabs={data?.classes ?? []}
+              active={activeClass}
+              onSelect={(key) => { setLockedNotice(null); setSelectedClass(key); }}
+              onLocked={(label) => setLockedNotice(`${label} — locked. Peer Insights is available for your own class only.`)}
+            />
+          </>
+        )}
 
         {lockedNotice && (
           <div className="mb-4 rounded-md border border-border bg-ink/30 px-4 py-2 text-[12px] text-muted-foreground">
             {lockedNotice}
           </div>
         )}
+
 
         {isLoading ? (
           <div className="rounded-md border border-border bg-ink/30 p-12 text-center text-xs uppercase tracking-widest text-muted-foreground">
