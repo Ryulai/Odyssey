@@ -197,7 +197,16 @@ export const completeTemporaryPasswordChange = createServerFn({ method: "POST" }
 
     if (meta["must_change_password"] && reset && new Date(reset.expires_at).getTime() < Date.now()) {
       await supabaseAdmin.from("password_resets").update({ status: "expired" }).eq("id", reset.id);
+      await supabaseAdmin.from("director_audit_log").insert({
+        actor_user_id: context.userId,
+        staff_id: reset.staff_id,
+        action: "password_reset_expired",
+        reason: "Temporary credential expired before it was used",
+        before_state: { reset_id: reset.id, status: "pending" },
+        after_state: { reset_id: reset.id, status: "expired" },
+      });
       throw new Error("This temporary credential has expired. Ask your Director to issue a new one.");
+
     }
 
     const nextMeta = { ...meta };
