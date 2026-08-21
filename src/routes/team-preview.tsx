@@ -116,8 +116,21 @@ function ReportPanel({ staffId, tab }: { staffId: string; tab: "performance" | "
 
       {tab === "performance" ? (
         data.performance.length === 0 ? (
-          <Box>No performance reviews recorded yet.</Box>
+          <div className="rounded-xl border border-border bg-ink/20 p-5">
+            <div className="font-display text-sm uppercase tracking-widest text-foreground">
+              Performance Review · No submitted review yet
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              You have preview access to {data.staff.name}'s Performance Review, but no monthly review has been
+              submitted for this team member yet. Once a monthly review is submitted, the grade, Class and Guild
+              points, and the four behaviour dimensions appear here automatically.
+            </p>
+            <p className="mt-2 text-[10px] uppercase tracking-widest text-muted-foreground">
+              Read-only preparation view · nothing is calculated or approved here
+            </p>
+          </div>
         ) : (
+
           <div className="space-y-4">
             {data.performance.map((m) => (
               <div key={m.month} className="rounded-xl border border-border bg-ink/20 p-5">
