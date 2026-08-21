@@ -154,7 +154,7 @@ export const getPasswordResetState = createServerFn({ method: "POST" })
 
     const { data: reset } = await supabaseAdmin
       .from("password_resets")
-      .select("id, status, expires_at")
+      .select("id, status, expires_at, staff_id")
       .eq("target_user_id", context.userId)
       .eq("status", "pending")
       .order("created_at", { ascending: false })
@@ -164,8 +164,17 @@ export const getPasswordResetState = createServerFn({ method: "POST" })
     const expired = !reset || new Date(reset.expires_at).getTime() < Date.now();
     if (expired && reset) {
       await supabaseAdmin.from("password_resets").update({ status: "expired" }).eq("id", reset.id);
+      await supabaseAdmin.from("director_audit_log").insert({
+        actor_user_id: context.userId,
+        staff_id: reset.staff_id,
+        action: "password_reset_expired",
+        reason: "Temporary credential expired before it was used",
+        before_state: { reset_id: reset.id, status: "pending" },
+        after_state: { reset_id: reset.id, status: "expired" },
+      });
     }
     return { mustChangePassword: true as const, expired };
+
   });
 
 export const completeTemporaryPasswordChange = createServerFn({ method: "POST" })
