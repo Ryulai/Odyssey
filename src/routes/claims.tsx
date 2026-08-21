@@ -307,7 +307,7 @@ function EvidenceGallery({ paths }: { paths: string[] }) {
 
   return (
     <div className="mt-2">
-      <div className="mb-1 text-[10px] uppercase tracking-widest text-muted-foreground">Voyage Proof · {paths.length} file{paths.length === 1 ? "" : "s"}</div>
+      <div className="mb-1 text-[10px] uppercase tracking-widest text-muted-foreground">Evidence · {paths.length} file{paths.length === 1 ? "" : "s"}</div>
       <div className="flex flex-wrap gap-2">
         {items.map((it, i) => it && (
           <button key={i} type="button" onClick={() => setActive(it)}
