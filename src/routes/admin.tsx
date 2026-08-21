@@ -848,6 +848,118 @@ function AchievementForm({ row, onSave, onCancel, busy }: { row: any; onSave: (a
   );
 }
 
+/* ============ Legacy / Historical Achievements (Director only) ============ */
+
+function toLocalInput(iso: string | null | undefined) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function LegacyAchievementsModule() {
+  const qc = useQueryClient();
+  const { data: groups = [], isLoading } = useQuery({
+    queryKey: ["legacy-achievements"],
+    queryFn: () => listLegacyAchievements(),
+  });
+  const [edit, setEdit] = useState<any>(null);
+  const save = useMutation({
+    mutationFn: (d: any) => updateLegacyAchievementDate({ data: d }),
+    onSuccess: () => {
+      toast.success("Historical date updated");
+      setEdit(null);
+      qc.invalidateQueries({ queryKey: ["legacy-achievements"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Update failed"),
+  });
+
+  return (
+    <div className="mt-8">
+      <Section title="Legacy / Historical Achievements">
+        <div className="mb-4 rounded-md border border-amber-500/40 bg-amber-500/5 p-3 text-[11px] leading-relaxed text-muted-foreground">
+          <span className="font-display uppercase tracking-widest text-amber-400">Legacy · Historical only</span>
+          <div className="mt-1">
+            These achievements are retired and are NOT part of the 8 Frozen Season One achievements. They stay hidden
+            from the Hunter catalogue, claims and statistics. Directors may only correct the award/claim date of
+            existing historical rows — definitions, rewards and star rules cannot be changed here.
+          </div>
+        </div>
+
+        {isLoading ? <div className="py-6 text-center text-xs text-muted-foreground">Loading…</div> : (
+          <div className="grid gap-4">
+            {groups.map((g: any) => (
+              <div key={g.id} className="rounded-md border border-border bg-ink/40 p-3">
+                <div className="font-medium text-foreground">
+                  {g.name}
+                  <span className="ml-2 rounded border border-amber-500/40 px-2 py-0.5 text-[10px] uppercase tracking-widest text-amber-400">Legacy</span>
+                </div>
+                <div className="text-xs text-muted-foreground">{g.description}</div>
+
+                <div className="mt-3 grid gap-2">
+                  {g.records.map((r: any) => (
+                    <div key={r.id} className="flex flex-wrap items-center justify-between gap-2 rounded border border-border/60 px-2 py-1.5 text-xs">
+                      <span className="text-foreground">{r.staff_name} · Awarded · ★{r.stars} · {r.period}</span>
+                      <span className="text-muted-foreground">{new Date(r.awarded_at).toLocaleString()}</span>
+                      <Btn variant="ghost" onClick={() => setEdit({ kind: "record", id: r.id, date: toLocalInput(r.awarded_at), period: r.period ?? "", reason: "", label: `${g.name} · ${r.staff_name}` })}>Edit date</Btn>
+                    </div>
+                  ))}
+                  {g.claims.map((c: any) => (
+                    <div key={c.id} className="flex flex-wrap items-center justify-between gap-2 rounded border border-border/60 px-2 py-1.5 text-xs">
+                      <span className="text-foreground">{c.staff_name} · Claim ({c.status})</span>
+                      <span className="text-muted-foreground">{new Date(c.created_at).toLocaleString()}</span>
+                      <Btn variant="ghost" onClick={() => setEdit({ kind: "claim", id: c.id, date: toLocalInput(c.created_at), reason: "", label: `${g.name} · ${c.staff_name}` })}>Edit date</Btn>
+                    </div>
+                  ))}
+                  {!g.records.length && !g.claims.length && (
+                    <div className="text-[11px] text-muted-foreground">No historical rows.</div>
+                  )}
+                </div>
+              </div>
+            ))}
+            {!groups.length && <div className="py-6 text-center text-xs text-muted-foreground">No legacy achievements.</div>}
+          </div>
+        )}
+
+        {edit && (
+          <form
+            className="mt-5 grid gap-3 rounded-md border border-amber-500/40 bg-ink/50 p-4 sm:grid-cols-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              save.mutate({
+                kind: edit.kind, id: edit.id,
+                date: new Date(edit.date).toISOString(),
+                ...(edit.kind === "record" ? { period: edit.period } : {}),
+                reason: edit.reason,
+              });
+            }}
+          >
+            <div className="sm:col-span-2 font-display text-xs uppercase tracking-widest text-amber-400">
+              Correct historical date — {edit.label}
+            </div>
+            <Field label={edit.kind === "record" ? "Awarded at" : "Claim date"}>
+              <input type="datetime-local" className={inputCls} value={edit.date} onChange={e => setEdit({ ...edit, date: e.target.value })} required />
+            </Field>
+            {edit.kind === "record" && (
+              <Field label="Period label">
+                <input className={inputCls} value={edit.period} onChange={e => setEdit({ ...edit, period: e.target.value })} placeholder="e.g. Jul 2026" />
+              </Field>
+            )}
+            <Field label="Reason (audit log)">
+              <input className={inputCls} value={edit.reason} onChange={e => setEdit({ ...edit, reason: e.target.value })} required />
+            </Field>
+            <div className="sm:col-span-2 mt-2 flex justify-end gap-2">
+              <Btn variant="ghost" onClick={() => setEdit(null)}>Cancel</Btn>
+              <Btn type="submit" disabled={save.isPending}>{save.isPending ? "Saving…" : "Save date"}</Btn>
+            </div>
+          </form>
+        )}
+      </Section>
+    </div>
+  );
+}
+
+
 /* ============ Ranks ============ */
 
 function RanksModule() {
