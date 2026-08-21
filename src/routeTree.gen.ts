@@ -24,6 +24,7 @@ import { Route as ObjectivePerformanceRouteImport } from './routes/objective-per
 import { Route as MentorshipRouteImport } from './routes/mentorship'
 import { Route as MapRouteImport } from './routes/map'
 import { Route as ManagerRouteImport } from './routes/manager'
+import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as JournalRouteImport } from './routes/journal'
 import { Route as InventoryRouteImport } from './routes/inventory'
 import { Route as HunterDashboardRouteImport } from './routes/hunter-dashboard'
@@ -144,6 +145,11 @@ const MapRoute = MapRouteImport.update({
 const ManagerRoute = ManagerRouteImport.update({
   id: '/manager',
   path: '/manager',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LeaderboardRoute = LeaderboardRouteImport.update({
+  id: '/leaderboard',
+  path: '/leaderboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const JournalRoute = JournalRouteImport.update({
@@ -392,6 +398,7 @@ export interface FileRoutesByFullPath {
   '/hunter-dashboard': typeof HunterDashboardRoute
   '/inventory': typeof InventoryRoute
   '/journal': typeof JournalRoute
+  '/leaderboard': typeof LeaderboardRoute
   '/manager': typeof ManagerRoute
   '/map': typeof MapRoute
   '/mentorship': typeof MentorshipRoute
@@ -454,6 +461,7 @@ export interface FileRoutesByTo {
   '/hunter-dashboard': typeof HunterDashboardRoute
   '/inventory': typeof InventoryRoute
   '/journal': typeof JournalRoute
+  '/leaderboard': typeof LeaderboardRoute
   '/manager': typeof ManagerRoute
   '/map': typeof MapRoute
   '/mentorship': typeof MentorshipRoute
@@ -515,6 +523,7 @@ export interface FileRoutesById {
   '/hunter-dashboard': typeof HunterDashboardRoute
   '/inventory': typeof InventoryRoute
   '/journal': typeof JournalRoute
+  '/leaderboard': typeof LeaderboardRoute
   '/manager': typeof ManagerRoute
   '/map': typeof MapRoute
   '/mentorship': typeof MentorshipRoute
@@ -580,6 +589,7 @@ export interface FileRouteTypes {
     | '/hunter-dashboard'
     | '/inventory'
     | '/journal'
+    | '/leaderboard'
     | '/manager'
     | '/map'
     | '/mentorship'
@@ -642,6 +652,7 @@ export interface FileRouteTypes {
     | '/hunter-dashboard'
     | '/inventory'
     | '/journal'
+    | '/leaderboard'
     | '/manager'
     | '/map'
     | '/mentorship'
@@ -702,6 +713,7 @@ export interface FileRouteTypes {
     | '/hunter-dashboard'
     | '/inventory'
     | '/journal'
+    | '/leaderboard'
     | '/manager'
     | '/map'
     | '/mentorship'
@@ -766,6 +778,7 @@ export interface RootRouteChildren {
   HunterDashboardRoute: typeof HunterDashboardRoute
   InventoryRoute: typeof InventoryRoute
   JournalRoute: typeof JournalRoute
+  LeaderboardRoute: typeof LeaderboardRoute
   ManagerRoute: typeof ManagerRoute
   MapRoute: typeof MapRoute
   MentorshipRoute: typeof MentorshipRoute
@@ -890,6 +903,13 @@ declare module '@tanstack/react-router' {
       path: '/manager'
       fullPath: '/manager'
       preLoaderRoute: typeof ManagerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/leaderboard': {
+      id: '/leaderboard'
+      path: '/leaderboard'
+      fullPath: '/leaderboard'
+      preLoaderRoute: typeof LeaderboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/journal': {
@@ -1331,6 +1351,7 @@ const rootRouteChildren: RootRouteChildren = {
   HunterDashboardRoute: HunterDashboardRoute,
   InventoryRoute: InventoryRoute,
   JournalRoute: JournalRoute,
+  LeaderboardRoute: LeaderboardRoute,
   ManagerRoute: ManagerRoute,
   MapRoute: MapRoute,
   MentorshipRoute: MentorshipRoute,
