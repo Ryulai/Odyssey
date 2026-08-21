@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AuthGate } from "@/components/auth-gate";
 import { getPeerInsights, type PeerRow } from "@/lib/peers.functions";
 import { rankLabel } from "@/lib/rpg";
+import { AUTHORITY_LABELS, departmentLabel, odysseyClassLabel } from "@/lib/taxonomy";
 
 export const Route = createFileRoute("/peer-insights")({
   head: () => ({
