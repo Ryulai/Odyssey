@@ -72,11 +72,24 @@ export const resetHunterPassword = createServerFn({ method: "POST" })
     if ((targetCount ?? 0) >= 2) throw new Error("A reset for this account was just issued. Wait a few minutes.");
 
     // Any previously pending credential for this account is revoked.
-    await supabaseAdmin
+    const { data: revoked } = await supabaseAdmin
       .from("password_resets")
       .update({ status: "revoked" })
       .eq("target_user_id", staffRow.user_id)
-      .eq("status", "pending");
+      .eq("status", "pending")
+      .select("id");
+
+    for (const row of revoked ?? []) {
+      await supabaseAdmin.from("director_audit_log").insert({
+        actor_user_id: context.userId,
+        staff_id: staffRow.id,
+        action: "password_reset_invalidated",
+        reason: "Superseded by a newly issued temporary credential",
+        before_state: { reset_id: row.id, status: "pending" },
+        after_state: { reset_id: row.id, status: "revoked" },
+      });
+    }
+
 
     const temporaryCredential = generateTempCredential();
     const credentialHash = await sha256(temporaryCredential);
