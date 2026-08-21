@@ -15,6 +15,7 @@ import { RoleProvider } from "../lib/roles";
 import { DirectorModeProvider } from "../lib/director-mode";
 import { DirectorModeBanner } from "../components/director-mode-toggle";
 import { TopRightControls } from "../components/top-right-controls";
+import { EnvironmentBadge } from "../components/environment-badge";
 import { Toaster } from "../components/ui/sonner";
 
 
@@ -135,6 +136,7 @@ function RootComponent() {
       <RoleProvider>
         <DirectorModeProvider>
           <TopRightControls />
+          <EnvironmentBadge />
           <DirectorModeBanner />
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />
