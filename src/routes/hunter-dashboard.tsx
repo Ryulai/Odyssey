@@ -293,8 +293,10 @@ function HunterDashboard() {
             <QuickLink to="/claims" label="Submit Achievement" />
             <QuickLink to="/performance" label="View Performance" />
             <QuickLink to="/profile" label="Open My Profile" />
+            <TeamPreviewActions />
           </div>
         </Card>
+
       </div>
     </Shell>
   );
