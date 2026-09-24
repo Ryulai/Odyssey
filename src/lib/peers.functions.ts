@@ -227,8 +227,10 @@ export const getPeerInsights = createServerFn({ method: "GET" })
     // ---- Members of the active Department + Class (server-side filter) ----
     let staffQuery = supabaseAdmin
       .from("staff")
-      .select("id, name, current_rank_key, location_id, business_unit, manager_id")
-      .neq("status", "inactive");
+      .select("id, name, current_rank_key, location_id, business_unit, manager_id, system_role")
+      .neq("status", "inactive")
+      // Ranking isolation: Manager/Director-level people never enter Department peer rankings.
+      .eq("system_role", "staff");
 
     // Managers stay inside their own business unit where the data supports it.
     if (authority === "manager" && meStaff?.business_unit) {
