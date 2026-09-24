@@ -97,10 +97,12 @@ function PeerInsights() {
   const [selectedDept, setSelectedDept] = useState<string | null>(null);
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
   const [lockedNotice, setLockedNotice] = useState<string | null>(null);
+  const [year, setYear] = useState<number>(new Date().getUTCFullYear());
+  const [month, setMonth] = useState<number>(new Date().getUTCMonth() + 1);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["peer-insights", selectedDept, selectedClass],
-    queryFn: () => getPeerInsights({ data: { department: selectedDept, class_key: selectedClass } }),
+    queryKey: ["peer-insights", selectedDept, selectedClass, year, month],
+    queryFn: () => getPeerInsights({ data: { department: selectedDept, class_key: selectedClass, year, month } }),
   });
 
   const rows = useMemo(() => {
@@ -167,6 +169,18 @@ function PeerInsights() {
           </>
         )}
 
+        <div className="mb-4 flex flex-wrap items-center gap-3">
+          <label className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Year</label>
+          <select value={year} onChange={(e) => setYear(Number(e.target.value))} className="rounded-md border border-border bg-ink/40 px-3 py-1.5 text-sm">
+            {[0, 1, 2].map((o) => new Date().getUTCFullYear() - o).map((y) => <option key={y} value={y}>{y}</option>)}
+          </select>
+          <label className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Month</label>
+          <select value={month} onChange={(e) => setMonth(Number(e.target.value))} className="rounded-md border border-border bg-ink/40 px-3 py-1.5 text-sm">
+            {MONTH_NAMES.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
+          </select>
+          <span className="text-[11px] text-muted-foreground">Showing {MONTH_NAMES[month - 1]} {year} Score and Grade</span>
+        </div>
+
         {lockedNotice && (
           <div className="mb-4 rounded-md border border-border bg-ink/30 px-4 py-2 text-[12px] text-muted-foreground">
             {lockedNotice}
@@ -227,7 +241,7 @@ function PeerTable({ rows }: { rows: PeerRow[] }) {
               </td>
               <td className="px-4 py-3 text-muted-foreground">{rankLabel(r.rank_key)}</td>
               <td className="px-4 py-3 text-muted-foreground">{r.location_name ?? "—"}</td>
-              <td className="px-4 py-3 text-right font-display text-base">{r.overall.toFixed(1)}</td>
+              <td className="px-4 py-3 text-right font-display text-base">{r.grade ? r.overall.toFixed(1) : "—"}</td>
               <td className="px-4 py-3 text-center"><GradePill grade={r.grade} /></td>
               <td className="px-4 py-3 text-center"><TrendGlyph trend={r.trend} /></td>
               <td className="px-4 py-3 text-right text-muted-foreground">{r.achievements_count}</td>
@@ -260,7 +274,7 @@ function CardsMobile({ rows }: { rows: PeerRow[] }) {
             </div>
             <div className="flex items-center gap-3">
               <div className="text-right">
-                <div className="font-display text-lg">{r.overall.toFixed(1)}</div>
+                <div className="font-display text-lg">{r.grade ? r.overall.toFixed(1) : "—"}</div>
                 <div className="text-[9px] uppercase tracking-widest text-muted-foreground">Overall Score</div>
               </div>
               <div className="text-center">
@@ -278,3 +292,5 @@ function CardsMobile({ rows }: { rows: PeerRow[] }) {
     </div>
   );
 }
+
+const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
