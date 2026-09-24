@@ -7,7 +7,7 @@ import { getPeerInsights, type PeerRow } from "@/lib/peers.functions";
 import { rankLabel } from "@/lib/rpg";
 import { AUTHORITY_LABELS, departmentLabel, odysseyClassLabel } from "@/lib/taxonomy";
 
-export const Route = createFileRoute("/peer-insights")({
+export const Route = createFileRoute("/leaderboard")({
   head: () => ({
     meta: [
       { title: "Peer Insights / Guild Ranking — The Odyssey Guide" },
