@@ -13,12 +13,27 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "The Odyssey Guide — Chart Your Journey. Forge Your Legacy." },
-      { name: "description", content: "Your dashboard: profile, monthly performance, legacy, class, promotion journey, and future systems — mentorship and ownership." },
-      { property: "og:title", content: "The Odyssey Guide — Chart Your Journey. Forge Your Legacy." },
-      { property: "og:description", content: "A single dashboard for your class, rank, monthly performance, legacy, and progression across the Five Systems of Odyssey." },
+      {
+        name: "description",
+        content:
+          "Your dashboard: profile, monthly performance, legacy, class, promotion journey, and future systems — mentorship and ownership.",
+      },
+      {
+        property: "og:title",
+        content: "The Odyssey Guide — Chart Your Journey. Forge Your Legacy.",
+      },
+      {
+        property: "og:description",
+        content:
+          "A single dashboard for your class, rank, monthly performance, legacy, and progression across the Five Systems of Odyssey.",
+      },
     ],
   }),
-  component: () => <AuthGate><Dashboard /></AuthGate>,
+  component: () => (
+    <AuthGate>
+      <Dashboard />
+    </AuthGate>
+  ),
 });
 
 function Dashboard() {
@@ -27,7 +42,21 @@ function Dashboard() {
     queryFn: () => getStaffDashboard({ data: {} }),
   });
   const { active } = usePrototype();
-  const data = active ? overlayDashboard(realData ?? { staff: {}, totals: null, evaluation: null, records: [], grades: [], legacy: null, holdings: [], claims: { pending: 0, approved: 0, rejected: 0 } }, active) : realData;
+  const data = active
+    ? overlayDashboard(
+        realData ?? {
+          staff: {},
+          totals: null,
+          evaluation: null,
+          records: [],
+          grades: [],
+          legacy: null,
+          holdings: [],
+          claims: { pending: 0, approved: 0, rejected: 0 },
+        },
+        active,
+      )
+    : realData;
 
   return (
     <div className="min-h-screen text-foreground">
@@ -45,7 +74,9 @@ function Dashboard() {
         <footer className="mt-12 border-t border-border pt-6 text-center text-xs text-muted-foreground">
           <div>The Odyssey Guide · Chart Your Journey. Forge Your Legacy.</div>
           <div className="mt-2">
-            <Link to="/map" className="uppercase tracking-widest text-gold hover:underline">Odyssey Map →</Link>
+            <Link to="/map" className="uppercase tracking-widest text-gold hover:underline">
+              Odyssey Map →
+            </Link>
           </div>
         </footer>
       </div>
@@ -57,14 +88,22 @@ function OnboardingCard() {
   const { user } = useAuth();
   return (
     <section className="rounded-md border border-gold/40 bg-ink/40 p-8 text-center">
-      <div className="font-display text-xs uppercase tracking-[0.25em] text-gold">Welcome Aboard</div>
-      <h1 className="mt-2 font-display text-2xl text-foreground">Your account hasn't been added to the ship's manifest yet</h1>
+      <div className="font-display text-xs uppercase tracking-[0.25em] text-gold">
+        Welcome Aboard
+      </div>
+      <h1 className="mt-2 font-display text-2xl text-foreground">
+        Your account hasn't been added to the ship's manifest yet
+      </h1>
       <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground">
-        Signed in as <span className="text-foreground">{user?.email}</span>. A Director needs to add you to the crew manifest
-        with this exact email — once logged, your profile, rank, stars and legacy will chart themselves here automatically.
+        Signed in as <span className="text-foreground">{user?.email}</span>. A Director needs to add
+        you to the crew manifest with this exact email — once logged, your profile, rank, stars and
+        legacy will chart themselves here automatically.
       </p>
       <div className="mt-5 flex flex-wrap justify-center gap-2">
-        <Link to="/admin" className="rounded-md border border-gold bg-gold/10 px-3 py-2 font-display text-[10px] uppercase tracking-widest text-gold hover:bg-gold/20">
+        <Link
+          to="/admin"
+          className="rounded-md border border-gold bg-gold/10 px-3 py-2 font-display text-[10px] uppercase tracking-widest text-gold hover:bg-gold/20"
+        >
           Open Admin → Staff
         </Link>
       </div>
@@ -74,14 +113,14 @@ function OnboardingCard() {
 
 const RANK_PALETTE: Record<string, { color: string; glow: string }> = {
   apprentice: { color: "#B8BFC7", glow: "#B8BFC760" },
-  bronze:     { color: "#B87333", glow: "#B8733380" },
-  silver:     { color: "#C7CBD1", glow: "#C7CBD180" },
-  gold:       { color: "#D4A84B", glow: "#D4A84B90" },
-  platinum:   { color: "#E5E4E2", glow: "#E5E4E280" },
-  diamond:    { color: "#B9F2FF", glow: "#B9F2FF80" },
-  black:      { color: "#1A1A1A", glow: "#D4A84B90" },
-  mystical:   { color: "#C9A227", glow: "#C9A22790" },
-  legend:     { color: "#FFF8E7", glow: "#F5D77FAA" },
+  bronze: { color: "#B87333", glow: "#B8733380" },
+  silver: { color: "#C7CBD1", glow: "#C7CBD180" },
+  gold: { color: "#D4A84B", glow: "#D4A84B90" },
+  platinum: { color: "#E5E4E2", glow: "#E5E4E280" },
+  diamond: { color: "#B9F2FF", glow: "#B9F2FF80" },
+  black: { color: "#1A1A1A", glow: "#D4A84B90" },
+  mystical: { color: "#C9A227", glow: "#C9A22790" },
+  legend: { color: "#FFF8E7", glow: "#F5D77FAA" },
 };
 
 function paletteFor(rankKey: string | null): { color: string; glow: string } {
@@ -99,23 +138,31 @@ function LinkedHome({ d }: { d: any }) {
   const isShipbuilder = role === "director";
   const totals = d.totals ?? { stars: 0, moons: 0, suns: 0 };
   const latestGrade = d.grades?.[0]?.grade ?? "—";
-  const rankKey  = s.current_rank_key ?? s.rpg?.rank_key ?? s.rank?.key ?? null;
-  const rankName = rankLabel(rankKey) || s.rank?.name || d.evaluation?.current_rank_name || "Unranked";
+  const rankKey = s.current_rank_key ?? s.rpg?.rank_key ?? s.rank?.key ?? null;
+  const rankName =
+    rankLabel(rankKey) || s.rank?.name || d.evaluation?.current_rank_name || "Unranked";
   const rankIdent = rankIdentity(rankKey);
   const palette = paletteFor(rankKey);
   const rankColor = isShipbuilder ? "#D4A84B" : palette.color;
-  const rankGlow  = isShipbuilder ? "#D4A84B90" : palette.glow;
+  const rankGlow = isShipbuilder ? "#D4A84B90" : palette.glow;
   const gradeMeta = GRADE_META[latestGrade as Grade] ?? null;
-  const initials = (s.name ?? "")
-    .split(/\s+/).filter(Boolean).slice(0, 2).map((w: string) => w[0]?.toUpperCase()).join("") || "—";
-  const legacyTitle = isShipbuilder ? "The Shipbuilder" : (d.legacy?.currentTitle?.name ?? "Wanderer");
+  const initials =
+    (s.name ?? "")
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((w: string) => w[0]?.toUpperCase())
+      .join("") || "—";
+  const legacyTitle = isShipbuilder
+    ? "The Shipbuilder"
+    : (d.legacy?.currentTitle?.name ?? "Wanderer");
 
   const classKey = s.rpg?.primary_class ?? null;
-  const roleKey  = s.rpg?.primary_role ?? null;
-  const className   = classLabel(classKey);
-  const roleName    = roleLabel(roleKey);
-  const faction     = factionFor(classKey);
-  const profession  = s.profession || s.job_title || roleName || "—";
+  const roleKey = s.rpg?.primary_role ?? null;
+  const className = classLabel(classKey);
+  const roleName = roleLabel(roleKey);
+  const faction = factionFor(classKey);
+  const profession = s.profession || s.job_title || roleName || "—";
 
   const goldOrHigher = /gold|platinum|diamond|black|mystical|legend|beyond/i.test(rankName);
   const secondaryUnlocked = goldOrHigher && Boolean(s.rpg?.secondary_class);
@@ -132,10 +179,22 @@ function LinkedHome({ d }: { d: any }) {
       >
         {/* Corner filigree */}
         <div className="pointer-events-none absolute inset-0 opacity-10">
-          <div className="absolute left-2 top-2 h-24 w-24 border-l-2 border-t-2" style={{ borderColor: "#C5A059" }} />
-          <div className="absolute right-2 top-2 h-24 w-24 border-r-2 border-t-2" style={{ borderColor: "#C5A059" }} />
-          <div className="absolute bottom-2 left-2 h-24 w-24 border-b-2 border-l-2" style={{ borderColor: "#C5A059" }} />
-          <div className="absolute bottom-2 right-2 h-24 w-24 border-b-2 border-r-2" style={{ borderColor: "#C5A059" }} />
+          <div
+            className="absolute left-2 top-2 h-24 w-24 border-l-2 border-t-2"
+            style={{ borderColor: "#C5A059" }}
+          />
+          <div
+            className="absolute right-2 top-2 h-24 w-24 border-r-2 border-t-2"
+            style={{ borderColor: "#C5A059" }}
+          />
+          <div
+            className="absolute bottom-2 left-2 h-24 w-24 border-b-2 border-l-2"
+            style={{ borderColor: "#C5A059" }}
+          />
+          <div
+            className="absolute bottom-2 right-2 h-24 w-24 border-b-2 border-r-2"
+            style={{ borderColor: "#C5A059" }}
+          />
         </div>
 
         {/* Header — portrait, identity, tagline */}
@@ -148,7 +207,6 @@ function LinkedHome({ d }: { d: any }) {
             initials={initials}
             isShipbuilder={isShipbuilder}
           />
-
 
           {/* Identity */}
           <div className="mt-6 space-y-2 text-center">
@@ -192,15 +250,32 @@ function LinkedHome({ d }: { d: any }) {
             className="mt-6 px-4 text-center text-sm font-light italic"
             style={{ color: "rgba(197,160,89,0.80)", fontFamily: "'Cormorant Garamond', serif" }}
           >
-            {isShipbuilder ? "Charts the course. Builds the ship." : `"${rankIdent || "I Can Do It."}"`}
+            {isShipbuilder
+              ? "Charts the course. Builds the ship."
+              : `"${rankIdent || "I Can Do It."}"`}
           </div>
         </div>
 
         {/* Divider */}
         <div className="flex items-center gap-3 px-8">
-          <div className="h-px flex-1" style={{ background: "linear-gradient(to right, transparent, rgba(197,160,89,0.40), transparent)" }} />
-          <div className="h-1.5 w-1.5 rotate-45 border" style={{ borderColor: "rgba(197,160,89,0.60)" }} />
-          <div className="h-px flex-1" style={{ background: "linear-gradient(to right, transparent, rgba(197,160,89,0.40), transparent)" }} />
+          <div
+            className="h-px flex-1"
+            style={{
+              background:
+                "linear-gradient(to right, transparent, rgba(197,160,89,0.40), transparent)",
+            }}
+          />
+          <div
+            className="h-1.5 w-1.5 rotate-45 border"
+            style={{ borderColor: "rgba(197,160,89,0.60)" }}
+          />
+          <div
+            className="h-px flex-1"
+            style={{
+              background:
+                "linear-gradient(to right, transparent, rgba(197,160,89,0.40), transparent)",
+            }}
+          />
         </div>
 
         {/* Data panels */}
@@ -214,9 +289,12 @@ function LinkedHome({ d }: { d: any }) {
               <span className="h-1 w-1 rotate-45" style={{ background: "#C5A059" }} />
               Character Profile
             </h3>
-            <div className="grid grid-cols-1 gap-y-3 border-l pl-3" style={{ borderColor: "rgba(197,160,89,0.20)" }}>
-              <DossierRow label="Class"      value={className || "—"} />
-              <DossierRow label="Rank"       value={rankName}         color={rankColor} />
+            <div
+              className="grid grid-cols-1 gap-y-3 border-l pl-3"
+              style={{ borderColor: "rgba(197,160,89,0.20)" }}
+            >
+              <DossierRow label="Class" value={className || "—"} />
+              <DossierRow label="Rank" value={rankName} color={rankColor} />
               <DossierRow label="Profession" value={profession} />
             </div>
           </section>
@@ -230,9 +308,12 @@ function LinkedHome({ d }: { d: any }) {
               <span className="h-1 w-1 rotate-45" style={{ background: "#C5A059" }} />
               Active Assignment
             </h3>
-            <div className="grid grid-cols-1 gap-y-3 border-l pl-3" style={{ borderColor: "rgba(197,160,89,0.20)" }}>
+            <div
+              className="grid grid-cols-1 gap-y-3 border-l pl-3"
+              style={{ borderColor: "rgba(197,160,89,0.20)" }}
+            >
               <DossierRow label="Business Unit" value={s.business_unit || "—"} />
-              <DossierRow label="Fleet"         value={s.location?.name || "—"} />
+              <DossierRow label="Fleet" value={s.location?.name || "—"} />
               <DossierRow
                 label={isShipbuilder ? "Role" : "Manager"}
                 value={isShipbuilder ? "Director · Beyond Rank" : (s.manager?.name ?? "Unassigned")}
@@ -246,10 +327,16 @@ function LinkedHome({ d }: { d: any }) {
               className="border p-4 text-center"
               style={{ background: "#141C2F", borderColor: "rgba(197,160,89,0.10)" }}
             >
-              <p className="mb-2 text-[9px] uppercase tracking-[0.2em]" style={{ color: "#C5A059" }}>
+              <p
+                className="mb-2 text-[9px] uppercase tracking-[0.2em]"
+                style={{ color: "#C5A059" }}
+              >
                 Monthly Perf.
               </p>
-              <p className="text-2xl font-bold" style={{ color: gradeMeta?.color ?? "#E2E8F0", fontFamily: "'Cinzel', serif" }}>
+              <p
+                className="text-2xl font-bold"
+                style={{ color: gradeMeta?.color ?? "#E2E8F0", fontFamily: "'Cinzel', serif" }}
+              >
                 {latestGrade !== "—" ? `Grade ${latestGrade}` : "—"}
               </p>
             </div>
@@ -257,12 +344,20 @@ function LinkedHome({ d }: { d: any }) {
               className="border p-4 text-center"
               style={{ background: "#141C2F", borderColor: "rgba(197,160,89,0.10)" }}
             >
-              <p className="mb-2 text-[9px] uppercase tracking-[0.2em]" style={{ color: "#C5A059" }}>
+              <p
+                className="mb-2 text-[9px] uppercase tracking-[0.2em]"
+                style={{ color: "#C5A059" }}
+              >
                 Legacy
               </p>
-              <p className="text-2xl font-bold" style={{ color: "#E2E8F0", fontFamily: "'Cinzel', serif" }}>
+              <p
+                className="text-2xl font-bold"
+                style={{ color: "#E2E8F0", fontFamily: "'Cinzel', serif" }}
+              >
                 {totals.stars}
-                <span className="ml-1 text-sm" style={{ color: "#C5A059" }}>★</span>
+                <span className="ml-1 text-sm" style={{ color: "#C5A059" }}>
+                  ★
+                </span>
               </p>
               <p className="mt-0.5 text-[10px]" style={{ color: "rgba(226,232,240,0.55)" }}>
                 {totals.moons} Moons · {totals.suns} Suns
@@ -275,7 +370,10 @@ function LinkedHome({ d }: { d: any }) {
         <div className="flex justify-center pb-8">
           <div className="flex items-center gap-3 opacity-40">
             <div className="h-px w-8" style={{ background: "#C5A059" }} />
-            <span className="text-[9px] font-light uppercase tracking-[0.4em]" style={{ color: "#C5A059" }}>
+            <span
+              className="text-[9px] font-light uppercase tracking-[0.4em]"
+              style={{ color: "#C5A059" }}
+            >
               Guild ID · {s.guild_id ?? "—"}
             </span>
             <div className="h-px w-8" style={{ background: "#C5A059" }} />
@@ -283,13 +381,18 @@ function LinkedHome({ d }: { d: any }) {
         </div>
       </section>
 
-
       {/* Quick actions */}
       <div className="mt-6 flex flex-wrap gap-2">
-        <Link to="/profile" className="rounded-md border border-gold bg-gold/10 px-4 py-2 font-display text-[10px] uppercase tracking-widest text-gold hover:bg-gold/20">
+        <Link
+          to="/profile"
+          className="rounded-md border border-gold bg-gold/10 px-4 py-2 font-display text-[10px] uppercase tracking-widest text-gold hover:bg-gold/20"
+        >
           Open My Profile →
         </Link>
-        <Link to="/claims" className="rounded-md border border-border px-4 py-2 font-display text-[10px] uppercase tracking-widest text-muted-foreground hover:border-gold/40 hover:text-gold">
+        <Link
+          to="/claims"
+          className="rounded-md border border-border px-4 py-2 font-display text-[10px] uppercase tracking-widest text-muted-foreground hover:border-gold/40 hover:text-gold"
+        >
           Submit Achievement
         </Link>
       </div>
@@ -300,7 +403,11 @@ function LinkedHome({ d }: { d: any }) {
           eyebrow="System 1"
           title="Monthly Performance"
           value={latestGrade !== "—" ? `Grade ${latestGrade}` : "No review"}
-          valueColor={latestGrade !== "—" ? (gradeMeta?.color ?? "var(--color-gold)") : "var(--color-muted-foreground)"}
+          valueColor={
+            latestGrade !== "—"
+              ? (gradeMeta?.color ?? "var(--color-gold)")
+              : "var(--color-muted-foreground)"
+          }
           sub={latestGrade !== "—" ? (gradeMeta?.label ?? "") : "Awaiting first monthly review"}
           linkTo="/performance"
           linkLabel="View Performance →"
@@ -315,7 +422,6 @@ function LinkedHome({ d }: { d: any }) {
           linkLabel="View Legacy →"
         />
       </div>
-
 
       {/* 4 · CLASS — summary → /career */}
       <div className="mt-6">
@@ -348,7 +454,11 @@ function LinkedHome({ d }: { d: any }) {
           title="Secondary Class"
           value={secondaryUnlocked ? classLabel(s.rpg.secondary_class) : "Locked"}
           valueColor={secondaryUnlocked ? "var(--color-gold)" : "var(--color-muted-foreground)"}
-          sub={secondaryUnlocked ? "A second profession — its own performance & rank" : "Unlocks at Gold Rank"}
+          sub={
+            secondaryUnlocked
+              ? "A second profession — its own performance & rank"
+              : "Unlocks at Gold Rank"
+          }
           linkTo="/secondary-class"
           linkLabel={secondaryUnlocked ? "Open Secondary Class →" : "View →"}
           wide
@@ -385,7 +495,15 @@ function IdField({ label, value, accent }: { label: string; value: string; accen
   );
 }
 
-function IdRow({ label, value, valueColor }: { label: string; value: string; valueColor?: string }) {
+function IdRow({
+  label,
+  value,
+  valueColor,
+}: {
+  label: string;
+  value: string;
+  valueColor?: string;
+}) {
   return (
     <div className="flex items-baseline justify-between gap-4">
       <div className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground">{label}</div>
@@ -418,19 +536,37 @@ function DossierRow({ label, value, color }: { label: string; value: string; col
   );
 }
 
-function MiniStat({ label, value, sub, color }: { label: string; value: string; sub: string; color: string }) {
+function MiniStat({
+  label,
+  value,
+  sub,
+  color,
+}: {
+  label: string;
+  value: string;
+  sub: string;
+  color: string;
+}) {
   return (
     <div className="rounded-md border border-border bg-ink/50 p-4 text-center">
       <div className="text-[11px] uppercase tracking-widest text-muted-foreground">{label}</div>
-      <div className="mt-1.5 font-display text-xl leading-tight sm:text-2xl" style={{ color }}>{value}</div>
+      <div className="mt-1.5 font-display text-xl leading-tight sm:text-2xl" style={{ color }}>
+        {value}
+      </div>
       <div className="text-xs text-muted-foreground">{sub}</div>
     </div>
   );
 }
 
-
 function SummaryCard({
-  eyebrow, title, value, valueColor, sub, linkTo, linkLabel, wide,
+  eyebrow,
+  title,
+  value,
+  valueColor,
+  sub,
+  linkTo,
+  linkLabel,
+  wide,
 }: {
   eyebrow: string;
   title: string;
@@ -445,12 +581,18 @@ function SummaryCard({
     <section className="rounded-xl border border-gold/25 bg-ink/40 p-6 sm:p-7">
       <div className="flex items-baseline justify-between">
         <div>
-          <div className="font-display text-[11px] uppercase tracking-[0.3em] text-gold">{title}</div>
-          <div className="mt-0.5 text-[10px] uppercase tracking-widest text-muted-foreground">{eyebrow}</div>
+          <div className="font-display text-[11px] uppercase tracking-[0.3em] text-gold">
+            {title}
+          </div>
+          <div className="mt-0.5 text-[10px] uppercase tracking-widest text-muted-foreground">
+            {eyebrow}
+          </div>
         </div>
       </div>
       <div className={`mt-5 ${wide ? "flex items-baseline gap-4" : ""}`}>
-        <div className="font-display text-3xl leading-tight" style={{ color: valueColor }}>{value}</div>
+        <div className="font-display text-3xl leading-tight" style={{ color: valueColor }}>
+          {value}
+        </div>
         <div className={`text-xs text-muted-foreground ${wide ? "" : "mt-1"}`}>{sub}</div>
       </div>
       <Link
@@ -463,13 +605,25 @@ function SummaryCard({
   );
 }
 
-function ComingSoonCard({ eyebrow, title, blurb }: { eyebrow: string; title: string; blurb: string }) {
+function ComingSoonCard({
+  eyebrow,
+  title,
+  blurb,
+}: {
+  eyebrow: string;
+  title: string;
+  blurb: string;
+}) {
   return (
     <section className="rounded-xl border border-border/70 bg-ink/30 p-6 sm:p-7">
       <div className="flex items-baseline justify-between">
         <div>
-          <div className="font-display text-[11px] uppercase tracking-[0.3em] text-muted-foreground">{title}</div>
-          <div className="mt-0.5 text-[10px] uppercase tracking-widest text-muted-foreground/70">{eyebrow}</div>
+          <div className="font-display text-[11px] uppercase tracking-[0.3em] text-muted-foreground">
+            {title}
+          </div>
+          <div className="mt-0.5 text-[10px] uppercase tracking-widest text-muted-foreground/70">
+            {eyebrow}
+          </div>
         </div>
         <span className="rounded-full border border-gold/30 bg-gold/5 px-2 py-0.5 text-[10px] uppercase tracking-widest text-gold">
           Coming Soon
@@ -525,12 +679,16 @@ function PromotionProgress({ d }: { d: any }) {
     <section className="card-ornate-gold p-8 sm:p-10">
       <div className="text-center">
         <div className="text-[10px] uppercase tracking-[0.3em] text-gold">Ascension</div>
-        <h2 className="mt-2 font-display text-2xl text-foreground sm:text-3xl">Promotion Journey — {nextRankName}</h2>
+        <h2 className="mt-2 font-display text-2xl text-foreground sm:text-3xl">
+          Promotion Journey — {nextRankName}
+        </h2>
       </div>
 
       <div className="mt-8">
         <div className="flex items-center justify-between">
-          <span className="font-display text-sm text-foreground">{currentRankGlyph} {currentRankName}</span>
+          <span className="font-display text-sm text-foreground">
+            {currentRankGlyph} {currentRankName}
+          </span>
           <span className="font-display text-sm text-gold">{nextRankName}</span>
         </div>
         <div className="relative mt-3 h-2 w-full overflow-visible rounded-full bg-ink/60">
@@ -548,7 +706,9 @@ function PromotionProgress({ d }: { d: any }) {
       </div>
 
       <div className="mt-8">
-        <p className="text-center text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Requirements</p>
+        <p className="text-center text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+          Requirements
+        </p>
         <div className="mt-4 space-y-3">
           {reqs.map((req) => (
             <div
@@ -580,7 +740,10 @@ function PromotionProgress({ d }: { d: any }) {
       </div>
 
       <div className="mt-6 text-center">
-        <Link to="/career" className="text-[11px] uppercase tracking-widest text-gold hover:underline">
+        <Link
+          to="/career"
+          className="text-[11px] uppercase tracking-widest text-gold hover:underline"
+        >
           Open Class for full progression →
         </Link>
       </div>
@@ -593,7 +756,8 @@ function PromotionProgress({ d }: { d: any }) {
 function OdysseyHeader() {
   const { role } = useRole();
   const { user, signOut } = useAuth();
-  const navLink = "rounded-md border border-border px-3 py-2 font-display text-[10px] uppercase tracking-widest text-muted-foreground hover:border-gold/40 hover:text-gold";
+  const navLink =
+    "rounded-md border border-border px-3 py-2 font-display text-[10px] uppercase tracking-widest text-muted-foreground hover:border-gold/40 hover:text-gold";
   return (
     <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center gap-3">
@@ -602,36 +766,79 @@ function OdysseyHeader() {
           <div className="font-display text-lg font-semibold tracking-widest text-gold uppercase">
             The Odyssey Guide
           </div>
-          <div className="text-xs text-muted-foreground">Chart Your Journey. Forge Your Legacy.</div>
+          <div className="text-xs text-muted-foreground">
+            Chart Your Journey. Forge Your Legacy.
+          </div>
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        <Link to="/hunter-dashboard" className="rounded-md border border-gold/50 bg-gold/10 px-3 py-2 font-display text-[10px] uppercase tracking-widest text-gold hover:bg-gold/20">Hunter Dashboard</Link>
-        <Link to="/peer-insights" className={navLink}>Peer Insights / Guild Ranking</Link>
+        <Link
+          to="/hunter-dashboard"
+          className="rounded-md border border-gold/50 bg-gold/10 px-3 py-2 font-display text-[10px] uppercase tracking-widest text-gold hover:bg-gold/20"
+        >
+          Hunter Dashboard
+        </Link>
+        <Link to="/peer-insights" className={navLink}>
+          Peer Insights / Guild Ranking
+        </Link>
 
-        <Link to="/profile" className={navLink}>My Profile</Link>
-        <Link to="/career" className={navLink}>Class</Link>
-        <Link to="/claims" className={navLink}>Achievements</Link>
-        {(role === "manager" || role === "director") && <Link to="/manager" className={navLink}>Team Dashboard</Link>}
-        {role === "director" && <Link to="/fleet" className={navLink}>Fleet Overview</Link>}
-        {can(role, "team.recommendPromotion") && <Link to="/promotions" className={navLink}>Promotions</Link>}
-        {can(role, "evaluations.write") && <Link to="/professional-performance" className={navLink}>Performance Review</Link>}
+        <Link to="/profile" className={navLink}>
+          My Profile
+        </Link>
+        <Link to="/career" className={navLink}>
+          Class
+        </Link>
+        <Link to="/claims" className={navLink}>
+          Achievements
+        </Link>
+        {(role === "manager" || role === "director") && (
+          <Link to="/manager" className={navLink}>
+            Team Dashboard
+          </Link>
+        )}
+        {role === "director" && (
+          <Link to="/fleet" className={navLink}>
+            Fleet Overview
+          </Link>
+        )}
+        {can(role, "team.recommendPromotion") && (
+          <Link to="/promotions" className={navLink}>
+            Promotions
+          </Link>
+        )}
+        {can(role, "evaluations.write") && (
+          <Link to="/professional-performance" className={navLink}>
+            Performance Review
+          </Link>
+        )}
 
         {role === "director" && (
-          <Link to="/codex" className="rounded-md border border-gold/40 px-3 py-2 font-display text-[10px] uppercase tracking-widest text-gold hover:bg-gold/10">
+          <Link
+            to="/codex"
+            className="rounded-md border border-gold/40 px-3 py-2 font-display text-[10px] uppercase tracking-widest text-gold hover:bg-gold/10"
+          >
             📖 Codex
           </Link>
         )}
         {can(role, "admin.access") && (
-          <Link to="/admin" className="rounded-md border border-gold/50 bg-gold/10 px-3 py-2 font-display text-[10px] uppercase tracking-widest text-gold hover:bg-gold/20">
+          <Link
+            to="/admin"
+            className="rounded-md border border-gold/50 bg-gold/10 px-3 py-2 font-display text-[10px] uppercase tracking-widest text-gold hover:bg-gold/20"
+          >
             Admin
           </Link>
         )}
         <div className="flex flex-col items-end pl-2">
-          <span className="text-[9px] uppercase tracking-[0.25em] text-muted-foreground">{user?.email}</span>
-          <span className="font-display text-[10px] uppercase tracking-widest text-gold">{ROLE_META[role].label}</span>
+          <span className="text-[9px] uppercase tracking-[0.25em] text-muted-foreground">
+            {user?.email}
+          </span>
+          <span className="font-display text-[10px] uppercase tracking-widest text-gold">
+            {ROLE_META[role].label}
+          </span>
         </div>
-        <button onClick={signOut} className={navLink}>Sign out</button>
+        <button onClick={signOut} className={navLink}>
+          Sign out
+        </button>
       </div>
     </header>
   );
@@ -652,7 +859,13 @@ function CrestIcon() {
         stroke="oklch(0.3 0.05 80)"
         strokeWidth="1.5"
       />
-      <path d="M16 18 L24 30 L32 18 M19 14 L29 14" stroke="oklch(0.2 0.04 80)" strokeWidth="2" fill="none" strokeLinecap="round" />
+      <path
+        d="M16 18 L24 30 L32 18 M19 14 L29 14"
+        stroke="oklch(0.2 0.04 80)"
+        strokeWidth="2"
+        fill="none"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
