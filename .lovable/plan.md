@@ -1,68 +1,48 @@
-## Journey Map — Split Secondary Class from Ownership
+# Unify Peer Insights and Guild Ranking
 
-Refinement to the frozen v2 plan. Journey Map's post-Gold section becomes **three distinct branches**, not one flat fan.
+## Goal
+Make `/peer-insights` the single competitive performance view, using its existing visual language while combining Rank, Score, Grade, Trend, identity, and achievement count on each employee card.
 
-### New post-Gold structure
+## Experience
+- Rename the page to **Peer Insights / Guild Ranking**.
+- Keep Year and Month selectors; every result updates to the selected month.
+- Each employee card/list row shows:
+  - Department ranking position
+  - Employee name, Department, and Class
+  - selected-month Performance Score and Performance Grade
+  - existing month-to-month Trend indicator and numeric change versus the immediately previous month
+  - existing achievement count as the only secondary statistic
+- Preserve the current highlighted “You” state, empty states, and private-data notice.
+- Remove duplicated promotion details, score breakdowns, and public-profile presentation from the old Leaderboard.
 
-```text
-                    Gold
-                     │
-      ┌──────────────┼──────────────┐
-      │              │              │
-  Secondary       Mentorship     Ownership
-   Class            (single       (progression
-      │              node)           tree)
-  ┌───┼───┬───────┐                  │
-  │   │   │       │            ┌─────┼─────┐
-Trainer Leader  Content    Partner  Partner  Share-
-        (ship)  Creator    Candidate         holder
-        │
-     Mixologist
-```
+## Filters and ranking isolation
+- Normal employees remain restricted to their existing Department/Class peer scope.
+- Managers and Directors retain the broader supervisor groups: **All, Warrior, Mage, Priest, Ranger, Manager**.
+- **All** renders separate ranking sections; it never combines people into one ranking.
+- Department sections contain Staff-level employees only. Manager-level people appear only in the Manager ranking. Directors are excluded.
+- Keep Class filtering within a selected Department. Filtering the visible cards by Class will not recalculate positions: displayed positions remain the employee’s rank within their full Department, matching the existing Leaderboard rule.
+- Locked or manipulated group/Class requests return no unauthorized data because scope is resolved and checked on the server.
 
-Rules:
-- **Secondary Class branch** — professions/identities. Contains: Trainer, Leader, Content Creator, Mixologist. (Drop Operations from the earlier v2 list; keep only these four to match this spec.)
-- **Mentorship branch** — a single node under Gold, no children. Represents "who you help grow", not a profession.
-- **Ownership branch** — a linear progression tree: Partner Candidate → Partner → Shareholder. Rendered vertically to signal it's a *path*, not a set of parallel choices.
-- Locked nodes still render as ghost silhouettes with a faint icon; unlocked nodes glow in rank colour; current pulses gold.
-- Feel target unchanged: Diablo IV skill tree, not org chart.
+## Data reuse
+- Consolidate the existing Peer Insights trend and achievement data with the Leaderboard’s group isolation and ranking position in the Peer Insights server response.
+- Continue reading stored monthly Performance scores and Grades; compare against the immediately previous stored month using the existing trend thresholds.
+- Do not modify Performance scoring, Grade calculation, promotion/ranking calculations, monthly evaluation records, Achievement rules, or database structure.
+- Do not select or expose manager notes, Behaviour details, salary, or private comments.
 
-### Data model
+## Navigation cleanup
+- Keep `/peer-insights` as the canonical page.
+- Preserve the old `/leaderboard` URL by redirecting it to `/peer-insights`.
+- Replace the two dashboard links with one **Peer Insights / Guild Ranking** link.
+- Leave Team Review Preview, Team Grades, and unrelated systems unchanged.
 
-`src/lib/showcase/characters.ts`:
-- Replace the flat `BRANCHES` / `JOURNEY_BRANCHES` list with a grouped constant:
-  ```ts
-  export const JOURNEY_TREE = {
-    secondaryClass: ["Trainer", "Leader", "Content Creator", "Mixologist"],
-    mentorship: ["Mentorship"],
-    ownership: ["Partner Candidate", "Partner", "Shareholder"],
-  } as const;
-  ```
-- `unlockedBranches: string[]` on each character stays as-is (flat list of node labels); the tree constant just describes *where* each label renders.
-- Update each character's `unlockedBranches` so any legacy values ("Business", "Operations", "Ownership", "Partner") map onto the new node names (e.g. "Ownership" → "Partner Candidate" or "Partner" depending on the character's stage). No new fields.
+## Verification
+- Run the project’s automated type and production checks.
+- Verify the unified page at desktop and mobile sizes when an authenticated preview session is available.
+- Verify normal employee scope, Manager/Director group access, Department/Manager isolation, All-group separation, Class filtering without rank recalculation, selected-month Score/Grade, previous-month Trend, and rejected unauthorized group/Class requests.
+- Do not publish.
 
-### UI
-
-`src/routes/showcase.journey-map.tsx`:
-- Replace the current single `BranchFan` under Gold with a three-column layout:
-  - Column 1: **Secondary Class** header + 4 profession chips (grid).
-  - Column 2: **Mentorship** header + single chip.
-  - Column 3: **Ownership** header + vertical stack of 3 chips with connecting line, so it reads as a ladder.
-- Each column gets its own small section title so the split is obvious.
-- Legend card (right sidebar) gains a short line: "After Gold, the path splits into three: Secondary Class, Mentorship, Ownership."
-- Keep the current rank spine (Apprentice → Bronze → Silver → Gold) and the walked/current/future styling exactly as-is.
-
-### Not touched
-
-- Act order, act names, `acts.ts`.
-- Hunter Card (act 4), Beyond The Horizon rename, universal-wording sweep — all still in the v2 plan and land in the same build pass.
-- `/showcase/secondary-class`, `/showcase/mentorship`, `/showcase/ownership` pages — unchanged.
-- Production routes, auth, DB, character fixtures beyond the branch-name remap.
-
-### Files this pass
-
-- `src/lib/showcase/characters.ts` — swap `BRANCHES` for grouped `JOURNEY_TREE`; remap character `unlockedBranches` values.
-- `src/routes/showcase.journey-map.tsx` — render the three-branch post-Gold layout.
-- `.lovable/plan.md` — update §1 to reflect the split.
-
-Approve and I ship this together with the rest of the v2 pass.
+## Expected files
+- `src/lib/peers.functions.ts` — unified authorized query and grouped ranking payload.
+- `src/routes/peer-insights.tsx` — unified filters and enriched Peer Insights cards/list.
+- `src/routes/leaderboard.tsx` — compatibility redirect only.
+- `src/routes/index.tsx` — replace duplicate links with one entry.
