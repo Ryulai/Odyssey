@@ -240,10 +240,12 @@ export const getPeerInsights = createServerFn({ method: "GET" })
     const allLocIds = Array.from(
       new Set([...locationIds, ...(baseMe?.location_id ? [baseMe.location_id] : [])]),
     );
-    const locRes: { data: Array<{ id: string; name: string }> | null; error: { message: string } | null } =
-      allLocIds.length
-        ? await supabaseAdmin.from("locations").select("id, name").in("id", allLocIds)
-        : { data: [], error: null };
+    const locRes: {
+      data: Array<{ id: string; name: string }> | null;
+      error: { message: string } | null;
+    } = allLocIds.length
+      ? await supabaseAdmin.from("locations").select("id, name").in("id", allLocIds)
+      : { data: [], error: null };
     if (locRes.error) throw new Error(locRes.error.message);
     const locMap = new Map<string, string>();
     for (const l of locRes.data ?? []) locMap.set(l.id, l.name);
@@ -283,8 +285,7 @@ export const getPeerInsights = createServerFn({ method: "GET" })
         .eq("month", previousMonth),
       supabaseAdmin.from("achievement_records").select("staff_id").in("staff_id", peerIds),
     ]);
-    for (const r of [evalsRes, prevEvalsRes, achRes])
-      if (r.error) throw new Error(r.error.message);
+    for (const r of [evalsRes, prevEvalsRes, achRes]) if (r.error) throw new Error(r.error.message);
 
     const evalMap = new Map<
       string,
