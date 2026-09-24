@@ -48,14 +48,7 @@ const MONTH_NAMES = [
   "December",
 ];
 
-function previousMonthLabel(year: number, month: number) {
-  return new Date(Date.UTC(year, month - 2, 1)).toLocaleDateString(undefined, {
-    month: "short",
-    timeZone: "UTC",
-  });
-}
-
-function Trend({ row, year, month }: { row: PeerRow; year: number; month: number }) {
+function Trend({ row }: { row: PeerRow }) {
   if (row.overall === null) return <span className="text-muted-foreground">— No review</span>;
   if (row.prev_overall === null)
     return <span className="text-muted-foreground">→ No prior review</span>;
@@ -70,7 +63,7 @@ function Trend({ row, year, month }: { row: PeerRow; year: number; month: number
   return (
     <span className={tone}>
       {glyph} {delta > 0 ? "+" : ""}
-      {delta.toFixed(1)} vs {previousMonthLabel(year, month)}
+      {delta.toFixed(1)}
     </span>
   );
 }
@@ -222,7 +215,7 @@ function Leaderboard() {
             </label>
           )}
           <div className="pb-2 text-[11px] text-muted-foreground">
-            {MONTH_NAMES[month - 1]} {year} · compared with {previousMonthLabel(year, month)}
+            {MONTH_NAMES[month - 1]} {year}
           </div>
         </div>
 
@@ -235,13 +228,7 @@ function Leaderboard() {
         ) : (
           <div className="space-y-7">
             {data?.sections.map((section) => (
-              <RankingSection
-                key={section.key}
-                label={section.label}
-                rows={section.peers}
-                year={year}
-                month={month}
-              />
+              <RankingSection key={section.key} label={section.label} rows={section.peers} />
             ))}
           </div>
         )}
@@ -256,17 +243,7 @@ function Leaderboard() {
   );
 }
 
-function RankingSection({
-  label,
-  rows,
-  year,
-  month,
-}: {
-  label: string;
-  rows: PeerRow[];
-  year: number;
-  month: number;
-}) {
+function RankingSection({ label, rows }: { label: string; rows: PeerRow[] }) {
   return (
     <section>
       <div className="mb-3 flex items-center justify-between border-b border-border pb-2">
@@ -319,7 +296,7 @@ function RankingSection({
                 </div>
               </div>
               <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 text-[11px]">
-                <Trend row={row} year={year} month={month} />
+                <Trend row={row} />
                 <span className="text-muted-foreground">{row.achievements_count} achievements</span>
               </div>
             </article>
