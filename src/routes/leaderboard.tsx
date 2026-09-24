@@ -228,11 +228,7 @@ function Leaderboard() {
         ) : (
           <div className="space-y-7">
             {data?.sections.map((section) => (
-              <RankingSection
-                key={section.key}
-                label={section.label}
-                rows={section.peers}
-              />
+              <RankingSection key={section.key} label={section.label} rows={section.peers} />
             ))}
           </div>
         )}
@@ -247,13 +243,7 @@ function Leaderboard() {
   );
 }
 
-function RankingSection({
-  label,
-  rows,
-}: {
-  label: string;
-  rows: PeerRow[];
-}) {
+function RankingSection({ label, rows }: { label: string; rows: PeerRow[] }) {
   return (
     <section>
       <div className="mb-3 flex items-center justify-between border-b border-border pb-2">
