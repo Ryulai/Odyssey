@@ -10,13 +10,13 @@ import { AUTHORITY_LABELS, departmentLabel, odysseyClassLabel } from "@/lib/taxo
 export const Route = createFileRoute("/leaderboard")({
   head: () => ({
     meta: [
-      { title: "Peer Insights / Guild Ranking — The Odyssey Guide" },
+      { title: "Leaderboard — The Odyssey Guide" },
       {
         name: "description",
         content:
           "Monthly guild rankings with Performance Score, Grade, Trend, Department, Class, and achievements.",
       },
-      { property: "og:title", content: "Peer Insights / Guild Ranking — The Odyssey Guide" },
+      { property: "og:title", content: "Leaderboard — The Odyssey Guide" },
       {
         property: "og:description",
         content:
@@ -28,7 +28,7 @@ export const Route = createFileRoute("/leaderboard")({
   }),
   component: () => (
     <AuthGate>
-      <PeerInsights />
+      <Leaderboard />
     </AuthGate>
   ),
 });
@@ -109,7 +109,7 @@ function PositionBadge({ position }: { position: number }) {
   );
 }
 
-function PeerInsights() {
+function Leaderboard() {
   const [group, setGroup] = useState<string | null>(null);
   const [classKey, setClassKey] = useState<string | null>(null);
   const [year, setYear] = useState(new Date().getUTCFullYear());
@@ -129,9 +129,9 @@ function PeerInsights() {
         <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
           <div>
             <div className="font-display text-[10px] uppercase tracking-[0.3em] text-gold">
-              Peer Insights
+              Guild Ranking
             </div>
-            <h1 className="mt-1 font-display text-2xl">Peer Insights / Guild Ranking</h1>
+            <h1 className="mt-1 font-display text-2xl">Leaderboard</h1>
             <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
               Rank, Score, Grade, and month-to-month Trend together for the selected month.
             </p>
@@ -229,7 +229,7 @@ function PeerInsights() {
         {query.isLoading ? (
           <Message>Gathering the guild ranking…</Message>
         ) : query.error ? (
-          <Message>Could not load Peer Insights. Please try again.</Message>
+          <Message>Could not load the Leaderboard. Please try again.</Message>
         ) : data?.notice ? (
           <Message>{data.notice}</Message>
         ) : (
