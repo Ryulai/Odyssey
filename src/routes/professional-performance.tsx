@@ -149,8 +149,9 @@ const HUNTER_TEMPLATE: ClassTemplate = {
 // VANGUARD PERFORMANCE SYSTEM V1 — FROZEN V1 (Warrior Department).
 // Monthly Performance = 70% Guild + 30% Class. Immutable: any change must be
 // labelled "V2 Proposal" and must not silently modify V1.
-// Class direction formulas are NOT YET FROZEN — nothing is calculated for
-// them and Vanguard reviews cannot be submitted until they are.
+// Class direction formulas are NOT YET FROZEN. Temporary manual V1 input:
+// Leader enters 0–10 per direction (default 5) = 0–10 points each. Not a
+// deduction system; replaceable by a future V2 formula.
 const VANGUARD_TEMPLATE: ClassTemplate = {
   id: "vanguard_performance_v1",
   classKey: "tanker",
@@ -163,9 +164,9 @@ const VANGUARD_TEMPLATE: ClassTemplate = {
   classMax: 30,
   guildMax: 70,
   classDimensions: [
-    { label: "Attendance & Reliability — 10%", description: "Calculation not yet frozen." },
-    { label: "Work Compliance — 10%", description: "Calculation not yet frozen." },
-    { label: "Reliability & Execution — 10%", description: "Calculation not yet frozen." },
+    { label: "Attendance & Reliability — 10%", description: "Formula not yet frozen · temporary manual V1 input (0–10)." },
+    { label: "Work Compliance — 10%", description: "Formula not yet frozen · temporary manual V1 input (0–10)." },
+    { label: "Reliability & Execution — 10%", description: "Formula not yet frozen · temporary manual V1 input (0–10)." },
   ],
   behaviourLabels: { teamwork: "Teamwork / Communication" },
   starScale: {
@@ -277,6 +278,7 @@ type Submitted = {
   classMax?: number;
   guildMax?: number;
   classStars?: number;
+  classValues?: number[];
   classPoints: number;
   guildPoints: number;
   total: number;
@@ -287,6 +289,7 @@ type Submitted = {
 type Draft = {
   salesAmount: number;
   classStars?: number | null;
+  classValues?: number[];
   stars: Stars;
   notes: string;
   submitted?: Submitted;
@@ -351,7 +354,7 @@ function MonthlyReviewPage() {
   const [month, setMonth] = useState(monthKey());
   const [staffId, setStaffId] = useState<string>("");
   const [salesAmount, setSalesAmount] = useState<number>(0);
-  const [classStars, setClassStars] = useState<number | null>(null);
+  const [classValues, setClassValues] = useState<number[]>([5, 5, 5]);
   const [stars, setStars] = useState<Stars>(blankStars());
   const [notes, setNotes] = useState<string>("");
   const [result, setResult] = useState<Submitted | undefined>();
@@ -378,7 +381,7 @@ function MonthlyReviewPage() {
   useEffect(() => {
     if (!staffId) {
       setSalesAmount(0);
-      setClassStars(null);
+      setClassValues([5, 5, 5]);
       setStars(blankStars());
       setNotes("");
       setResult(undefined);
@@ -386,7 +389,7 @@ function MonthlyReviewPage() {
     }
     const d = loadDraft(staffId, month);
     setSalesAmount(d.salesAmount);
-    setClassStars(d.classStars ?? null);
+    setClassValues(d.classValues ?? [5, 5, 5]);
     setStars({ ...blankStars(), ...d.stars });
     setNotes(d.notes);
     setResult(d.submitted);
@@ -400,11 +403,9 @@ function MonthlyReviewPage() {
   const guildMax = template?.guildMax ?? GUILD_MAX;
   const behaviourMax = round1(guildMax / BEHAVIOURS.length);
   const salesReady =
-    (!hasSalesMetric || salesAmount > 0) && (!hasRatingMetric || classStars != null);
-  // Vanguard V1: Class formulas not yet frozen → submission blocked (no invented scores).
-  const classFormulaPending = hasRatingMetric;
-  const canSubmit =
-    Boolean(staffId) && !!template && !classFormulaPending && salesReady && allRated;
+    (!hasSalesMetric || salesAmount > 0) && true;
+  // Vanguard V1: temporary manual 0–10 input per Class direction (default 5).
+  const canSubmit = Boolean(staffId) && !!template && salesReady && allRated;
 
   async function handleSubmit() {
     if (!canSubmit || !template || saving) return;
@@ -424,7 +425,7 @@ function MonthlyReviewPage() {
     const classPoints = hasSalesMetric
       ? classPointsFromSales(salesAmount, salesTarget, classMax)
       : hasRatingMetric
-      ? starPoints(classStars ?? 0, classMax)
+      ? round1(classValues.reduce((a, v) => a + Math.min(10, Math.max(0, v)), 0))
       : 0;
     const total = round1(classPoints + guildPoints);
     const g = gradeFor(total);
@@ -435,7 +436,7 @@ function MonthlyReviewPage() {
       salesTarget,
       classMax,
       guildMax,
-      classStars: hasRatingMetric ? (classStars ?? 0) : undefined,
+      classValues: hasRatingMetric ? classValues : undefined,
       classPoints,
       guildPoints,
       total,
@@ -465,7 +466,7 @@ function MonthlyReviewPage() {
         },
       });
       setResult(submitted);
-      saveDraft(staffId, month, { salesAmount, classStars, stars, notes, submitted });
+      saveDraft(staffId, month, { salesAmount, classValues, stars, notes, submitted });
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
         queryClient.invalidateQueries({ queryKey: ["peer-insights"] }),
@@ -485,7 +486,7 @@ function MonthlyReviewPage() {
 
   function handleReset() {
     setSalesAmount(0);
-    setClassStars(null);
+    setClassValues([5, 5, 5]);
     setStars(blankStars());
     setNotes("");
     setResult(undefined);
@@ -608,18 +609,42 @@ function MonthlyReviewPage() {
                     <>
                       <p className="text-xs text-muted-foreground">
                         Vanguard Performance System V1 (frozen): three Class directions,
-                        10% each. Their calculation formulas are not yet frozen, so no
-                        Class score is calculated and this review cannot be submitted yet.
+                        10% each. Formulas are not yet frozen — temporary manual V1 input:
+                        give each a Leader judgment from 0 to 10 (default 5). Each point =
+                        1% of the total score. Not a deduction system.
                       </p>
                       <ul className="mt-3 grid gap-2 sm:grid-cols-3">
-                        {template.classDimensions.map((d) => (
+                        {template.classDimensions.map((d, i) => (
                           <li key={d.label} className="rounded-md border border-border bg-black/20 p-3">
                             <div className="font-display text-xs uppercase tracking-widest text-gold">
                               {d.label}
                             </div>
                             <div className="mt-1 text-[11px] text-muted-foreground">{d.description}</div>
+                            <div className="mt-2 flex items-center gap-2">
+                              <input
+                                type="range"
+                                min={0}
+                                max={10}
+                                step={1}
+                                value={classValues[i] ?? 5}
+                                aria-label={d.label}
+                                onChange={(e) => {
+                                  const v = Number(e.target.value);
+                                  setClassValues((prev) => prev.map((x, j) => (j === i ? v : x)));
+                                }}
+                                className="w-full accent-[hsl(var(--gold,45_80%_60%))]"
+                              />
+                              <span className="w-12 text-right font-display text-sm text-gold">
+                                {classValues[i] ?? 5}/10
+                              </span>
+                            </div>
                           </li>
                         ))}
+                      </ul>
+                      <p className="mt-2 text-xs text-muted-foreground">
+                        Class Performance: {classValues.reduce((a, v) => a + v, 0)} / 30
+                      </p>
+                      <ul className="hidden">
                       </ul>
                       <p className="mt-3 text-[11px] italic text-muted-foreground">
                         Full Attendance is an Achievement / Recognition item, not a Performance
@@ -748,8 +773,6 @@ function MonthlyReviewPage() {
                         ? "Ready to submit. The system calculates everything automatically."
                         : hasSalesMetric && !salesReady
                         ? `Enter this month's ${template.metricLabel.toLowerCase()} figure to continue.`
-                        : classFormulaPending
-                        ? "Submission unavailable — Vanguard Class Performance formulas are not yet frozen (V1)."
                         : "Give a star rating to all four behaviour dimensions."}
                     </div>
                     <div className="flex items-center gap-2">
@@ -896,8 +919,8 @@ function ResultPanel({ result }: { result: Submitted }) {
           label={`Class Performance — ${cMax}%`}
           value={`${result.classPoints} / ${cMax}`}
           suffix={
-            result.classStars != null
-              ? `${result.classStars}★ · Reliability · Attendance · Work Compliance`
+            result.classValues
+              ? `${result.classValues.join(" + ")} · temporary manual V1 input`
               : `${fmtMoney(result.salesAmount)} of ${fmtMoney(result.salesTarget)} · ${targetPct}%`
           }
         />
