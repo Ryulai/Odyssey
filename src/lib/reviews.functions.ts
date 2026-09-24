@@ -6,7 +6,10 @@ export type SubmitReviewInput = {
   month: string; // "YYYY-MM"
   sales_amount: number;
   sales_target: number;
-  /** Class Performance, 0-50 */
+  /** Points allocated to Class / Guild (Hunter 50/50, Vanguard 30/70). Defaults 50/50. */
+  class_max?: number;
+  guild_max?: number;
+  /** Class Performance, 0-class_max */
   class_points: number;
   /** Guild Performance, 0-50 */
   guild_points: number;
@@ -39,8 +42,9 @@ export const submitMonthlyReview = createServerFn({ method: "POST" })
       staff_id: data.staff_id,
       month: monthDate,
       // Stored as 0-100 equivalents so existing dashboards keep working.
-      sales_score: clamp(data.class_points * 2),
-      review_score: clamp(data.guild_points * 2),
+      // (For Hunter 50/50 this is identical to points × 2.)
+      sales_score: clamp((data.class_points / (Number(data.class_max) || 50)) * 100),
+      review_score: clamp((data.guild_points / (Number(data.guild_max) || 50)) * 100),
       composite_score: Math.max(0, Math.min(999.99, Number(data.final_score) || 0)),
       grade: data.grade,
       notes: data.notes ?? "",

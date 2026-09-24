@@ -44,9 +44,9 @@ export const Route = createFileRoute("/professional-performance")({
 // 0 stars is reserved for exceptional cases (no participation / no evidence).
 // ===================================================================
 
+// Default (Hunter) structure. Vanguard overrides via its template (30 / 70).
 const CLASS_MAX = 50;
 const GUILD_MAX = 50;
-const BEHAVIOUR_MAX = 12.5; // per dimension
 
 const CURRENCY = "RM";
 function fmtMoney(n: number) {
@@ -117,7 +117,13 @@ type ClassTemplate = {
   id: string;
   classKey: string;
   className: string;
-  classMetric: "sales" | "none";
+  classMetric: "sales" | "rating" | "none";
+  /** Points allocated to Class Performance (Hunter 50, Vanguard 30). */
+  classMax: number;
+  /** Points allocated to Guild Performance (Hunter 50, Vanguard 70). */
+  guildMax: number;
+  /** Established Class dimensions shown for "rating" classes. */
+  classDimensions?: { label: string; description: string }[];
   metricLabel: string;
   inputLabel: string;
   monthlyTarget: number;
@@ -133,6 +139,29 @@ const HUNTER_TEMPLATE: ClassTemplate = {
   inputLabel: "Sales this month",
   monthlyTarget: 50000,
   targetNote: "fixed for all Hunters",
+  classMax: CLASS_MAX,
+  guildMax: GUILD_MAX,
+};
+
+// FROZEN Vanguard (Warrior Department) structure: Class 30% + Guild 70%.
+// No internal sub-weighting of the three Class dimensions has been frozen,
+// so the manager gives ONE Class Performance star rating judged across them.
+const VANGUARD_TEMPLATE: ClassTemplate = {
+  id: "vanguard_review_v1",
+  classKey: "tanker",
+  className: "Vanguard",
+  classMetric: "rating",
+  metricLabel: "Reliability · Attendance · Work Compliance",
+  inputLabel: "Class Performance rating",
+  monthlyTarget: 0,
+  targetNote: "",
+  classMax: 30,
+  guildMax: 70,
+  classDimensions: [
+    { label: "Reliability", description: "Dependable execution of assigned duties." },
+    { label: "Attendance", description: "Punctuality and presence as scheduled." },
+    { label: "Work Compliance", description: "Following procedures, standards and instructions." },
+  ],
 };
 
 const WARRIOR_TEMPLATE: ClassTemplate = {
@@ -144,17 +173,20 @@ const WARRIOR_TEMPLATE: ClassTemplate = {
   inputLabel: "Sales this month",
   monthlyTarget: 50000,
   targetNote: "temporary placeholder — Warrior class metric pending final design",
+  classMax: CLASS_MAX,
+  guildMax: GUILD_MAX,
 };
 
 const TEMPLATES: Record<string, ClassTemplate> = {
   hunter: HUNTER_TEMPLATE,
   warrior: WARRIOR_TEMPLATE,
+  // Vanguard is stored as role_key "tanker" (Warrior Department).
+  tanker: VANGUARD_TEMPLATE,
+  vanguard: VANGUARD_TEMPLATE,
 };
 
 // Recognised Classes without a template yet.
 const KNOWN_CLASSES_WITHOUT_TEMPLATE: Record<string, string> = {
-  tanker: "Vanguard",
-  vanguard: "Vanguard",
   alchemist: "Alchemist",
   mage: "Mage",
   navigator: "Navigator",
@@ -227,6 +259,9 @@ type Submitted = {
   at: string;
   salesAmount: number;
   salesTarget: number;
+  classMax?: number;
+  guildMax?: number;
+  classStars?: number;
   classPoints: number;
   guildPoints: number;
   total: number;
@@ -236,6 +271,7 @@ type Submitted = {
 
 type Draft = {
   salesAmount: number;
+  classStars?: number | null;
   stars: Stars;
   notes: string;
   submitted?: Submitted;
@@ -272,13 +308,18 @@ function saveDraft(staffId: string, month: string, draft: Draft) {
 // Calculation engine (pure)
 // -------------------------------------------------------------------
 
-function classPointsFromSales(amount: number, target: number) {
+function classPointsFromSales(amount: number, target: number, max = CLASS_MAX) {
   if (!target) return 0;
-  return round1(Math.min(1, amount / target) * CLASS_MAX);
+  return round1(Math.min(1, amount / target) * max);
 }
 
-function behaviourPoints(stars: number) {
-  return round1((stars / 5) * BEHAVIOUR_MAX);
+/** Star rating → points on the frozen 20%-per-star scale. */
+function starPoints(stars: number, max: number) {
+  return round1((stars / 5) * max);
+}
+
+function behaviourPoints(stars: number, guildMax = GUILD_MAX) {
+  return starPoints(stars, guildMax / BEHAVIOURS.length);
 }
 
 // -------------------------------------------------------------------
@@ -295,6 +336,7 @@ function MonthlyReviewPage() {
   const [month, setMonth] = useState(monthKey());
   const [staffId, setStaffId] = useState<string>("");
   const [salesAmount, setSalesAmount] = useState<number>(0);
+  const [classStars, setClassStars] = useState<number | null>(null);
   const [stars, setStars] = useState<Stars>(blankStars());
   const [notes, setNotes] = useState<string>("");
   const [result, setResult] = useState<Submitted | undefined>();
@@ -321,6 +363,7 @@ function MonthlyReviewPage() {
   useEffect(() => {
     if (!staffId) {
       setSalesAmount(0);
+      setClassStars(null);
       setStars(blankStars());
       setNotes("");
       setResult(undefined);
@@ -328,6 +371,7 @@ function MonthlyReviewPage() {
     }
     const d = loadDraft(staffId, month);
     setSalesAmount(d.salesAmount);
+    setClassStars(d.classStars ?? null);
     setStars({ ...blankStars(), ...d.stars });
     setNotes(d.notes);
     setResult(d.submitted);
@@ -336,7 +380,12 @@ function MonthlyReviewPage() {
   const hasSalesMetric = template?.classMetric === "sales";
   const salesTarget = template?.monthlyTarget ?? 0;
   const allRated = BEHAVIOURS.every((b) => stars[b.key] != null);
-  const salesReady = !hasSalesMetric || salesAmount > 0;
+  const hasRatingMetric = template?.classMetric === "rating";
+  const classMax = template?.classMax ?? CLASS_MAX;
+  const guildMax = template?.guildMax ?? GUILD_MAX;
+  const behaviourMax = round1(guildMax / BEHAVIOURS.length);
+  const salesReady =
+    (!hasSalesMetric || salesAmount > 0) && (!hasRatingMetric || classStars != null);
   const canSubmit = Boolean(staffId) && !!template && salesReady && allRated;
 
   async function handleSubmit() {
@@ -349,12 +398,16 @@ function MonthlyReviewPage() {
         label: b.label,
         stars: s,
         pct: s * 20,
-        points: behaviourPoints(s),
+        points: behaviourPoints(s, guildMax),
       };
     });
 
     const guildPoints = round1(perBehaviour.reduce((sum, b) => sum + b.points, 0));
-    const classPoints = hasSalesMetric ? classPointsFromSales(salesAmount, salesTarget) : 0;
+    const classPoints = hasSalesMetric
+      ? classPointsFromSales(salesAmount, salesTarget, classMax)
+      : hasRatingMetric
+      ? starPoints(classStars ?? 0, classMax)
+      : 0;
     const total = round1(classPoints + guildPoints);
     const g = gradeFor(total);
 
@@ -362,6 +415,9 @@ function MonthlyReviewPage() {
       at: new Date().toISOString(),
       salesAmount,
       salesTarget,
+      classMax,
+      guildMax,
+      classStars: hasRatingMetric ? (classStars ?? 0) : undefined,
       classPoints,
       guildPoints,
       total,
@@ -377,6 +433,8 @@ function MonthlyReviewPage() {
           month,
           sales_amount: salesAmount,
           sales_target: salesTarget,
+          class_max: classMax,
+          guild_max: guildMax,
           class_points: classPoints,
           guild_points: guildPoints,
           final_score: total,
@@ -389,7 +447,7 @@ function MonthlyReviewPage() {
         },
       });
       setResult(submitted);
-      saveDraft(staffId, month, { salesAmount, stars, notes, submitted });
+      saveDraft(staffId, month, { salesAmount, classStars, stars, notes, submitted });
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
         queryClient.invalidateQueries({ queryKey: ["peer-insights"] }),
@@ -409,6 +467,7 @@ function MonthlyReviewPage() {
 
   function handleReset() {
     setSalesAmount(0);
+    setClassStars(null);
     setStars(blankStars());
     setNotes("");
     setResult(undefined);
@@ -432,8 +491,10 @@ function MonthlyReviewPage() {
               Performance Review
             </h1>
             <p className="mt-1 max-w-2xl text-xs text-muted-foreground">
-              50% Class Performance + 50% Guild Performance. Managers judge observable
-              behaviour. The system calculates the monthly result.
+              {template
+                ? `${classMax}% Class Performance + ${guildMax}% Guild Performance = 100% Total Performance.`
+                : "Class Performance + Guild Performance = 100% Total Performance."}{" "}
+              Managers judge observable behaviour. The system calculates the monthly result.
             </p>
           </div>
           <Link
@@ -519,12 +580,45 @@ function MonthlyReviewPage() {
                       1
                     </span>
                     <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">
-                      Class Performance · {template.metricLabel}
+                      Class Performance — {classMax}%
                     </h2>
                     <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                      max {CLASS_MAX} points
+                      {template.metricLabel} · max {classMax} points
                     </span>
                   </div>
+                  {hasRatingMetric && template.classDimensions ? (
+                    <>
+                      <p className="text-xs text-muted-foreground">
+                        Judge the {template.className}'s class execution this month across
+                        the three established dimensions, then give one star rating. The
+                        system converts it to points.
+                      </p>
+                      <ul className="mt-3 grid gap-2 sm:grid-cols-3">
+                        {template.classDimensions.map((d) => (
+                          <li key={d.label} className="rounded-md border border-border bg-black/20 p-3">
+                            <div className="font-display text-xs uppercase tracking-widest text-gold">
+                              {d.label}
+                            </div>
+                            <div className="mt-1 text-[11px] text-muted-foreground">{d.description}</div>
+                          </li>
+                        ))}
+                      </ul>
+                      <div className="mt-4">
+                        <BehaviourCard
+                          behaviour={{
+                            key: "professionalism",
+                            label: template.inputLabel,
+                            group: "Internal",
+                            description: template.metricLabel,
+                          }}
+                          max={classMax}
+                          stars={classStars}
+                          onSelect={setClassStars}
+                        />
+                      </div>
+                    </>
+                  ) : (
+                  <>
                   <p className="text-xs text-muted-foreground">
                     {template.metricLabel} is the core performance of the {template.className}{" "}
                     Class. Enter the figure — the system converts it to points.
@@ -560,6 +654,8 @@ function MonthlyReviewPage() {
                       </div>
                     </div>
                   </div>
+                  </>
+                  )}
                 </section>
 
                 {/* 2 — GUILD PERFORMANCE */}
@@ -569,10 +665,10 @@ function MonthlyReviewPage() {
                       2
                     </span>
                     <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">
-                      Guild Performance
+                      Guild Performance — {guildMax}%
                     </h2>
                     <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                      max {GUILD_MAX} points · 4 × {BEHAVIOUR_MAX}
+                      max {guildMax} points · 4 × {behaviourMax}
                     </span>
                   </div>
                   <p className="mb-4 text-xs text-muted-foreground">
@@ -591,6 +687,7 @@ function MonthlyReviewPage() {
                           <BehaviourCard
                             key={b.key}
                             behaviour={b}
+                            max={behaviourMax}
                             stars={stars[b.key]}
                             onSelect={(v) => setStars((s) => ({ ...s, [b.key]: v }))}
                           />
@@ -641,6 +738,8 @@ function MonthlyReviewPage() {
                         ? "Ready to submit. The system calculates everything automatically."
                         : hasSalesMetric && !salesReady
                         ? `Enter this month's ${template.metricLabel.toLowerCase()} figure to continue.`
+                        : hasRatingMetric && classStars == null
+                        ? "Give the Class Performance star rating to continue."
                         : "Give a star rating to all four behaviour dimensions."}
                     </div>
                     <div className="flex items-center gap-2">
@@ -680,16 +779,18 @@ function MonthlyReviewPage() {
 
 function BehaviourCard({
   behaviour,
+  max,
   stars,
   onSelect,
 }: {
   behaviour: Behaviour;
+  max: number;
   stars: number | null;
   onSelect: (v: number) => void;
 }) {
   const value = stars ?? 0;
   const pct = value * 20;
-  const points = behaviourPoints(value);
+  const points = starPoints(value, max);
 
   return (
     <article className="rounded-md border border-border bg-ink/30 p-5">
@@ -706,7 +807,7 @@ function BehaviourCard({
           <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
             Max
           </div>
-          <div className="font-display text-sm text-gold/80">{BEHAVIOUR_MAX} pts</div>
+          <div className="font-display text-sm text-gold/80">{max} pts</div>
         </div>
       </header>
 
@@ -748,7 +849,7 @@ function BehaviourCard({
               {pct}%
             </span>
             <span className="rounded-md border border-gold/40 bg-gold/10 px-2 py-1 font-display text-gold">
-              {points} / {BEHAVIOUR_MAX} pts
+              {points} / {max} pts
             </span>
           </div>
         )}
@@ -769,6 +870,9 @@ function BehaviourCard({
 
 function ResultPanel({ result }: { result: Submitted }) {
   const g = gradeFor(result.total);
+  const cMax = result.classMax ?? CLASS_MAX;
+  const gMax = result.guildMax ?? GUILD_MAX;
+  const bMax = round1(gMax / BEHAVIOURS.length);
   const targetPct = result.salesTarget
     ? Math.round((result.salesAmount / result.salesTarget) * 100)
     : 0;
@@ -777,12 +881,16 @@ function ResultPanel({ result }: { result: Submitted }) {
     <div className="mt-5 space-y-4 border-t border-gold/30 pt-5">
       <div className="grid gap-3 sm:grid-cols-3">
         <Stat
-          label="Class Performance"
-          value={`${result.classPoints} / ${CLASS_MAX}`}
-          suffix={`${fmtMoney(result.salesAmount)} of ${fmtMoney(result.salesTarget)} · ${targetPct}%`}
+          label={`Class Performance — ${cMax}%`}
+          value={`${result.classPoints} / ${cMax}`}
+          suffix={
+            result.classStars != null
+              ? `${result.classStars}★ · Reliability · Attendance · Work Compliance`
+              : `${fmtMoney(result.salesAmount)} of ${fmtMoney(result.salesTarget)} · ${targetPct}%`
+          }
         />
-        <Stat label="Guild Performance" value={`${result.guildPoints} / ${GUILD_MAX}`} suffix="4 behaviour dimensions" />
-        <Stat label="Total Performance" value={`${result.total} / 100`} accent />
+        <Stat label={`Guild Performance — ${gMax}%`} value={`${result.guildPoints} / ${gMax}`} suffix="4 behaviour dimensions" />
+        <Stat label="Total Performance — 100%" value={`${result.total} / 100`} accent />
       </div>
 
       <div className="rounded-md border border-border bg-ink/40 p-4">
@@ -796,7 +904,7 @@ function ResultPanel({ result }: { result: Submitted }) {
               <span className="text-gold">{"★".repeat(b.stars)}{"☆".repeat(5 - b.stars)}</span>
               <span className="text-muted-foreground">{b.pct}%</span>
               <span className="ml-auto font-display text-foreground">
-                {b.points} / {BEHAVIOUR_MAX} pts
+                {b.points} / {bMax} pts
               </span>
             </li>
           ))}
@@ -808,7 +916,7 @@ function ResultPanel({ result }: { result: Submitted }) {
         style={{ borderColor: g.color }}
       >
         <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
-          Final Grade
+          Final Performance Grade
         </div>
         <div className="mt-1 font-display text-3xl font-bold" style={{ color: g.color }}>
           {g.grade}
@@ -817,7 +925,8 @@ function ResultPanel({ result }: { result: Submitted }) {
           {g.label}
         </div>
         <p className="mt-2 text-[11px] text-muted-foreground">
-          A 90–100 · B 80–89 · C 60–79 · D below 60. Certified means the required
+          A 90–100 · B 80–89 · C 60–79 · D below 60. The Grade is the final Performance
+          result — not a behaviour dimension. Certified means the required
           standard for the current role has been met.
         </p>
       </div>
