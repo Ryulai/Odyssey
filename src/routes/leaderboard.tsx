@@ -77,9 +77,12 @@ function monthLabel(iso: string | null) {
 }
 
 function Leaderboard() {
+  const [group, setGroup] = useState<string | null>(null);
+  const [year, setYear] = useState<number>(new Date().getUTCFullYear());
+  const [month, setMonth] = useState<number | null>(null); // null = latest completed review
   const { data, isLoading } = useQuery({
-    queryKey: ["leaderboard"],
-    queryFn: () => getLeaderboard({ data: undefined }),
+    queryKey: ["leaderboard", group, year, month],
+    queryFn: () => getLeaderboard({ data: { group, year, month } }),
   });
   const [selected, setSelected] = useState<LeaderboardRow | null>(null);
   const [onlyScored, setOnlyScored] = useState(false);
@@ -102,7 +105,7 @@ function Leaderboard() {
             </div>
             <h1 className="mt-1 font-display text-2xl">Leaderboard</h1>
             <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-              Every Hunter, ordered by their latest completed Performance score. Ranking and Performance stay
+              Each ranking group, ordered by Performance score for the selected month (or latest review). Ranking and Performance stay
               separate systems — this board only reflects them. Private manager notes are never shown.
             </p>
           </div>
@@ -146,15 +149,38 @@ function Leaderboard() {
               </div>
             )}
 
+            {(data?.groups.length ?? 0) > 0 && (
+              <div className="mb-3 flex flex-wrap gap-1 rounded-md border border-border p-1">
+                {data!.groups.map(g => (
+                  <button key={g.key} onClick={() => setGroup(g.key)}
+                    className={`rounded px-4 py-1.5 font-display text-[10px] uppercase tracking-[0.25em] ${data!.active_group === g.key ? "bg-gold/15 text-gold" : "text-muted-foreground hover:text-gold"}`}>
+                    {g.label}
+                  </button>
+                ))}
+              </div>
+            )}
+            <div className="mb-3 flex flex-wrap items-center gap-3">
+              <label className="text-[10px] uppercase tracking-widest text-muted-foreground">Year</label>
+              <select value={year} onChange={e => setYear(Number(e.target.value))} className="rounded-md border border-border bg-ink/40 px-3 py-1.5 text-sm">
+                {[0, 1, 2].map(o => new Date().getUTCFullYear() - o).map(y => <option key={y} value={y}>{y}</option>)}
+              </select>
+              <label className="text-[10px] uppercase tracking-widest text-muted-foreground">Month</label>
+              <select value={month ?? 0} onChange={e => setMonth(Number(e.target.value) || null)} className="rounded-md border border-border bg-ink/40 px-3 py-1.5 text-sm">
+                <option value={0}>Latest review</option>
+                {["January","February","March","April","May","June","July","August","September","October","November","December"].map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
+              </select>
+            </div>
             <div className="mb-3 flex flex-wrap items-center gap-2">
-              <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Sorted by latest Performance score</span>
+              <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                {data?.selected_month ? `Sorted by ${monthLabel(data.selected_month)} Performance score · each group ranked separately` : "Sorted by latest Performance score · each group ranked separately"}
+              </span>
               <button
                 onClick={() => setOnlyScored(v => !v)}
                 className={`rounded-md border px-3 py-1.5 font-display text-[10px] uppercase tracking-[0.25em] transition ${
                   onlyScored ? "border-gold bg-gold/15 text-gold" : "border-border text-muted-foreground hover:border-gold/50 hover:text-gold"
                 }`}
               >
-                Scored only
+                {onlyScored ? "Scored only (on)" : "Showing all eligible"}
               </button>
             </div>
 

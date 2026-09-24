@@ -1,4 +1,4 @@
-import { toDepartmentKey } from "@/lib/taxonomy";
+import { DEPARTMENTS, toDepartmentKey, type DepartmentKey } from "@/lib/taxonomy";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
@@ -37,11 +37,30 @@ export type LeaderboardPayload = {
   me_staff_id: string | null;
   my_position: number | null;
   notice?: string;
+  /** Ranking groups the caller may open (enforced server-side). */
+  groups: Array<{ key: LeaderboardGroup; label: string }>;
+  active_group: LeaderboardGroup | null;
+  /** Selected month (YYYY-MM-01) or null = latest completed review. */
+  selected_month: string | null;
 };
 
+export type LeaderboardGroup = DepartmentKey | "manager";
+
 export const getLeaderboard = createServerFn({ method: "GET" })
+  .inputValidator((d: { group?: string | null; year?: number | null; month?: number | null } | undefined) => {
+    const y = Number(d?.year) || null;
+    const m = Number(d?.month) || null;
+    return {
+      group: d?.group ? String(d.group).toLowerCase() : null,
+      month: y && m && m >= 1 && m <= 12 ? `${y}-${String(m).padStart(2, "0")}-01` : null,
+    };
+  })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<LeaderboardPayload> => {
+  .handler(async ({ context, data }): Promise<LeaderboardPayload> => {
+    const rolesRes = await context.supabase.from("user_roles").select("role").eq("user_id", context.userId);
+    if (rolesRes.error) throw new Error(rolesRes.error.message);
+    const roleSet = new Set((rolesRes.data ?? []).map(r => r.role as string));
+    const supervisor = roleSet.has("manager") || roleSet.has("director");
     const meRes = await context.supabase
       .from("staff")
       .select("id")
@@ -62,7 +81,7 @@ export const getLeaderboard = createServerFn({ method: "GET" })
     const staff = staffRes.data ?? [];
 
     if (!staff.length) {
-      return { rows: [], me_staff_id: meStaffId, my_position: null, notice: "No Hunters on the manifest yet." };
+      return { rows: [], me_staff_id: meStaffId, my_position: null, notice: "No Hunters on the manifest yet.", groups: [], active_group: null, selected_month: data.month };
     }
 
     const ids = staff.map(s => s.id);
@@ -73,7 +92,8 @@ export const getLeaderboard = createServerFn({ method: "GET" })
         .from("monthly_evaluations")
         .select("staff_id, month, composite_score, grade, sales_score, review_score")
         .in("staff_id", ids)
-        .order("month", { ascending: false }),
+        .order("month", { ascending: false })
+        .then(r => (data.month ? { ...r, data: (r.data ?? []).filter(e => String(e.month).slice(0, 7) === data.month!.slice(0, 7)) } : r)),
       supabaseAdmin.from("locations").select("id, name"),
       supabaseAdmin.from("ranks").select("key, name, position, min_total_stars").order("position", { ascending: true }),
       supabaseAdmin.from("staff_identities").select("staff_id, class_key, is_primary").in("staff_id", ids),
@@ -99,11 +119,25 @@ export const getLeaderboard = createServerFn({ method: "GET" })
     const starMap = new Map<string, number>();
     for (const a of achRes.data ?? []) starMap.set(a.staff_id, (starMap.get(a.staff_id) ?? 0) + (Number(a.stars) || 0));
 
-    // Visibility + ranking isolation: only Staff-level employees of the caller's own
-    // Department. Manager/Director-level people never appear in this ranking.
+    // Visibility + ranking isolation (server-side):
+    //  - Staff: only their own Department's Staff-level ranking.
+    //  - Manager/Director: any Department ranking, plus the separate Manager ranking.
+    //  - Each request returns exactly ONE group; there is no combined ranking.
+    //  - Directors never appear in any ranking.
     const myDept = meStaffId ? toDepartmentKey(classMap.get(meStaffId)) : null;
-    const scoped = staff.filter(s =>
-      s.system_role === "staff" && !!myDept && toDepartmentKey(classMap.get(s.id) ?? s.career_path) === myDept,
+    const groups: LeaderboardPayload["groups"] = supervisor
+      ? [...DEPARTMENTS.map(d => ({ key: d.key as LeaderboardGroup, label: d.label })), { key: "manager", label: "Manager" }]
+      : myDept ? [{ key: myDept, label: DEPARTMENTS.find(d => d.key === myDept)!.label }] : [];
+    const requested = groups.find(g => g.key === data.group)?.key ?? null;
+    if (data.group && !requested) {
+      return { rows: [], me_staff_id: meStaffId, my_position: null, notice: "Locked — this ranking is outside your access.", groups, active_group: null, selected_month: data.month };
+    }
+    const activeGroup: LeaderboardGroup | null = requested ?? (myDept && groups.some(g => g.key === myDept) ? myDept : groups[0]?.key ?? null);
+    const deptOf = (s: { id: string; career_path: string | null }) => toDepartmentKey(classMap.get(s.id) ?? s.career_path);
+    const scoped = !activeGroup ? [] : staff.filter(s =>
+      activeGroup === "manager"
+        ? s.system_role === "manager"
+        : s.system_role === "staff" && deptOf(s) === activeGroup,
     );
 
     const rows: LeaderboardRow[] = scoped.map(s => {
@@ -152,5 +186,8 @@ export const getLeaderboard = createServerFn({ method: "GET" })
       me_staff_id: meStaffId,
       my_position: idx >= 0 ? idx + 1 : null,
       notice: meStaffId ? undefined : "You aren't on the crew manifest yet — ask a Director to add you to appear on the board.",
+      groups,
+      active_group: activeGroup,
+      selected_month: data.month,
     };
   });
