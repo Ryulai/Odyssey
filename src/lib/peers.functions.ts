@@ -69,14 +69,22 @@ function prevMonthStart(d = new Date()) {
 }
 
 export const getPeerInsights = createServerFn({ method: "GET" })
-  .inputValidator((data: { department?: string | null; class_key?: string | null } | undefined) => ({
-    department: data?.department ? String(data.department).toLowerCase().trim() : null,
-    class_key: data?.class_key ? String(data.class_key).toLowerCase().trim() : null,
-  }))
+  .inputValidator((data: { department?: string | null; class_key?: string | null; year?: number | null; month?: number | null } | undefined) => {
+    const y = Number(data?.year) || null;
+    const m = Number(data?.month) || null;
+    return {
+      department: data?.department ? String(data.department).toLowerCase().trim() : null,
+      class_key: data?.class_key ? String(data.class_key).toLowerCase().trim() : null,
+      year: y,
+      month: m && m >= 1 && m <= 12 ? m : null,
+    };
+  })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context, data }): Promise<PeerInsightsPayload> => {
-    const currentMonth = monthStart();
-    const previousMonth = prevMonthStart();
+    // Explicit Year + Month selection wins; otherwise the current month.
+    const selected = data.year && data.month ? new Date(Date.UTC(data.year, data.month - 1, 1)) : new Date();
+    const currentMonth = monthStart(selected);
+    const previousMonth = prevMonthStart(selected);
 
     // ---- Role / Authority (highest privilege wins) ----
     const rolesRes = await context.supabase
