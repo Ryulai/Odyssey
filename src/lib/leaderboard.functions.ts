@@ -1,3 +1,4 @@
+import { toDepartmentKey } from "@/lib/taxonomy";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
@@ -55,7 +56,7 @@ export const getLeaderboard = createServerFn({ method: "GET" })
 
     const staffRes = await supabaseAdmin
       .from("staff")
-      .select("id, name, current_rank_key, location_id, career_path")
+      .select("id, name, current_rank_key, location_id, career_path, system_role")
       .neq("status", "inactive");
     if (staffRes.error) throw new Error(staffRes.error.message);
     const staff = staffRes.data ?? [];
@@ -98,7 +99,14 @@ export const getLeaderboard = createServerFn({ method: "GET" })
     const starMap = new Map<string, number>();
     for (const a of achRes.data ?? []) starMap.set(a.staff_id, (starMap.get(a.staff_id) ?? 0) + (Number(a.stars) || 0));
 
-    const rows: LeaderboardRow[] = staff.map(s => {
+    // Visibility + ranking isolation: only Staff-level employees of the caller's own
+    // Department. Manager/Director-level people never appear in this ranking.
+    const myDept = meStaffId ? toDepartmentKey(classMap.get(meStaffId)) : null;
+    const scoped = staff.filter(s =>
+      s.system_role === "staff" && !!myDept && toDepartmentKey(classMap.get(s.id) ?? s.career_path) === myDept,
+    );
+
+    const rows: LeaderboardRow[] = scoped.map(s => {
       const e = latest.get(s.id);
       const current = s.current_rank_key ? rankByKey.get(s.current_rank_key) : undefined;
       const next = current
