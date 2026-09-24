@@ -48,14 +48,7 @@ const MONTH_NAMES = [
   "December",
 ];
 
-function previousMonthLabel(year: number, month: number) {
-  return new Date(Date.UTC(year, month - 2, 1)).toLocaleDateString(undefined, {
-    month: "short",
-    timeZone: "UTC",
-  });
-}
-
-function Trend({ row, year, month }: { row: PeerRow; year: number; month: number }) {
+function Trend({ row }: { row: PeerRow }) {
   if (row.overall === null) return <span className="text-muted-foreground">— No review</span>;
   if (row.prev_overall === null)
     return <span className="text-muted-foreground">→ No prior review</span>;
@@ -70,7 +63,7 @@ function Trend({ row, year, month }: { row: PeerRow; year: number; month: number
   return (
     <span className={tone}>
       {glyph} {delta > 0 ? "+" : ""}
-      {delta.toFixed(1)} vs {previousMonthLabel(year, month)}
+      {delta.toFixed(1)}
     </span>
   );
 }
