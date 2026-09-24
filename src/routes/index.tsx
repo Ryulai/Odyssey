@@ -607,8 +607,7 @@ function OdysseyHeader() {
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <Link to="/hunter-dashboard" className="rounded-md border border-gold/50 bg-gold/10 px-3 py-2 font-display text-[10px] uppercase tracking-widest text-gold hover:bg-gold/20">Hunter Dashboard</Link>
-        <Link to="/leaderboard" className={navLink}>Leaderboard</Link>
-        <Link to="/peer-insights" className={navLink}>Peer Insights</Link>
+        <Link to="/peer-insights" className={navLink}>Peer Insights / Guild Ranking</Link>
 
         <Link to="/profile" className={navLink}>My Profile</Link>
         <Link to="/career" className={navLink}>Class</Link>

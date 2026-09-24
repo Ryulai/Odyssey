@@ -3,7 +3,6 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   DEPARTMENTS,
   classesOf,
-  departmentDbKey,
   departmentLabel,
   normalizeKey,
   odysseyClassLabel,
@@ -18,9 +17,14 @@ export type PeerRow = {
   rank_key: string | null;
   location_id: string | null;
   location_name: string | null;
-  overall: number;
+  department: DepartmentKey | null;
+  class_key: string | null;
+  class_label: string | null;
+  position: number;
+  overall: number | null;
   grade: string | null;
   prev_overall: number | null;
+  trend_delta: number | null;
   trend: "up" | "down" | "flat" | "new";
   achievements_count: number;
   is_me: boolean;
@@ -50,13 +54,10 @@ export type PeerInsightsPayload = {
     class_key: string | null;
   } | null;
   month: string;
-  peers: PeerRow[];
-  scope: PeerScope;
-  /** Department tabs; `unlocked` is authoritative and enforced server-side. */
-  departments: TabItem[];
-  /** Classes of the active Department; `unlocked` enforced server-side. */
+  sections: Array<{ key: DepartmentKey | "manager"; label: string; peers: PeerRow[] }>;
+  groups: Array<{ key: "all" | DepartmentKey | "manager"; label: string }>;
   classes: TabItem[];
-  active_department: DepartmentKey | null;
+  active_group: "all" | DepartmentKey | "manager" | null;
   active_class: string | null;
   notice?: string;
 };
@@ -69,11 +70,11 @@ function prevMonthStart(d = new Date()) {
 }
 
 export const getPeerInsights = createServerFn({ method: "GET" })
-  .inputValidator((data: { department?: string | null; class_key?: string | null; year?: number | null; month?: number | null } | undefined) => {
+  .inputValidator((data: { group?: string | null; class_key?: string | null; year?: number | null; month?: number | null } | undefined) => {
     const y = Number(data?.year) || null;
     const m = Number(data?.month) || null;
     return {
-      department: data?.department ? String(data.department).toLowerCase().trim() : null,
+      group: data?.group ? String(data.group).toLowerCase().trim() : null,
       class_key: data?.class_key ? String(data.class_key).toLowerCase().trim() : null,
       year: y,
       month: m && m >= 1 && m <= 12 ? m : null,
@@ -86,7 +87,6 @@ export const getPeerInsights = createServerFn({ method: "GET" })
     const currentMonth = monthStart(selected);
     const previousMonth = prevMonthStart(selected);
 
-    // ---- Role / Authority (highest privilege wins) ----
     const rolesRes = await context.supabase
       .from("user_roles")
       .select("role")
@@ -99,7 +99,6 @@ export const getPeerInsights = createServerFn({ method: "GET" })
         ? "manager"
         : "staff";
 
-    // ---- Caller's staff record ----
     const meRes = await context.supabase
       .from("staff")
       .select("id, name, current_rank_key, location_id, business_unit")
@@ -112,7 +111,6 @@ export const getPeerInsights = createServerFn({ method: "GET" })
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    // ---- Identity maps: department (class_key) + class (role_key) ----
     const [identAll, rpgAll] = await Promise.all([
       supabaseAdmin
         .from("staff_identities")
@@ -143,21 +141,16 @@ export const getPeerInsights = createServerFn({ method: "GET" })
     const myDept = meStaff ? deptByStaff.get(meStaff.id) ?? null : null;
     const myClass = meStaff ? classByStaff.get(meStaff.id) ?? null : null;
 
-    // ---- Authorization helpers ----
-    const canSeeDept = (d: DepartmentKey) => authority === "director" || (!!myDept && d === myDept);
-    const canSeeClass = (d: DepartmentKey, c: string) => {
-      if (authority === "director") return true;
-      if (!canSeeDept(d)) return false;
-      // Managers cover their whole department; staff only their own class.
-      if (authority === "manager") return true;
-      return !!myClass && c === myClass;
-    };
-
-    const departmentTabs: TabItem[] = DEPARTMENTS.map((d) => ({
-      key: d.key,
-      label: d.label,
-      unlocked: canSeeDept(d.key),
-    }));
+    const supervisor = authority === "manager" || authority === "director";
+    const groups: PeerInsightsPayload["groups"] = supervisor
+      ? [
+          { key: "all", label: "All" },
+          ...DEPARTMENTS.map((d) => ({ key: d.key, label: d.label })),
+          { key: "manager", label: "Manager" },
+        ]
+      : myDept
+        ? [{ key: myDept, label: departmentLabel(myDept) }]
+        : [];
 
     const baseMe = meStaff
       ? {
@@ -172,17 +165,14 @@ export const getPeerInsights = createServerFn({ method: "GET" })
         }
       : null;
 
-    const empty = (notice: string, dep: DepartmentKey | null = null, cls: string | null = null): PeerInsightsPayload => ({
+    const empty = (notice: string): PeerInsightsPayload => ({
       me: baseMe,
       month: currentMonth,
-      peers: [],
-      scope: { kind: "class", label: "Your class" },
-      departments: departmentTabs,
-      classes: dep
-        ? classesOf(dep).map((c) => ({ key: c.key, label: c.label, unlocked: canSeeClass(dep, c.key) }))
-        : [],
-      active_department: dep,
-      active_class: cls,
+      sections: [],
+      groups,
+      classes: [],
+      active_group: null,
+      active_class: null,
       notice,
     });
 
@@ -190,70 +180,50 @@ export const getPeerInsights = createServerFn({ method: "GET" })
       return empty("You aren't on the crew manifest yet — Peer Insights unlocks once a Director adds you.");
     }
 
-    // ---- Resolve active Department ----
-    const requestedDept = toDepartmentKey(data.department);
-    let activeDept: DepartmentKey | null;
-    if (authority === "director") {
-      activeDept = requestedDept ?? myDept ?? DEPARTMENTS[0].key;
-    } else {
-      if (!myDept) return empty("Your department isn't set yet — ask a Director to complete your profile.");
-      if (requestedDept && requestedDept !== myDept) {
-        return empty("Locked — Peer Insights is limited to your own department.", myDept, myClass);
-      }
-      activeDept = myDept;
+    if (!myDept && !supervisor) return empty("Your department isn't set yet — ask a Director to complete your profile.");
+    const requestedGroup = data.group as "all" | DepartmentKey | "manager" | null;
+    if (requestedGroup && !groups.some((g) => g.key === requestedGroup)) {
+      return empty("Locked — this ranking group is outside your access.");
     }
+    const activeGroup = requestedGroup ?? (supervisor ? "all" : myDept);
+    if (!activeGroup) return empty("No ranking group is available for this account.");
 
-    const classTabs: TabItem[] = classesOf(activeDept).map((c) => ({
-      key: c.key,
-      label: c.label,
-      unlocked: canSeeClass(activeDept!, c.key),
-    }));
-
-    // ---- Resolve active Class ----
+    const activeDept = activeGroup !== "all" && activeGroup !== "manager" ? activeGroup : null;
     const requestedClass = normalizeKey(data.class_key);
-    let activeClass: string | null;
-    if (requestedClass) {
-      if (!canSeeClass(activeDept, requestedClass)) {
-        return empty("Locked — Peer Insights is available for your own class only.", activeDept, myClass);
-      }
-      activeClass = requestedClass;
-    } else if (myDept === activeDept && myClass) {
-      activeClass = myClass;
-    } else {
-      activeClass = classTabs.find((t) => t.unlocked)?.key ?? null;
+    const allowedClassKeys = activeDept ? classesOf(activeDept).map((c) => c.key) : [];
+    if (requestedClass && (!activeDept || !allowedClassKeys.includes(requestedClass))) {
+      return empty("Locked — this Class is outside the selected Department.");
     }
-
-    if (!activeClass) {
-      return empty("No classes are configured for this department yet.", activeDept, null);
+    if (!supervisor && requestedClass && requestedClass !== myClass) {
+      return empty("Locked — Peer Insights is available for your own Class only.");
     }
+    const activeClass = requestedClass ?? (!supervisor && activeDept === myDept ? myClass : null);
+    const classTabs: TabItem[] = activeDept
+      ? [
+          ...(supervisor ? [{ key: "all", label: "All Classes", unlocked: true }] : []),
+          ...classesOf(activeDept).map((c) => ({
+            key: c.key,
+            label: c.label,
+            unlocked: supervisor || c.key === myClass,
+          })),
+        ]
+      : [];
 
-    const scope: PeerScope = {
-      kind: authority === "director" ? "organization" : "class",
-      label: `${departmentLabel(activeDept)} · ${odysseyClassLabel(activeClass)}`,
-    };
-
-    // ---- Members of the active Department + Class (server-side filter) ----
-    let staffQuery = supabaseAdmin
+    const staffRes = await supabaseAdmin
       .from("staff")
       .select("id, name, current_rank_key, location_id, business_unit, manager_id, system_role")
-      .neq("status", "inactive")
-      // Ranking isolation: Manager/Director-level people never enter Department peer rankings.
-      .eq("system_role", "staff");
-
-    // Managers stay inside their own business unit where the data supports it.
-    if (authority === "manager" && meStaff?.business_unit) {
-      staffQuery = staffQuery.eq("business_unit", meStaff.business_unit);
-    }
-
-    const staffRes = await staffQuery;
+      .neq("status", "inactive");
     if (staffRes.error) throw new Error(staffRes.error.message);
-
-    const peerStaff = (staffRes.data ?? []).filter(
-      (s: any) => deptByStaff.get(s.id) === activeDept && classByStaff.get(s.id) === activeClass,
-    ) as Array<{ id: string; name: string; current_rank_key: string | null; location_id: string | null }>;
-
-    // Location names.
-    const locationIds = Array.from(new Set(peerStaff.map((p) => p.location_id).filter(Boolean))) as string[];
+    const allStaff = staffRes.data ?? [];
+    const sectionKeys: Array<DepartmentKey | "manager"> = activeGroup === "all"
+      ? [...DEPARTMENTS.map((d) => d.key), "manager"]
+      : [activeGroup];
+    const eligible = allStaff.filter((s) =>
+      sectionKeys.some((key) => key === "manager"
+        ? s.system_role === "manager"
+        : s.system_role === "staff" && deptByStaff.get(s.id) === key),
+    );
+    const locationIds = Array.from(new Set(eligible.map((p) => p.location_id).filter(Boolean))) as string[];
     const allLocIds = Array.from(new Set([...locationIds, ...(baseMe?.location_id ? [baseMe.location_id] : [])]));
     const locRes = allLocIds.length
       ? await supabaseAdmin.from("locations").select("id, name").in("id", allLocIds)
@@ -266,21 +236,8 @@ export const getPeerInsights = createServerFn({ method: "GET" })
       ? { ...baseMe, location_name: baseMe.location_id ? locMap.get(baseMe.location_id) ?? null : null }
       : null;
 
-    if (!peerStaff.length) {
-      return {
-        me,
-        month: currentMonth,
-        peers: [],
-        scope,
-        departments: departmentTabs,
-        classes: classTabs,
-        active_department: activeDept,
-        active_class: activeClass,
-        notice: `No ${odysseyClassLabel(activeClass)} crew in this department yet.`,
-      };
-    }
-
-    const peerIds = peerStaff.map((p) => p.id);
+    const peerIds = eligible.map((p) => p.id);
+    if (!peerIds.length) return { me, month: currentMonth, sections: sectionKeys.map((key) => ({ key, label: key === "manager" ? "Manager" : departmentLabel(key), peers: [] })), groups, classes: classTabs, active_group: activeGroup, active_class: activeClass };
     const [evalsRes, prevEvalsRes, achRes] = await Promise.all([
       supabaseAdmin
         .from("monthly_evaluations")
@@ -303,47 +260,44 @@ export const getPeerInsights = createServerFn({ method: "GET" })
     const achMap = new Map<string, number>();
     for (const a of achRes.data ?? []) achMap.set(a.staff_id, (achMap.get(a.staff_id) ?? 0) + 1);
 
-    const peers: PeerRow[] = peerStaff.map((p) => {
-      const e = evalMap.get(p.id);
-      const overall = Number(e?.composite_score ?? 0);
-      const prev = prevMap.get(p.id) ?? null;
-      const trend: PeerRow["trend"] = !e
-        ? "new"
-        : prev === null
-          ? "flat"
-          : overall > prev + 0.5
-            ? "up"
-            : overall < prev - 0.5
-              ? "down"
-              : "flat";
-      return {
-        staff_id: p.id,
-        name: p.name,
-        rank_key: p.current_rank_key,
-        location_id: p.location_id,
-        location_name: p.location_id ? locMap.get(p.location_id) ?? null : null,
-        overall,
-        grade: e?.grade ?? null,
-        prev_overall: prev,
-        trend,
-        achievements_count: achMap.get(p.id) ?? 0,
-        is_me: !!meStaff && p.id === meStaff.id,
-      };
+    const sections = sectionKeys.map((key) => {
+      const members = eligible.filter((s) => key === "manager"
+        ? s.system_role === "manager"
+        : s.system_role === "staff" && deptByStaff.get(s.id) === key);
+      const ranked = members.map((p) => {
+        const e = evalMap.get(p.id);
+        const overall = e ? Number(e.composite_score) : null;
+        const prev = prevMap.get(p.id) ?? null;
+        const delta = overall !== null && prev !== null ? overall - prev : null;
+        const trend: PeerRow["trend"] = overall === null ? "new" : prev === null ? "flat" : delta !== null && delta > 0.5 ? "up" : delta !== null && delta < -0.5 ? "down" : "flat";
+        const department = deptByStaff.get(p.id) ?? null;
+        const classKey = classByStaff.get(p.id) ?? null;
+        return {
+          staff_id: p.id, name: p.name, rank_key: p.current_rank_key,
+          location_id: p.location_id, location_name: p.location_id ? locMap.get(p.location_id) ?? null : null,
+          department, class_key: classKey, class_label: classKey ? odysseyClassLabel(classKey) : null,
+          position: 0, overall, grade: e?.grade ?? null, prev_overall: prev, trend_delta: delta,
+          trend, achievements_count: achMap.get(p.id) ?? 0, is_me: !!meStaff && p.id === meStaff.id,
+        } satisfies PeerRow;
+      });
+      ranked.sort((a, b) => {
+        if (a.overall === null && b.overall === null) return a.name.localeCompare(b.name);
+        if (a.overall === null) return 1;
+        if (b.overall === null) return -1;
+        return b.overall - a.overall;
+      });
+      ranked.forEach((row, index) => { row.position = index + 1; });
+      const visible = activeClass && key !== "manager" ? ranked.filter((row) => row.class_key === activeClass) : ranked;
+      return { key, label: key === "manager" ? "Manager" : departmentLabel(key), peers: visible };
     });
-
-    peers.sort((x, y) => y.overall - x.overall);
 
     return {
       me,
       month: currentMonth,
-      peers,
-      scope,
-      departments: departmentTabs,
+      sections,
+      groups,
       classes: classTabs,
-      active_department: activeDept,
+      active_group: activeGroup,
       active_class: activeClass,
     };
   });
-
-// Keeps `departmentDbKey` reachable for future write paths without changing schema.
-export const __TAXONOMY_DB_KEY = departmentDbKey;
