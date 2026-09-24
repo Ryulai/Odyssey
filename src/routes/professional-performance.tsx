@@ -124,6 +124,9 @@ type ClassTemplate = {
   guildMax: number;
   /** Established Class dimensions shown for "rating" classes. */
   classDimensions?: { label: string; description: string }[];
+  behaviourLabels?: Partial<Record<BehaviourKey, string>>;
+  starScale?: Record<number, string>;
+  gradeLabels?: Partial<Record<"A" | "B" | "C" | "D", string>>;
   metricLabel: string;
   inputLabel: string;
   monthlyTarget: number;
@@ -143,25 +146,37 @@ const HUNTER_TEMPLATE: ClassTemplate = {
   guildMax: GUILD_MAX,
 };
 
-// FROZEN Vanguard (Warrior Department) structure: Class 30% + Guild 70%.
-// No internal sub-weighting of the three Class dimensions has been frozen,
-// so the manager gives ONE Class Performance star rating judged across them.
+// VANGUARD PERFORMANCE SYSTEM V1 — FROZEN V1 (Warrior Department).
+// Monthly Performance = 70% Guild + 30% Class. Immutable: any change must be
+// labelled "V2 Proposal" and must not silently modify V1.
+// Class direction formulas are NOT YET FROZEN — nothing is calculated for
+// them and Vanguard reviews cannot be submitted until they are.
 const VANGUARD_TEMPLATE: ClassTemplate = {
-  id: "vanguard_review_v1",
+  id: "vanguard_performance_v1",
   classKey: "tanker",
   className: "Vanguard",
   classMetric: "rating",
-  metricLabel: "Reliability · Attendance · Work Compliance",
-  inputLabel: "Class Performance rating",
+  metricLabel: "3 directions × 10%",
+  inputLabel: "Class Performance",
   monthlyTarget: 0,
   targetNote: "",
   classMax: 30,
   guildMax: 70,
   classDimensions: [
-    { label: "Reliability", description: "Dependable execution of assigned duties." },
-    { label: "Attendance", description: "Punctuality and presence as scheduled." },
-    { label: "Work Compliance", description: "Following procedures, standards and instructions." },
+    { label: "Attendance & Reliability — 10%", description: "Calculation not yet frozen." },
+    { label: "Work Compliance — 10%", description: "Calculation not yet frozen." },
+    { label: "Reliability & Execution — 10%", description: "Calculation not yet frozen." },
   ],
+  behaviourLabels: { teamwork: "Teamwork / Communication" },
+  starScale: {
+    0: "Exceptional case — no participation, no completion, or no applicable evidence.",
+    1: "1 ★ — Critical. Evidence suggested.",
+    2: "2 ★ — Developing. Evidence suggested.",
+    3: "3 ★ — Certified / meets standard.",
+    4: "4 ★ — Above Standard.",
+    5: "5 ★ — Exceptional. Evidence suggested.",
+  },
+  gradeLabels: { D: "Delta" },
 };
 
 const WARRIOR_TEMPLATE: ClassTemplate = {
@@ -386,7 +401,10 @@ function MonthlyReviewPage() {
   const behaviourMax = round1(guildMax / BEHAVIOURS.length);
   const salesReady =
     (!hasSalesMetric || salesAmount > 0) && (!hasRatingMetric || classStars != null);
-  const canSubmit = Boolean(staffId) && !!template && salesReady && allRated;
+  // Vanguard V1: Class formulas not yet frozen → submission blocked (no invented scores).
+  const classFormulaPending = hasRatingMetric;
+  const canSubmit =
+    Boolean(staffId) && !!template && !classFormulaPending && salesReady && allRated;
 
   async function handleSubmit() {
     if (!canSubmit || !template || saving) return;
@@ -589,9 +607,9 @@ function MonthlyReviewPage() {
                   {hasRatingMetric && template.classDimensions ? (
                     <>
                       <p className="text-xs text-muted-foreground">
-                        Judge the {template.className}'s class execution this month across
-                        the three established dimensions, then give one star rating. The
-                        system converts it to points.
+                        Vanguard Performance System V1 (frozen): three Class directions,
+                        10% each. Their calculation formulas are not yet frozen, so no
+                        Class score is calculated and this review cannot be submitted yet.
                       </p>
                       <ul className="mt-3 grid gap-2 sm:grid-cols-3">
                         {template.classDimensions.map((d) => (
@@ -603,19 +621,10 @@ function MonthlyReviewPage() {
                           </li>
                         ))}
                       </ul>
-                      <div className="mt-4">
-                        <BehaviourCard
-                          behaviour={{
-                            key: "professionalism",
-                            label: template.inputLabel,
-                            group: "Internal",
-                            description: template.metricLabel,
-                          }}
-                          max={classMax}
-                          stars={classStars}
-                          onSelect={setClassStars}
-                        />
-                      </div>
+                      <p className="mt-3 text-[11px] italic text-muted-foreground">
+                        Full Attendance is an Achievement / Recognition item, not a Performance
+                        score addition.
+                      </p>
                     </>
                   ) : (
                   <>
@@ -686,7 +695,8 @@ function MonthlyReviewPage() {
                         {BEHAVIOURS.filter((b) => b.group === group).map((b) => (
                           <BehaviourCard
                             key={b.key}
-                            behaviour={b}
+                            behaviour={{ ...b, label: template.behaviourLabels?.[b.key] ?? b.label }}
+                            starScale={template.starScale}
                             max={behaviourMax}
                             stars={stars[b.key]}
                             onSelect={(v) => setStars((s) => ({ ...s, [b.key]: v }))}
@@ -738,8 +748,8 @@ function MonthlyReviewPage() {
                         ? "Ready to submit. The system calculates everything automatically."
                         : hasSalesMetric && !salesReady
                         ? `Enter this month's ${template.metricLabel.toLowerCase()} figure to continue.`
-                        : hasRatingMetric && classStars == null
-                        ? "Give the Class Performance star rating to continue."
+                        : classFormulaPending
+                        ? "Submission unavailable — Vanguard Class Performance formulas are not yet frozen (V1)."
                         : "Give a star rating to all four behaviour dimensions."}
                     </div>
                     <div className="flex items-center gap-2">
@@ -782,9 +792,11 @@ function BehaviourCard({
   max,
   stars,
   onSelect,
+  starScale,
 }: {
   behaviour: Behaviour;
   max: number;
+  starScale?: Record<number, string>;
   stars: number | null;
   onSelect: (v: number) => void;
 }) {
@@ -858,7 +870,7 @@ function BehaviourCard({
       <p className="mt-3 text-[11px] italic text-muted-foreground">
         {stars == null
           ? "Select the star rating that matches the behaviour actually demonstrated this month."
-          : STAR_MEANING[stars]}
+          : (starScale ?? STAR_MEANING)[stars]}
       </p>
     </article>
   );
