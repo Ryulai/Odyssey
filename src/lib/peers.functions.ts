@@ -30,11 +30,6 @@ export type PeerRow = {
   is_me: boolean;
 };
 
-export type PeerScope =
-  | { kind: "class"; label: string }
-  | { kind: "department"; label: string }
-  | { kind: "organization"; label: string };
-
 export type TabItem = {
   key: string;
   label: string;
@@ -142,7 +137,7 @@ export const getPeerInsights = createServerFn({ method: "GET" })
     }
     for (const r of (identAll.data ?? [])
       .slice()
-      .sort((a: any, b: any) => (a.position ?? 0) - (b.position ?? 0))) {
+      .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))) {
       if (!r.is_primary) continue;
       const d = toDepartmentKey(r.class_key);
       if (d) deptByStaff.set(r.staff_id, d);
@@ -245,12 +240,13 @@ export const getPeerInsights = createServerFn({ method: "GET" })
     const allLocIds = Array.from(
       new Set([...locationIds, ...(baseMe?.location_id ? [baseMe.location_id] : [])]),
     );
-    const locRes = allLocIds.length
-      ? await supabaseAdmin.from("locations").select("id, name").in("id", allLocIds)
-      : ({ data: [], error: null } as any);
-    if ((locRes as any).error) throw new Error((locRes as any).error.message);
+    const locRes: { data: Array<{ id: string; name: string }> | null; error: { message: string } | null } =
+      allLocIds.length
+        ? await supabaseAdmin.from("locations").select("id, name").in("id", allLocIds)
+        : { data: [], error: null };
+    if (locRes.error) throw new Error(locRes.error.message);
     const locMap = new Map<string, string>();
-    for (const l of (locRes as any).data ?? []) locMap.set(l.id, l.name);
+    for (const l of locRes.data ?? []) locMap.set(l.id, l.name);
 
     const me = baseMe
       ? {
@@ -287,10 +283,13 @@ export const getPeerInsights = createServerFn({ method: "GET" })
         .eq("month", previousMonth),
       supabaseAdmin.from("achievement_records").select("staff_id").in("staff_id", peerIds),
     ]);
-    for (const r of [evalsRes, prevEvalsRes, achRes] as any[])
+    for (const r of [evalsRes, prevEvalsRes, achRes])
       if (r.error) throw new Error(r.error.message);
 
-    const evalMap = new Map<string, any>();
+    const evalMap = new Map<
+      string,
+      { staff_id: string; composite_score: number | null; grade: string | null }
+    >();
     for (const e of evalsRes.data ?? []) evalMap.set(e.staff_id, e);
     const prevMap = new Map<string, number>();
     for (const e of prevEvalsRes.data ?? [])
