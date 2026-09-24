@@ -306,7 +306,7 @@ function RankingSection({
                 </div>
               </div>
               <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 text-[11px]">
-                <Trend row={row} year={year} month={month} />
+                <Trend row={row} />
                 <span className="text-muted-foreground">{row.achievements_count} achievements</span>
               </div>
             </article>
