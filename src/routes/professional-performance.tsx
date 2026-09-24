@@ -644,8 +644,6 @@ function MonthlyReviewPage() {
                       <p className="mt-2 text-xs text-muted-foreground">
                         Class Performance: {classValues.reduce((a, v) => a + v, 0)} / 30
                       </p>
-                      <ul className="hidden">
-                      </ul>
                       <p className="mt-3 text-[11px] italic text-muted-foreground">
                         Full Attendance is an Achievement / Recognition item, not a Performance
                         score addition.
