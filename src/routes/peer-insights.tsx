@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AuthGate } from "@/components/auth-gate";
+import { Button } from "@/components/ui/button";
 import { getPeerInsights, type PeerRow } from "@/lib/peers.functions";
 import { rankLabel } from "@/lib/rpg";
 import { AUTHORITY_LABELS, departmentLabel, odysseyClassLabel } from "@/lib/taxonomy";
@@ -9,288 +10,330 @@ import { AUTHORITY_LABELS, departmentLabel, odysseyClassLabel } from "@/lib/taxo
 export const Route = createFileRoute("/peer-insights")({
   head: () => ({
     meta: [
-      { title: "Peer Insights — The Odyssey Guide" },
-      { name: "description", content: "See how Hunters of your own class are performing this month by Overall Score and Overall Grade." },
-      { property: "og:title", content: "Peer Insights — The Odyssey Guide" },
-      { property: "og:description", content: "A clean, overall-only view of peer performance for the current month." },
+      { title: "Peer Insights / Guild Ranking — The Odyssey Guide" },
+      {
+        name: "description",
+        content:
+          "Monthly guild rankings with Performance Score, Grade, Trend, Department, Class, and achievements.",
+      },
+      { property: "og:title", content: "Peer Insights / Guild Ranking — The Odyssey Guide" },
+      {
+        property: "og:description",
+        content:
+          "See monthly Performance ranking, Grade, and Trend within authorized Odyssey groups.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: () => <AuthGate><PeerInsights /></AuthGate>,
+  component: () => (
+    <AuthGate>
+      <PeerInsights />
+    </AuthGate>
+  ),
 });
 
-function monthLabel(iso: string) {
-  const d = new Date(iso + "T00:00:00Z");
-  return d.toLocaleDateString(undefined, { month: "long", year: "numeric", timeZone: "UTC" });
+const MONTH_NAMES = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+function previousMonthLabel(year: number, month: number) {
+  return new Date(Date.UTC(year, month - 2, 1)).toLocaleDateString(undefined, {
+    month: "short",
+    timeZone: "UTC",
+  });
 }
 
-function TrendGlyph({ trend }: { trend: PeerRow["trend"] }) {
-  if (trend === "up")   return <span className="text-emerald-300">▲</span>;
-  if (trend === "down") return <span className="text-rose-300">▼</span>;
-  if (trend === "new")  return <span className="text-muted-foreground">•</span>;
-  return <span className="text-muted-foreground">–</span>;
+function Trend({ row, year, month }: { row: PeerRow; year: number; month: number }) {
+  if (row.overall === null) return <span className="text-muted-foreground">— No review</span>;
+  if (row.prev_overall === null)
+    return <span className="text-muted-foreground">→ No prior review</span>;
+  const glyph = row.trend === "up" ? "↑" : row.trend === "down" ? "↓" : "→";
+  const tone =
+    row.trend === "up"
+      ? "text-emerald-300"
+      : row.trend === "down"
+        ? "text-rose-300"
+        : "text-muted-foreground";
+  const delta = row.trend_delta ?? 0;
+  return (
+    <span className={tone}>
+      {glyph} {delta > 0 ? "+" : ""}
+      {delta.toFixed(1)} vs {previousMonthLabel(year, month)}
+    </span>
+  );
 }
 
 function GradePill({ grade }: { grade: string | null }) {
-  const map: Record<string, string> = {
+  const tones: Record<string, string> = {
     A: "border-emerald-400/50 bg-emerald-400/10 text-emerald-200",
     B: "border-sky-400/50 bg-sky-400/10 text-sky-200",
     C: "border-amber-400/50 bg-amber-400/10 text-amber-200",
     D: "border-rose-400/50 bg-rose-400/10 text-rose-200",
   };
-  const cls = grade ? map[grade] ?? "border-border text-muted-foreground" : "border-border text-muted-foreground";
   return (
-    <span className={`inline-flex h-7 w-7 items-center justify-center rounded-full border font-display text-[12px] ${cls}`}>
+    <span
+      className={`inline-flex h-9 w-9 items-center justify-center rounded-full border font-display text-sm ${grade ? (tones[grade] ?? "border-border text-muted-foreground") : "border-border text-muted-foreground"}`}
+    >
       {grade ?? "—"}
     </span>
   );
 }
 
-function TabRow({
-  tabs,
-  active,
-  onSelect,
-  onLocked,
-}: {
-  tabs: { key: string; label: string; unlocked: boolean }[];
-  active: string | null;
-  onSelect: (key: string) => void;
-  onLocked: (label: string) => void;
-}) {
-  if (!tabs.length) return null;
+function PositionBadge({ position }: { position: number }) {
+  const tone =
+    position === 1
+      ? "border-gold bg-gold/20 text-gold"
+      : position === 2
+        ? "border-foreground/40 bg-foreground/5 text-foreground"
+        : position === 3
+          ? "border-amber-700/70 bg-amber-700/15 text-amber-300"
+          : "border-border text-muted-foreground";
   return (
-    <div className="mb-3 flex flex-wrap gap-2">
-      {tabs.map((t) =>
-        t.unlocked ? (
-          <button
-            key={t.key}
-            type="button"
-            onClick={() => onSelect(t.key)}
-            className={`rounded-md border px-3 py-1.5 text-[11px] uppercase tracking-widest transition ${
-              t.key === active
-                ? "border-gold/60 bg-gold/10 text-gold"
-                : "border-border bg-ink/30 text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {t.label}
-          </button>
-        ) : (
-          <button
-            key={t.key}
-            type="button"
-            aria-disabled="true"
-            onClick={() => onLocked(t.label)}
-            title="Locked"
-            className="cursor-not-allowed rounded-md border border-border/60 bg-ink/20 px-3 py-1.5 text-[11px] uppercase tracking-widest text-muted-foreground/60"
-          >
-            🔒 {t.label}
-          </button>
-        ),
-      )}
-    </div>
+    <span
+      className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md border font-display text-xs ${tone}`}
+    >
+      #{position}
+    </span>
   );
 }
 
 function PeerInsights() {
-  // `null` = let the server decide (own department/class, or the Director's default).
-  const [selectedDept, setSelectedDept] = useState<string | null>(null);
-  const [selectedClass, setSelectedClass] = useState<string | null>(null);
-  const [lockedNotice, setLockedNotice] = useState<string | null>(null);
-  const [year, setYear] = useState<number>(new Date().getUTCFullYear());
-  const [month, setMonth] = useState<number>(new Date().getUTCMonth() + 1);
-
-  const { data, isLoading } = useQuery({
-    queryKey: ["peer-insights", selectedDept, selectedClass, year, month],
-    queryFn: () => getPeerInsights({ data: { department: selectedDept, class_key: selectedClass, year, month } }),
+  const [group, setGroup] = useState<string | null>(null);
+  const [classKey, setClassKey] = useState<string | null>(null);
+  const [year, setYear] = useState(new Date().getUTCFullYear());
+  const [month, setMonth] = useState(new Date().getUTCMonth() + 1);
+  const query = useQuery({
+    queryKey: ["peer-insights", group, classKey, year, month],
+    queryFn: () =>
+      getPeerInsights({
+        data: { group, class_key: classKey === "all" ? null : classKey, year, month },
+      }),
   });
-
-  const rows = useMemo(() => {
-    const list = [...(data?.peers ?? [])];
-    list.sort((x, y) => y.overall - x.overall);
-    return list;
-  }, [data]);
-
-  const activeDept = data?.active_department ?? selectedDept;
-  const activeClass = data?.active_class ?? selectedClass;
+  const data = query.data;
 
   return (
-    <div className="min-h-screen text-foreground">
+    <main className="min-h-screen text-foreground">
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
         <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <div className="font-display text-[10px] uppercase tracking-[0.3em] text-gold">Peer Insights</div>
-            <h1 className="mt-1 font-display text-2xl text-foreground">
-              {data?.me?.authority === "director" ? "Organization overview" : "Your class this month"}
-            </h1>
+            <div className="font-display text-[10px] uppercase tracking-[0.3em] text-gold">
+              Peer Insights
+            </div>
+            <h1 className="mt-1 font-display text-2xl">Peer Insights / Guild Ranking</h1>
+            <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+              Rank, Score, Grade, and month-to-month Trend together for the selected month.
+            </p>
           </div>
-          <div className="flex flex-col items-end gap-1 text-right">
-            <Link to="/" className="text-xs uppercase tracking-widest text-gold hover:underline">← Home</Link>
-            {data && (
-              <div className="text-[11px] uppercase tracking-widest text-muted-foreground">
-                Scope: <span className="text-foreground">{data.scope.label}</span>
-                <span className="px-2">·</span>
-                {monthLabel(data.month ?? new Date().toISOString().slice(0, 10))}
-              </div>
-            )}
-            {data?.me && (
-              <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                {departmentLabel(data.me.department)} · {odysseyClassLabel(data.me.class_key) || "—"}
-                <span className="px-2">·</span>
-                {AUTHORITY_LABELS[data.me.authority]}
-                <span className="px-2">·</span>
-                Fleet: <span className="text-foreground">{data.me.location_name ?? "—"}</span>
-                <span className="px-2">·</span>
-                Rank: <span className="text-foreground">{rankLabel(data.me.rank_key)}</span>
-              </div>
-            )}
-          </div>
+          <Link to="/" className="text-xs uppercase tracking-widest text-gold hover:underline">
+            ← Home
+          </Link>
         </header>
 
-        {/* Departments — Warrior | Mage | Priest | Ranger. Locked tabs never fetch. */}
-        <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Department</div>
-        <TabRow
-          tabs={data?.departments ?? []}
-          active={activeDept}
-          onSelect={(key) => { setLockedNotice(null); setSelectedDept(key); setSelectedClass(null); }}
-          onLocked={(label) => setLockedNotice(`${label} department — locked. Peer Insights is limited to your own department.`)}
-        />
-
-        {/* Classes inside the selected department. */}
-        {(data?.classes?.length ?? 0) > 0 && (
-          <>
-            <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Class</div>
-            <TabRow
-              tabs={data?.classes ?? []}
-              active={activeClass}
-              onSelect={(key) => { setLockedNotice(null); setSelectedClass(key); }}
-              onLocked={(label) => setLockedNotice(`${label} — locked. Peer Insights is available for your own class only.`)}
-            />
-          </>
-        )}
-
-        <div className="mb-4 flex flex-wrap items-center gap-3">
-          <label className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Year</label>
-          <select value={year} onChange={(e) => setYear(Number(e.target.value))} className="rounded-md border border-border bg-ink/40 px-3 py-1.5 text-sm">
-            {[0, 1, 2].map((o) => new Date().getUTCFullYear() - o).map((y) => <option key={y} value={y}>{y}</option>)}
-          </select>
-          <label className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Month</label>
-          <select value={month} onChange={(e) => setMonth(Number(e.target.value))} className="rounded-md border border-border bg-ink/40 px-3 py-1.5 text-sm">
-            {MONTH_NAMES.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
-          </select>
-          <span className="text-[11px] text-muted-foreground">Showing {MONTH_NAMES[month - 1]} {year} Score and Grade</span>
-        </div>
-
-        {lockedNotice && (
-          <div className="mb-4 rounded-md border border-border bg-ink/30 px-4 py-2 text-[12px] text-muted-foreground">
-            {lockedNotice}
+        {data?.me && (
+          <div className="mb-4 text-[10px] uppercase tracking-widest text-muted-foreground">
+            {departmentLabel(data.me.department)} · {odysseyClassLabel(data.me.class_key) || "—"} ·{" "}
+            {AUTHORITY_LABELS[data.me.authority]} · Rank:{" "}
+            <span className="text-foreground">{rankLabel(data.me.rank_key)}</span>
           </div>
         )}
 
-
-        {isLoading ? (
-          <div className="rounded-md border border-border bg-ink/30 p-12 text-center text-xs uppercase tracking-widest text-muted-foreground">
-            Gathering the fleet…
+        {(data?.groups.length ?? 0) > 1 && (
+          <div
+            className="mb-4 flex flex-wrap gap-1 rounded-md border border-border p-1"
+            aria-label="Ranking group"
+          >
+            {data?.groups.map((item) => (
+              <Button
+                key={item.key}
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setGroup(item.key);
+                  setClassKey(null);
+                }}
+                className={`font-display text-[10px] uppercase tracking-[0.2em] ${data.active_group === item.key ? "bg-gold/15 text-gold" : "text-muted-foreground"}`}
+              >
+                {item.label}
+              </Button>
+            ))}
           </div>
-        ) : data?.notice ? (
-          <div className="rounded-md border border-gold/40 bg-ink/30 p-8 text-center text-sm text-muted-foreground">
-            {data.notice}
-          </div>
-        ) : (
-          <>
-            <PeerTable rows={rows} />
-            <CardsMobile rows={rows} />
-            <p className="mt-5 text-[11px] leading-relaxed text-muted-foreground">
-              Overall Score and Overall Grade (A / B / C / D) only. Detailed review sections, manager
-              notes, salary and private comments are never shown here.
-            </p>
-          </>
         )}
-      </div>
-    </div>
-  );
-}
 
-
-function PeerTable({ rows }: { rows: PeerRow[] }) {
-  return (
-    <div className="hidden overflow-hidden rounded-md border border-border bg-ink/30 md:block">
-      <table className="w-full border-collapse text-sm">
-        <thead className="bg-ink/60 text-[10px] uppercase tracking-widest text-muted-foreground">
-          <tr>
-            <th className="px-4 py-3 text-left">#</th>
-            <th className="px-4 py-3 text-left">Hunter</th>
-            <th className="px-4 py-3 text-left">Rank</th>
-            <th className="px-4 py-3 text-left">Fleet</th>
-            <th className="px-4 py-3 text-right text-gold">Overall Score</th>
-            <th className="px-4 py-3 text-center">Overall Grade</th>
-            <th className="px-4 py-3 text-center">Trend</th>
-            <th className="px-4 py-3 text-right">Achievements</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r, i) => (
-            <tr
-              key={r.staff_id}
-              className={`border-t border-border transition ${r.is_me ? "bg-gold/10 ring-1 ring-inset ring-gold/40" : "hover:bg-ink/40"}`}
+        <div className="mb-4 flex flex-wrap items-end gap-3">
+          <label className="grid gap-1 text-[10px] uppercase tracking-widest text-muted-foreground">
+            Year
+            <select
+              value={year}
+              onChange={(event) => setYear(Number(event.target.value))}
+              className="rounded-md border border-border bg-ink/40 px-3 py-2 text-sm text-foreground"
             >
-              <td className="px-4 py-3 text-muted-foreground">{i + 1}</td>
-              <td className="px-4 py-3 font-display uppercase tracking-wider">
-                {r.name}
-                {r.is_me && <span className="ml-2 rounded border border-gold/60 px-1.5 py-0.5 text-[9px] uppercase tracking-widest text-gold">You</span>}
-              </td>
-              <td className="px-4 py-3 text-muted-foreground">{rankLabel(r.rank_key)}</td>
-              <td className="px-4 py-3 text-muted-foreground">{r.location_name ?? "—"}</td>
-              <td className="px-4 py-3 text-right font-display text-base">{r.grade ? r.overall.toFixed(1) : "—"}</td>
-              <td className="px-4 py-3 text-center"><GradePill grade={r.grade} /></td>
-              <td className="px-4 py-3 text-center"><TrendGlyph trend={r.trend} /></td>
-              <td className="px-4 py-3 text-right text-muted-foreground">{r.achievements_count}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-function CardsMobile({ rows }: { rows: PeerRow[] }) {
-  return (
-    <div className="grid gap-3 md:hidden">
-      {rows.map((r, i) => (
-        <div
-          key={r.staff_id}
-          className={`rounded-md border p-4 ${r.is_me ? "border-gold/60 bg-gold/10" : "border-border bg-ink/30"}`}
-        >
-          <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">#{i + 1}</span>
-                <span className="truncate font-display uppercase tracking-wider">{r.name}</span>
-                {r.is_me && <span className="rounded border border-gold/60 px-1.5 py-0.5 text-[9px] uppercase tracking-widest text-gold">You</span>}
-              </div>
-              <div className="mt-0.5 text-[11px] text-muted-foreground">
-                {rankLabel(r.rank_key)} · {r.location_name ?? "—"}
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="text-right">
-                <div className="font-display text-lg">{r.grade ? r.overall.toFixed(1) : "—"}</div>
-                <div className="text-[9px] uppercase tracking-widest text-muted-foreground">Overall Score</div>
-              </div>
-              <div className="text-center">
-                <GradePill grade={r.grade} />
-                <div className="mt-1 text-[9px] uppercase tracking-widest text-muted-foreground">Grade</div>
-              </div>
-            </div>
-          </div>
-          <div className="mt-3 flex items-center justify-between border-t border-border pt-2 text-[11px] text-muted-foreground">
-            <span>Trend <TrendGlyph trend={r.trend} /></span>
-            <span>{r.achievements_count} achievements</span>
+              {[0, 1, 2]
+                .map((offset) => new Date().getUTCFullYear() - offset)
+                .map((value) => (
+                  <option key={value} value={value}>
+                    {value}
+                  </option>
+                ))}
+            </select>
+          </label>
+          <label className="grid gap-1 text-[10px] uppercase tracking-widest text-muted-foreground">
+            Month
+            <select
+              value={month}
+              onChange={(event) => setMonth(Number(event.target.value))}
+              className="rounded-md border border-border bg-ink/40 px-3 py-2 text-sm text-foreground"
+            >
+              {MONTH_NAMES.map((name, index) => (
+                <option key={name} value={index + 1}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </label>
+          {(data?.classes.length ?? 0) > 0 && (
+            <label className="grid gap-1 text-[10px] uppercase tracking-widest text-muted-foreground">
+              Class
+              <select
+                value={classKey ?? data?.active_class ?? "all"}
+                onChange={(event) => setClassKey(event.target.value)}
+                className="rounded-md border border-border bg-ink/40 px-3 py-2 text-sm text-foreground"
+              >
+                {data?.classes
+                  .filter((item) => item.unlocked)
+                  .map((item) => (
+                    <option key={item.key} value={item.key}>
+                      {item.label}
+                    </option>
+                  ))}
+              </select>
+            </label>
+          )}
+          <div className="pb-2 text-[11px] text-muted-foreground">
+            {MONTH_NAMES[month - 1]} {year} · compared with {previousMonthLabel(year, month)}
           </div>
         </div>
-      ))}
-    </div>
+
+        {query.isLoading ? (
+          <Message>Gathering the guild ranking…</Message>
+        ) : query.error ? (
+          <Message>Could not load Peer Insights. Please try again.</Message>
+        ) : data?.notice ? (
+          <Message>{data.notice}</Message>
+        ) : (
+          <div className="space-y-7">
+            {data?.sections.map((section) => (
+              <RankingSection
+                key={section.key}
+                label={section.label}
+                rows={section.peers}
+                year={year}
+                month={month}
+              />
+            ))}
+          </div>
+        )}
+
+        <p className="mt-6 text-[11px] leading-relaxed text-muted-foreground">
+          A / B / C / D is the overall Performance Review Grade, not a Behaviour section. Private
+          notes, detailed review sections, salary, and comments are never shown. Every group ranks
+          separately.
+        </p>
+      </div>
+    </main>
   );
 }
 
-const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+function RankingSection({
+  label,
+  rows,
+  year,
+  month,
+}: {
+  label: string;
+  rows: PeerRow[];
+  year: number;
+  month: number;
+}) {
+  return (
+    <section>
+      <div className="mb-3 flex items-center justify-between border-b border-border pb-2">
+        <h2 className="font-display text-sm uppercase tracking-[0.25em] text-gold">
+          {label} Ranking
+        </h2>
+        <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
+          {rows.length} eligible
+        </span>
+      </div>
+      {rows.length === 0 ? (
+        <Message>No eligible people in this group.</Message>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {rows.map((row) => (
+            <article
+              key={row.staff_id}
+              className={`rounded-md border p-4 ${row.is_me ? "border-gold/60 bg-gold/10" : "border-border bg-ink/30"}`}
+            >
+              <div className="flex items-start gap-3">
+                <PositionBadge position={row.position} />
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="truncate font-display uppercase tracking-wider">{row.name}</h3>
+                    {row.is_me && (
+                      <span className="rounded border border-gold/60 px-1.5 py-0.5 text-[9px] uppercase tracking-widest text-gold">
+                        You
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-1 text-[11px] text-muted-foreground">
+                    {departmentLabel(row.department)} · {row.class_label ?? "—"}
+                  </div>
+                </div>
+                <div className="flex shrink-0 items-center gap-3">
+                  <div className="text-right">
+                    <div className="font-display text-xl">
+                      {row.overall === null ? "—" : row.overall.toFixed(1)}
+                    </div>
+                    <div className="text-[9px] uppercase tracking-widest text-muted-foreground">
+                      Score
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <GradePill grade={row.grade} />
+                    <div className="mt-1 text-[9px] uppercase tracking-widest text-muted-foreground">
+                      Grade
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 text-[11px]">
+                <Trend row={row} year={year} month={month} />
+                <span className="text-muted-foreground">{row.achievements_count} achievements</span>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function Message({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="rounded-md border border-border bg-ink/30 p-10 text-center text-sm text-muted-foreground">
+      {children}
+    </div>
+  );
+}
