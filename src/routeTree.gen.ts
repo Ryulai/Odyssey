@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TeamPreviewRouteImport } from './routes/team-preview'
+import { Route as TeamGradesRouteImport } from './routes/team-grades'
 import { Route as SystemRouteImport } from './routes/system'
 import { Route as StatisticsRouteImport } from './routes/statistics'
 import { Route as ShowcaseRouteImport } from './routes/showcase'
@@ -76,6 +77,11 @@ import { Route as CodexCategorySlugRouteImport } from './routes/codex.$category.
 const TeamPreviewRoute = TeamPreviewRouteImport.update({
   id: '/team-preview',
   path: '/team-preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeamGradesRoute = TeamGradesRouteImport.update({
+  id: '/team-grades',
+  path: '/team-grades',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SystemRoute = SystemRouteImport.update({
@@ -420,6 +426,7 @@ export interface FileRoutesByFullPath {
   '/showcase': typeof ShowcaseRouteWithChildren
   '/statistics': typeof StatisticsRoute
   '/system': typeof SystemRouteWithChildren
+  '/team-grades': typeof TeamGradesRoute
   '/team-preview': typeof TeamPreviewRoute
   '/codex/$category': typeof CodexCategoryRouteWithChildren
   '/collections/backgrounds': typeof CollectionsBackgroundsRoute
@@ -482,6 +489,7 @@ export interface FileRoutesByTo {
   '/sales-review': typeof SalesReviewRoute
   '/secondary-class': typeof SecondaryClassRoute
   '/statistics': typeof StatisticsRoute
+  '/team-grades': typeof TeamGradesRoute
   '/team-preview': typeof TeamPreviewRoute
   '/collections/backgrounds': typeof CollectionsBackgroundsRoute
   '/collections/cosmetics': typeof CollectionsCosmeticsRoute
@@ -547,6 +555,7 @@ export interface FileRoutesById {
   '/showcase': typeof ShowcaseRouteWithChildren
   '/statistics': typeof StatisticsRoute
   '/system': typeof SystemRouteWithChildren
+  '/team-grades': typeof TeamGradesRoute
   '/team-preview': typeof TeamPreviewRoute
   '/codex/$category': typeof CodexCategoryRouteWithChildren
   '/collections/backgrounds': typeof CollectionsBackgroundsRoute
@@ -614,6 +623,7 @@ export interface FileRouteTypes {
     | '/showcase'
     | '/statistics'
     | '/system'
+    | '/team-grades'
     | '/team-preview'
     | '/codex/$category'
     | '/collections/backgrounds'
@@ -676,6 +686,7 @@ export interface FileRouteTypes {
     | '/sales-review'
     | '/secondary-class'
     | '/statistics'
+    | '/team-grades'
     | '/team-preview'
     | '/collections/backgrounds'
     | '/collections/cosmetics'
@@ -740,6 +751,7 @@ export interface FileRouteTypes {
     | '/showcase'
     | '/statistics'
     | '/system'
+    | '/team-grades'
     | '/team-preview'
     | '/codex/$category'
     | '/collections/backgrounds'
@@ -806,6 +818,7 @@ export interface RootRouteChildren {
   ShowcaseRoute: typeof ShowcaseRouteWithChildren
   StatisticsRoute: typeof StatisticsRoute
   SystemRoute: typeof SystemRouteWithChildren
+  TeamGradesRoute: typeof TeamGradesRoute
   TeamPreviewRoute: typeof TeamPreviewRoute
   CodexCategoryRoute: typeof CodexCategoryRouteWithChildren
   CodexIndexRoute: typeof CodexIndexRoute
@@ -818,6 +831,13 @@ declare module '@tanstack/react-router' {
       path: '/team-preview'
       fullPath: '/team-preview'
       preLoaderRoute: typeof TeamPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/team-grades': {
+      id: '/team-grades'
+      path: '/team-grades'
+      fullPath: '/team-grades'
+      preLoaderRoute: typeof TeamGradesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/system': {
@@ -1387,6 +1407,7 @@ const rootRouteChildren: RootRouteChildren = {
   ShowcaseRoute: ShowcaseRouteWithChildren,
   StatisticsRoute: StatisticsRoute,
   SystemRoute: SystemRouteWithChildren,
+  TeamGradesRoute: TeamGradesRoute,
   TeamPreviewRoute: TeamPreviewRoute,
   CodexCategoryRoute: CodexCategoryRouteWithChildren,
   CodexIndexRoute: CodexIndexRoute,

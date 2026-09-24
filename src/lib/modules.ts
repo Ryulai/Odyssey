@@ -72,6 +72,7 @@ export const MODULE_GROUPS: ModuleGroup[] = [
     entries: [
       { key: "fleet",        label: "Fleet",               to: "/fleet",        status: "live",        description: "Your ship, your crew, and the vessels that sail beside you." },
       { key: "team-preview", label: "Team Review Preview", to: "/team-preview", status: "live",        description: "For accounts with direct reports: read-only preview of your team's achievements and performance reviews." },
+      { key: "team-grades",  label: "Team Grades",         to: "/team-grades",  status: "live",        description: "Managers and Directors: monthly Grades by Department and Manager group, each ranked separately." },
 
       { key: "registry",  label: "Guild Registry", to: "/guild/registry",  status: "coming-soon", description: "The full roll of members across every ship in the guild." },
       { key: "economy",   label: "Economy",        to: "/guild/economy",   status: "coming-soon", description: "Sales, revenue, and the ledgers that keep the fleet sailing." },
