@@ -362,51 +362,100 @@ function TeamOverview() {
 
   if (isLoading) return <SkeletonBox>Evaluating…</SkeletonBox>;
 
+  const statusBadge = (ev: any) =>
+    ev?.eligible ? (
+      <span className="inline-block whitespace-nowrap rounded border border-emerald-400/50 bg-emerald-400/10 px-2 py-0.5 font-display text-[10px] uppercase tracking-widest text-emerald-300">Eligible</span>
+    ) : ev?.next_rank_key ? (
+      <span className="inline-block whitespace-nowrap rounded border border-border px-2 py-0.5 font-display text-[10px] uppercase tracking-widest text-muted-foreground">Building</span>
+    ) : (
+      <span className="inline-block whitespace-nowrap rounded border border-gold/40 px-2 py-0.5 font-display text-[10px] uppercase tracking-widest text-gold">Max</span>
+    );
+
+  const metric = (value: number | undefined, target: number | undefined | null) =>
+    `${value ?? 0}${target ? ` / ${target}` : ""}`;
+
   return (
     <section className="rounded-md border border-border bg-ink/30 p-3">
-      <table className="w-full text-sm">
-        <thead className="text-left text-[10px] uppercase tracking-widest text-muted-foreground">
-          <tr className="border-b border-border">
-            <th className="px-2 py-2">Hunter</th>
-            <th className="px-2 py-2">Current</th>
-            <th className="px-2 py-2">Next</th>
-            <th className="px-2 py-2 text-right">★</th>
-            <th className="px-2 py-2 text-right">A</th>
-            <th className="px-2 py-2 text-right">B</th>
-            <th className="px-2 py-2 text-right">Ach</th>
-            <th className="px-2 py-2 text-center">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.map(({ staff, evaluation }: any) => {
-            const ev = evaluation;
-            return (
-              <tr key={staff.id} className="border-b border-border/40">
-                <td className="px-2 py-2">
-                  <div>{staff.name}</div>
-                  <div className="text-[10px] text-muted-foreground">{staff.role}</div>
-                </td>
-                <td className="px-2 py-2 text-muted-foreground">{ev?.current_rank_name ?? "—"}</td>
-                <td className="px-2 py-2">{ev?.next_rank_name ?? "Max"}</td>
-                <td className="px-2 py-2 text-right">{ev?.total_stars ?? 0}{ev?.next_min_total_stars ? ` / ${ev.next_min_total_stars}` : ""}</td>
-                <td className="px-2 py-2 text-right">{ev?.a_grades ?? 0}{ev?.next_min_a_grades ? ` / ${ev.next_min_a_grades}` : ""}</td>
-                <td className="px-2 py-2 text-right">{ev?.b_grades ?? 0}{ev?.next_min_b_grades ? ` / ${ev.next_min_b_grades}` : ""}</td>
-                <td className="px-2 py-2 text-right">{ev?.unique_achievements ?? 0}{ev?.next_min_achievements ? ` / ${ev.next_min_achievements}` : ""}</td>
-                <td className="px-2 py-2 text-center">
-                  {ev?.eligible ? (
-                    <span className="rounded border border-emerald-400/50 bg-emerald-400/10 px-2 py-0.5 font-display text-[10px] uppercase tracking-widest text-emerald-300">Eligible</span>
-                  ) : ev?.next_rank_key ? (
-                    <span className="rounded border border-border px-2 py-0.5 font-display text-[10px] uppercase tracking-widest text-muted-foreground">Building</span>
-                  ) : (
-                    <span className="rounded border border-gold/40 px-2 py-0.5 font-display text-[10px] uppercase tracking-widest text-gold">Max</span>
-                  )}
-                </td>
-              </tr>
-            );
-          })}
-          {!data.length && <tr><td colSpan={8} className="py-6 text-center text-xs text-muted-foreground">No Hunters in the fleet yet.</td></tr>}
-        </tbody>
-      </table>
+      {/* Mobile: card layout */}
+      <div className="space-y-3 md:hidden">
+        {data.map(({ staff, evaluation }: any) => {
+          const ev = evaluation;
+          return (
+            <article key={staff.id} className="rounded-lg border border-border/60 bg-ink/40 p-3">
+              <header className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+                <div className="min-w-0">
+                  <div className="truncate text-sm">{staff.name}</div>
+                  <div className="truncate text-[10px] text-muted-foreground">{staff.role}</div>
+                </div>
+                <div className="shrink-0">{statusBadge(ev)}</div>
+              </header>
+              <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+                <div>
+                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Current</div>
+                  <div className="text-muted-foreground">{ev?.current_rank_name ?? "—"}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Next</div>
+                  <div>{ev?.next_rank_name ?? "Max"}</div>
+                </div>
+              </div>
+              <div className="mt-3 grid grid-cols-4 gap-2 text-xs">
+                {[
+                  ["★", metric(ev?.total_stars, ev?.next_min_total_stars)],
+                  ["A", metric(ev?.a_grades, ev?.next_min_a_grades)],
+                  ["B", metric(ev?.b_grades, ev?.next_min_b_grades)],
+                  ["Ach", metric(ev?.unique_achievements, ev?.next_min_achievements)],
+                ].map(([label, value]) => (
+                  <div key={label as string} className="rounded border border-border/50 px-2 py-1 text-center">
+                    <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
+                    <div className="whitespace-nowrap">{value}</div>
+                  </div>
+                ))}
+              </div>
+            </article>
+          );
+        })}
+        {!data.length && <div className="py-6 text-center text-xs text-muted-foreground">No Hunters in the fleet yet.</div>}
+      </div>
+
+      {/* Tablet & desktop: scrollable table with sticky Hunter column */}
+      <div className="-mx-3 hidden overflow-x-auto px-3 md:block">
+        <table className="w-full min-w-[720px] text-sm">
+          <thead className="text-left text-[10px] uppercase tracking-widest text-muted-foreground">
+            <tr className="border-b border-border">
+              <th className="sticky left-0 z-10 bg-ink/80 px-2 py-2 min-w-[150px] backdrop-blur">Hunter</th>
+              <th className="px-2 py-2 min-w-[110px]">Current</th>
+              <th className="px-2 py-2 min-w-[110px]">Next</th>
+              <th className="px-2 py-2 text-right min-w-[70px]">★</th>
+              <th className="px-2 py-2 text-right min-w-[70px]">A</th>
+              <th className="px-2 py-2 text-right min-w-[70px]">B</th>
+              <th className="px-2 py-2 text-right min-w-[70px]">Ach</th>
+              <th className="px-2 py-2 text-center min-w-[110px]">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map(({ staff, evaluation }: any) => {
+              const ev = evaluation;
+              return (
+                <tr key={staff.id} className="border-b border-border/40">
+                  <td className="sticky left-0 z-10 bg-ink/80 px-2 py-2 backdrop-blur">
+                    <div className="truncate">{staff.name}</div>
+                    <div className="truncate text-[10px] text-muted-foreground">{staff.role}</div>
+                  </td>
+                  <td className="px-2 py-2 text-muted-foreground">{ev?.current_rank_name ?? "—"}</td>
+                  <td className="px-2 py-2">{ev?.next_rank_name ?? "Max"}</td>
+                  <td className="whitespace-nowrap px-2 py-2 text-right">{metric(ev?.total_stars, ev?.next_min_total_stars)}</td>
+                  <td className="whitespace-nowrap px-2 py-2 text-right">{metric(ev?.a_grades, ev?.next_min_a_grades)}</td>
+                  <td className="whitespace-nowrap px-2 py-2 text-right">{metric(ev?.b_grades, ev?.next_min_b_grades)}</td>
+                  <td className="whitespace-nowrap px-2 py-2 text-right">{metric(ev?.unique_achievements, ev?.next_min_achievements)}</td>
+                  <td className="px-2 py-2 text-center">{statusBadge(ev)}</td>
+                </tr>
+              );
+            })}
+            {!data.length && <tr><td colSpan={8} className="py-6 text-center text-xs text-muted-foreground">No Hunters in the fleet yet.</td></tr>}
+          </tbody>
+        </table>
+      </div>
     </section>
   );
 }
