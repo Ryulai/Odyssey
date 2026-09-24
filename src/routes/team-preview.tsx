@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AuthGate } from "@/components/auth-gate";
-import { getMyTeamScope, getReportPreview } from "@/lib/team-preview.functions";
+import { getMyTeamScope, getReportPreview, type ReportPreview } from "@/lib/team-preview.functions";
 
 export const Route = createFileRoute("/team-preview")({
   head: () => ({
@@ -115,44 +115,7 @@ function ReportPanel({ staffId, tab }: { staffId: string; tab: "performance" | "
       </div>
 
       {tab === "performance" ? (
-        data.performance.length === 0 ? (
-          <div className="rounded-xl border border-border bg-ink/20 p-5">
-            <div className="font-display text-sm uppercase tracking-widest text-foreground">
-              Performance Review · No submitted review yet
-            </div>
-            <p className="mt-2 text-xs text-muted-foreground">
-              You have preview access to {data.staff.name}'s Performance Review, but no monthly review has been
-              submitted for this team member yet. Once a monthly review is submitted, the grade, Class and Guild
-              points, and the four behaviour dimensions appear here automatically.
-            </p>
-            <p className="mt-2 text-[10px] uppercase tracking-widest text-muted-foreground">
-              Read-only preparation view · nothing is calculated or approved here
-            </p>
-          </div>
-        ) : (
-
-          <div className="space-y-4">
-            {data.performance.map((m) => (
-              <div key={m.month} className="rounded-xl border border-border bg-ink/20 p-5">
-                <div className="flex items-baseline justify-between">
-                  <div className="font-display text-sm uppercase tracking-widest text-foreground">{m.label}</div>
-                  <div className="font-display text-2xl text-gold">{m.grade}</div>
-                </div>
-                <div className="mt-2 text-xs text-muted-foreground">
-                  Total {m.total}/100 · Class {m.class_points}/50 · Guild {m.guild_points}/50
-                </div>
-                <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                  {m.behaviours.map((b) => (
-                    <div key={b.key} className="flex items-center justify-between rounded-md border border-border/60 px-3 py-2 text-xs">
-                      <span className="text-muted-foreground">{b.name}</span>
-                      <span className="text-foreground">{Math.round(b.percent)}%</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        )
+        <PerformanceGradeHistory performance={data.performance} staffName={data.staff.name} />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           {data.achievements.map((a) => (
@@ -167,6 +130,125 @@ function ReportPanel({ staffId, tab }: { staffId: string; tab: "performance" | "
             </div>
           ))}
         </div>
+      )}
+    </div>
+  );
+}
+
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+const MONTHS_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+function PerformanceGradeHistory({
+  performance,
+  staffName,
+}: {
+  performance: ReportPreview["performance"];
+  staffName: string;
+}) {
+  // month -> Grade lookup, keyed by YYYY-MM (day-agnostic)
+  const byKey = new Map<string, string>();
+  for (const p of performance) byKey.set(p.month.slice(0, 7), p.grade);
+  const years = Array.from(new Set(performance.map((p) => p.month.slice(0, 4)))).sort((a, b) => b.localeCompare(a));
+
+  const [year, setYear] = useState<string>(years[0] ?? "");
+  const [monthIdx, setMonthIdx] = useState<number>(-1); // -1 = All Months
+
+  const gradeFor = (y: string, idx: number) => {
+    const mm = String(idx + 1).padStart(2, "0");
+    return byKey.get(`${y}-${mm}`) ?? null;
+  };
+
+  if (performance.length === 0) {
+    return (
+      <div className="rounded-xl border border-border bg-ink/20 p-5">
+        <div className="font-display text-sm uppercase tracking-widest text-foreground">
+          Performance Review · No submitted review yet
+        </div>
+        <p className="mt-2 text-xs text-muted-foreground">
+          You have preview access to {staffName}'s Performance Review, but no monthly review has been
+          submitted for this team member yet. Once a monthly review is submitted, the Grade (A · B · C · D) for
+          that month appears here automatically.
+        </p>
+        <p className="mt-2 text-[10px] uppercase tracking-widest text-muted-foreground">
+          Read-only preparation view · nothing is calculated or approved here
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-5">
+      <div className="rounded-md border border-gold/25 bg-gold/5 p-3 text-xs text-muted-foreground">
+        <span className="font-display uppercase tracking-widest text-gold">Grade</span> = the overall
+        Performance Review Grade (A · B · C · D), not the four Behaviour sections.
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <label className="text-[10px] uppercase tracking-widest text-muted-foreground">Year</label>
+        <select
+          value={year}
+          onChange={(e) => { setYear(e.target.value); setMonthIdx(-1); }}
+          className="rounded-md border border-border bg-ink/40 px-3 py-2 text-sm text-foreground"
+        >
+          {years.map((y) => (
+            <option key={y} value={y}>{y}</option>
+          ))}
+        </select>
+        <label className="text-[10px] uppercase tracking-widest text-muted-foreground">Month</label>
+        <select
+          value={monthIdx}
+          onChange={(e) => setMonthIdx(Number(e.target.value))}
+          className="rounded-md border border-border bg-ink/40 px-3 py-2 text-sm text-foreground"
+        >
+          <option value={-1}>All Months</option>
+          {MONTHS.map((m, i) => (
+            <option key={m} value={i}>{m}</option>
+          ))}
+        </select>
+      </div>
+
+      {monthIdx === -1 ? (
+        <div className="rounded-xl border border-border bg-ink/20 p-5">
+          <div className="mb-3 font-display text-sm uppercase tracking-widest text-foreground">
+            {year} · Grade History
+          </div>
+          <ul className="divide-y divide-border/60">
+            {MONTHS_SHORT.map((short, i) => {
+              const g = gradeFor(year, i);
+              return (
+                <li key={short} className="flex items-center justify-between py-2">
+                  <span className="text-sm text-muted-foreground">{MONTHS[i]}</span>
+                  <span className={`font-display text-lg ${g ? "text-gold" : "text-muted-foreground/50"}`}>
+                    {g ?? "—"}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+          <p className="mt-3 text-[10px] uppercase tracking-widest text-muted-foreground">
+            Months with no submitted review show “—”. Read-only preparation view.
+          </p>
+        </div>
+      ) : (
+        (() => {
+          const g = gradeFor(year, monthIdx);
+          return (
+            <div className="rounded-xl border border-border bg-ink/20 p-6 text-center">
+              <div className="font-display text-sm uppercase tracking-widest text-muted-foreground">
+                {MONTHS[monthIdx]} {year}
+              </div>
+              <div className={`mt-2 font-display text-5xl ${g ? "text-gold" : "text-muted-foreground/40"}`}>
+                {g ?? "—"}
+              </div>
+              <div className="mt-2 text-[10px] uppercase tracking-widest text-muted-foreground">
+                {g ? "Performance Review Grade" : "No submitted review for this month"}
+              </div>
+            </div>
+          );
+        })()
       )}
     </div>
   );
