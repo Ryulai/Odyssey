@@ -33,7 +33,7 @@ const SYSTEMS: SystemCard[] = [
       "Measures current contribution during an evaluation period. Class Performance + Guild Performance, resolved into an ABCD grade.",
     status: "live",
     to: "/performance",
-    existing: ["Monthly Performance", "Performance Review", "ABCD grading", "Peer Insights"],
+    existing: ["Monthly Performance", "Performance Review", "ABCD grading", "Leaderboard"],
   },
   {
     number: "02",

@@ -778,8 +778,8 @@ function OdysseyHeader() {
         >
           Hunter Dashboard
         </Link>
-        <Link to="/peer-insights" className={navLink}>
-          Peer Insights / Guild Ranking
+        <Link to="/leaderboard" className={navLink}>
+          Leaderboard
         </Link>
 
         <Link to="/profile" className={navLink}>

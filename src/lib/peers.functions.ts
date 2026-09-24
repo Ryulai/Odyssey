@@ -185,7 +185,7 @@ export const getPeerInsights = createServerFn({ method: "GET" })
 
     if (!meStaff && authority !== "director") {
       return empty(
-        "You aren't on the crew manifest yet — Peer Insights unlocks once a Director adds you.",
+        "You aren't on the crew manifest yet — the Leaderboard unlocks once a Director adds you.",
       );
     }
 
@@ -205,7 +205,7 @@ export const getPeerInsights = createServerFn({ method: "GET" })
       return empty("Locked — this Class is outside the selected Department.");
     }
     if (!supervisor && requestedClass && requestedClass !== myClass) {
-      return empty("Locked — Peer Insights is available for your own Class only.");
+      return empty("Locked — the Leaderboard is available for your own Class only.");
     }
     const activeClass = requestedClass ?? (!supervisor && activeDept === myDept ? myClass : null);
     const classTabs: TabItem[] = activeDept
