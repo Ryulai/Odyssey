@@ -215,7 +215,7 @@ function Leaderboard() {
             </label>
           )}
           <div className="pb-2 text-[11px] text-muted-foreground">
-            {MONTH_NAMES[month - 1]} {year} · compared with {previousMonthLabel(year, month)}
+            {MONTH_NAMES[month - 1]} {year}
           </div>
         </div>
 
@@ -232,8 +232,6 @@ function Leaderboard() {
                 key={section.key}
                 label={section.label}
                 rows={section.peers}
-                year={year}
-                month={month}
               />
             ))}
           </div>
@@ -252,13 +250,9 @@ function Leaderboard() {
 function RankingSection({
   label,
   rows,
-  year,
-  month,
 }: {
   label: string;
   rows: PeerRow[];
-  year: number;
-  month: number;
 }) {
   return (
     <section>
